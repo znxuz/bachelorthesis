@@ -1,0 +1,163 @@
+\section{Hintergrund}
+
+Die vorliegende Bachelorarbeit hat zum Ziel, die Robotersteuerungssoftware, die
+derzeit auf Micro-ROS basiert, auf FreeRTOS zu portieren, um einen
+vergleichenden Leistungsanalyse zwischen beiden Plattformen durchzuführen. Beide
+Systeme sind für die Steuerung eines mobilen Roboters auf einem Cortex-M7
+Mikrocontroller von Arm konzipiert, unterscheiden sich jedoch in ihrer
+grundlegenden Architektur, was sich auch in ihrer Echtzeitfähigkeit und
+Ressourcennutzung widerspiegelt. Während Micro-ROS auf der \ac{ROS}2 aufbaut und
+eine höhere Abstraktionsebene sowie standardisierte Kommunikationsschnittstellen
+mittels der \ac{DDS}-Middleware bietet, basiert Micro-ROS selbst auf FreeRTOS.
+Die Portierung der Robotersteuerungssoftware von Micro-ROS auf FreeRTOS kann
+daher als eine Reduzierung der Abhängigkeitsebene betrachtet werden. Dies
+ermöglicht eine direktere und effizientere Nutzung der zugrunde liegenden
+Echtzeit-, sowie Speicherressourcen.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=0.8\textwidth]{assets/Micro-ROS_architecture}
+    \caption{Micro-ROS Architektur\cite[S. 6]{koubaa2023}}
+% \label{fig:uros_architecture}
+\end{figure}
+
+Nach dem Wechsel zu FreeRTOS wird die Echtzeitleistung der Steuerungssoftware
+analysiert mit einem besonderen Fokus auf den Overhead, der durch die
+Micro-ROS-Schicht verursacht wird. Der Vergleich soll aufzeigen, inwiefern
+FreeRTOS durch die Eliminierung dieser zusätzlichen Abhängigkeit eine
+effizientere und leichtgewichtige Lösung für kritische Roboteranwendungen
+darstellt. Dabei soll der Einsatz einer zyklengenaue Messung des Programmablaufs
+ermöglichen, fundierte Aussagen über die Echtzeitfähigkeit beider Plattformen zu
+treffen, und den Leistungsgewinn anhand von diesem Beispiel für eine
+Steuerungssoftware quantitativ zu belegen.
+
+\subsection{FreeRTOS}
+
+% TODO entwickelt von wem
+
+FreeRTOS ist ein leichtgewichtiges, Open-Source-Echtzeitbetriebssystem, das
+speziell für eingebettete Systeme entwickelt wurde. Es zeichnet sich unter
+anderem durch deterministisches Verhalten mit Echtzeitgarantie sowie
+konfigurierbare Allokation Speicher aus. Diese Eigenschaften machen es zu einer
+idealen Wahl für Robotersteuerungssoftware, insbesondere wenn
+Echtzeitanforderungen und effiziente Ressourcennutzung im Vordergrund stehen.
+
+Im Rahmen dieser Bachelorarbeit wird FreeRTOS als Alternative zu Micro-ROS
+eingesetzt, um die bestehende Robotersteuerungssoftware zu portieren. Während
+Micro-ROS auf der Robot Operating System (ROS) 2-Middleware basiert und eine
+hohe Abstraktionsebene sowie standardisierte Kommunikationsschnittstellen
+bietet, ist FreeRTOS darauf ausgelegt, deterministische Echtzeitanforderungen zu
+erfüllen und kritische Aufgaben in eingebetteten Systemen effizient zu
+verwalten.
+
+Ziel der Migration ist es, die Echtzeitleistung beider Systeme zu vergleichen,
+insbesondere in Bezug auf Latenzzeiten, Scheduling-Effizienz und
+Speicherauslastung. FreeRTOS bietet hierfür geeignete Mechanismen wie Trace
+Hooks, die eine zyklengenaue Messung der Systemleistung ermöglichen. Diese
+Analyse soll aufzeigen, inwiefern FreeRTOS als Alternative zu Micro-ROS für
+kritische Roboteranwendungen geeignet ist und welche Vorteile es in Bezug auf
+Determinismus und Ressourceneffizienz bietet. \subsubsection{Konzepte und
+Komponenten}
+
+\subsubsection{Konzepte}
+
+Hier ist die Sektion Konzepte und Komponenten unter Berücksichtigung der
+gegebenen Anforderungen:
+
+Konzepte und Komponenten FreeRTOS bietet eine Reihe von grundlegenden Konzepten
+und Komponenten, die für die Entwicklung von eingebetteten Echtzeitsystemen
+essenziell sind. Im Fokus dieser Arbeit stehen insbesondere Queues,
+Semaphore/Mutexe, Direct Task Notifications und Trace Hooks, die für die
+effiziente Steuerung und Synchronisation von Robotersteuerungssoftware von
+zentraler Bedeutung sind.
+
+\paragraph{Queues}
+
+Queues sind eine der Kernkomponenten von FreeRTOS und dienen der
+Interprozesskommunikation zwischen Tasks. Sie ermöglichen den sicheren Austausch
+von Daten und Nachrichten, selbst in multithreaded Umgebungen. Queues sind
+threadsicher und können sowohl zur Datenübertragung als auch zur
+Task-Synchronisation verwendet werden. Viele der höheren
+Synchronisationsmechanismen in FreeRTOS, wie Semaphore und Mutexe, sind auf
+Queues aufgebaut, was ihre zentrale Rolle im System unterstreicht.
+
+
+\paragraph{Semaphore und Mutexe}
+
+Semaphore und Mutexe sind Synchronisationsmechanismen, die den Zugriff auf
+gemeinsame Ressourcen koordinieren und Race Conditions verhindern.
+
+Semaphore werden verwendet, um den Zugriff auf Ressourcen zu beschränken oder um
+Ereignisse zwischen Tasks zu signalisieren. Mutexe (Mutual Exclusion) sind
+spezialisierte Semaphore, die sicherstellen, dass nur ein Task gleichzeitig auf
+eine kritische Ressource zugreifen kann.
+
+\paragraph{Direct Task Notifications}
+
+Direct Task Notifications sind ein effizienter und ressourcensparender
+Mechanismus zur Task-Synchronisation. Im Gegensatz zu Semaphore oder Queues
+senden sie direkte Signale an einen Task, ohne zusätzliche Datenstrukturen zu
+benötigen. Dies reduziert den Overhead und ermöglicht eine schnellere
+Synchronisation.
+
+Vergleich mit Semaphore: Während Semaphore universell einsetzbar sind, bieten
+Direct Task Notifications eine leistungsstarke Alternative, wenn nur einfache
+Synchronisation zwischen Tasks erforderlich ist.
+
+\paragraph{Trace Hooks}
+
+Trace Hooks sind spezielle Vorhakpunkte in der FreeRTOS-API, die es ermöglichen,
+Ereignisse im System zu verfolgen und zu protokollieren. Sie sind besonders
+nützlich für die Echtzeitanalyse, da sie detaillierte Informationen über
+Task-Wechsel, Scheduling und Synchronisationsereignisse liefern. Diese
+Funktionen sind entscheidend, um die Leistungscharakteristika der
+Robotersteuerungssoftware zu analysieren und Optimierungspotenziale zu
+identifizieren.
+
+
+Zusammenfassend bilden diese Komponenten die Grundlage für die effiziente und
+deterministische Steuerung von Robotersteuerungssoftware in FreeRTOS. Sie
+ermöglichen eine zuverlässige Kommunikation, Synchronisation und Analyse, die
+für die erfolgreiche Migration und den Vergleich mit Micro-ROS unerlässlich
+sind.
+
+\subsection{Echtzeitanalyse}
+
+Um die Echtzeitanalyse der Steuerungssoftware durchzuführen, ist eine Methode
+erforderlich, die jeden Ausführungsabschnitt des Codes flexibel, präzise und
+threadsicher messen kann. Da die Software multithreaded ist, muss sichergestellt
+werden, dass die Messungen trotz Interrupts und preemptivem Scheduling korrekt
+und zyklengetreu durchgeführt werden können.
+
+\subsection{Zyklenzähler}
+
+Basierend auf den oben genannten Herausforderungen bietet die \ac{DWT} eine
+geeignete Lösung \cite{ARM_KA001499}. Die DWT ist ein Hardwaremodul in
+Prozessoren inklusive ARMv7-M, das speziell für die Analyse von
+Programmabläufen entwickelt wurde \cite{ARMv7_ref_man_dwt_profiling}. Ein für
+diese Arbeit zentraler Bestandteil der DWT ist der Zyklenzähler
+\mintinline{c}|DWT_CYCCNT|, der bei jedem Takt inkrementiert wird, solange sich
+der Prozessor nicht im Debug-Zustand befindet \cite{ARMv7_ref_man_dwt_cycle}.
+Dadurch ermöglicht die DWT beispielsweise die Erfassung von Echtzeitaspekten mit
+zyklengenauer Präzision under normaler Operation \cite{ARMv7_ref_man_dwt}.
+
+\subsubsection{Beispiel: SEGGER SystemView}
+
+Ein Beispiel hierfür ist SEGGER SystemView, ein Echtzeit-Analysewerkzeug, das
+den DWT-Zyklenzähler einsetzt, um Live-Code-Profiling auf eingebetteten Systemen
+durchzuführen \cite{SEGGER_SystemView}.
+
+% TODO maybe not inline code to bloat the thesis
+Das SEGGER SystemView nutzt den DWT, indem die Funktion \linebreak
+\mintinline{c}|SEGGER_SYSVIEW_GET_TIMESTAMP()| einfach die hardkodierte
+Registeradresse des Zyklenzählers zurückgibt, anstatt die interne Funktion
+\mintinline{c}|SEGGER_SYSVIEW_X_GetTimestamp()| aufzurufen
+\cite{SystemView_Config, Arm_DWT_Programmers_Model}. Dies erfolgt, sofern das
+Macro \mintinline{c}|SEGGER_SYSVIEW_CORE_CM3| definiert ist
+\cite{SystemView_Config_79}. Aus dieser Definition wird gezeigt, dass die
+Nutzung des DWT für Cortex-M3, M4 sowie M7 Prozessoren aktiviert wird. Daraus
+könnte sich eventuell auch schlussfolgern lassen, dass der DWT nur auf diesen
+Prozessoren verfügbar ist.
+
+Aufgrund dieser Eigenschaften der DWT wird die Implementierung für die
+Echtzeitanalyse auf dieser Komponente aufbauen.
