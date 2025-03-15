@@ -46,6 +46,95 @@
 \newblock \url{https://developer.arm.com/documentation/ka001499/latest/}. --
 \newblock Zugriff: 14. März 2025
 
+\bibitem[{Fre}a]{freertos_mutexes}
+\textsc{{FreeRTOS}}:
+\newblock \emph{Mutexes}.
+\newblock
+  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/02-Queues-mutexes-and-semaphores/04-Mutexes}.
+  --
+\newblock Zugriff: 15. März 2025
+
+\bibitem[{Fre}b]{freertos_queues}
+\textsc{{FreeRTOS}}:
+\newblock \emph{Queues}.
+\newblock
+  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/02-Queues-mutexes-and-semaphores/01-Queues}.
+  --
+\newblock Zugriff: 15. März 2025
+
+\bibitem[{Fre}c]{freertos_rtos_tick}
+\textsc{{FreeRTOS}}:
+\newblock \emph{The RTOS Tick}.
+\newblock
+  \url{https://www.freertos.org/Documentation/02-Kernel/05-RTOS-implementation-tutorial/02-Building-blocks/03-The-RTOS-tick}.
+  --
+\newblock Zugriff: 15. März 2025
+
+\bibitem[{Fre}d]{freertos_rtos_trace_hooks}
+\textsc{{FreeRTOS}}:
+\newblock \emph{RTOS Trace Feature}.
+\newblock
+  \url{https://freertos.org/Documentation/02-Kernel/02-Kernel-features/09-RTOS-trace-feature#defining}.
+  --
+\newblock Zugriff: 15. März 2025
+
+\bibitem[{Fre}e]{freertos_semphr_incl}
+\textsc{{FreeRTOS}}:
+\newblock \emph{semphr.h}.
+\newblock
+  \url{https://github.com/kylemanna/freertos/blob/125e48f028767ed04a7b27f8ceeec3210a7f1c98/FreeRTOS/Source/include/semphr.h#L138}.
+  --
+\newblock Zugriff: 15. März 2025
+
+\bibitem[{Fre}f]{freertos_task_notifications_desc}
+\textsc{{FreeRTOS}}:
+\newblock \emph{Task Notifications}.
+\newblock
+  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/03-Direct-to-task-notifications/01-Task-notifications#description}.
+  --
+\newblock Zugriff: 15. März 2025
+
+\bibitem[{Fre}g]{freertos_task_notifications_usage}
+\textsc{{FreeRTOS}}:
+\newblock \emph{Task Notifications - Performance Benefits and Usage
+  Restrictions}.
+\newblock
+  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/03-Direct-to-task-notifications/01-Task-notifications#performance-benefits-and-usage-restrictions}.
+  --
+\newblock Zugriff: 15. März 2025
+
+\bibitem[{Fre}h]{freertos_tasks_c_213}
+\textsc{{FreeRTOS}}:
+\newblock \emph{tasks.c}.
+\newblock
+  \url{https://github.com/jameswalmsley/FreeRTOS/blob/a7152a969b2b49fce50d759b3972f17bf3b18ed7/FreeRTOS/Source/tasks.c#L213}.
+  --
+\newblock Zugriff: 15. März 2025
+
+\bibitem[{Fre}i]{freertos_tasks_c_4296}
+\textsc{{FreeRTOS}}:
+\newblock \emph{tasks.c}.
+\newblock
+  \url{https://github.com/jameswalmsley/FreeRTOS/blob/a7152a969b2b49fce50d759b3972f17bf3b18ed7/FreeRTOS/Source/tasks.c#L4296}.
+  --
+\newblock Zugriff: 15. März 2025
+
+\bibitem[{Fre}j]{freertos_tasks_c_3926}
+\textsc{{FreeRTOS}}:
+\newblock \emph{tasks.c}.
+\newblock
+  \url{https://github.com/jameswalmsley/FreeRTOS/blob/a7152a969b2b49fce50d759b3972f17bf3b18ed7/FreeRTOS/Source/tasks.c#L3926}.
+  --
+\newblock Zugriff: 15. März 2025
+
+\bibitem[{Fre}k]{freertos_tick_resolution}
+\textsc{{FreeRTOS}}:
+\newblock \emph{Tick Resolution}.
+\newblock
+  \url{https://mobile.freertos.org/Documentation/02-Kernel/05-RTOS-implementation-tutorial/02-Building-blocks/11-Tick-Resolution}.
+  --
+\newblock Zugriff: 15. März 2025
+
 \bibitem[Kou23]{koubaa2023}
 \textsc{Koubaa}, Anis:
 \newblock \emph{Robot Operating System (ROS) The Complete Reference}.
@@ -78,5 +167,11 @@
   \url{https://github.com/sifive/Segger_SystemView-metal/blob/cd89dbc2f3d5222d9856780517261ad7a2804805/SystemView/Config/SEGGER_SYSVIEW_Conf.h#L79}.
   --
 \newblock Zugriff: 14. März 2025
+
+\bibitem[{Wik}]{wikipedia_priority_inversion}
+\textsc{{Wikipedia}}:
+\newblock \emph{Priority Inversion}.
+\newblock \url{https://en.wikipedia.org/wiki/Priority_inversion}. --
+\newblock Zugriff: 15. März 2025
 
 \end{thebibliography}
