@@ -6,19 +6,18 @@ vergleichenden Leistungsanalyse zwischen beiden Plattformen durchzuführen. Beid
 Systeme sind für die Steuerung eines mobilen Roboters auf einem Cortex-M7
 Mikrocontroller von Arm konzipiert, unterscheiden sich jedoch in ihrer
 grundlegenden Architektur, was sich auch in ihrer Echtzeitfähigkeit und
-Ressourcennutzung widerspiegelt. Während Micro-ROS auf der \ac{ROS 2} aufbaut und
-eine höhere Abstraktionsebene sowie standardisierte Kommunikationsschnittstellen
-mittels der \ac{DDS}-Middleware bietet, basiert Micro-ROS selbst auf FreeRTOS.
-Die Portierung der Robotersteuerungssoftware von Micro-ROS auf FreeRTOS kann
-daher als eine Reduzierung der Abhängigkeitsebene betrachtet werden. Dies
-ermöglicht eine direktere und effizientere Nutzung der zugrunde liegenden
-Echtzeit-, sowie Speicherressourcen.
+Ressourcennutzung widerspiegelt. Während Micro-ROS auf der \ac{ROS 2} aufbaut
+und eine höhere Abstraktionsebene sowie standardisierte
+Kommunikationsschnittstellen mittels der \ac{DDS}-Middleware bietet, basiert
+Micro-ROS selbst auf FreeRTOS. Die Portierung der Robotersteuerungssoftware von
+Micro-ROS auf FreeRTOS kann daher als eine Reduzierung der Abhängigkeitsebene
+betrachtet werden. Dies ermöglicht eine direktere und effizientere Nutzung der
+zugrunde liegenden Echtzeit-, sowie Speicherressourcen.
 
-\begin{figure}[htb]
-    \centering
+\begin{figure}[htb] \centering
     \includegraphics[width=0.8\textwidth]{assets/Micro-ROS_architecture}
     \caption{Micro-ROS Architektur\cite[S. 6]{koubaa2023}}
-% \label{fig:uros_architecture}
+    % \label{fig:uros_architecture}
 \end{figure}
 
 Nach dem Wechsel zu FreeRTOS wird die Echtzeitleistung der Steuerungssoftware
@@ -64,7 +63,7 @@ Queues sind eine der Kernkomponenten von FreeRTOS und dienen der
 Interprozesskommunikation zwischen Tasks. Sie ermöglichen den threadsicheren
 Austausch von Daten, und können sowohl zur Datenübertragung als auch zur
 Synchronisation von Tasks verwendet werden, da dedizierte
-(Ressourcen-)Synchronisationsmechanismen wie Semaphore und Mutexe sind auf
+(Ressourcen-)\\Synchronisationsmechanismen wie Semaphore und Mutexe sind auf
 Queues aufgebaut \cite{freertos_semphr_incl}.
 
 \paragraph{Semaphore}
@@ -77,14 +76,26 @@ Dies kann zu Prioritätsinversion führen, bei der ein niedriger priorisierter
 Task eine Ressource blockiert, die ein höher priorisierter Task benötigt
 \cite{wikipedia_priority_inversion}.
 
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/prio_inversion}
+    \caption{Priority Inversion}
+\end{figure}
+
 \paragraph{Mutexe}
 
 Im Gegensatz dazu sind Mutexe („Mutual Exclusion“) Semaphore in FreeRTOS, die
 Prioritätsvererbung implementieren \cite{freertos_mutexes}. Wenn ein Task auf
 einen Mutex wartet, der von einem niedriger priorisierten Task gehalten wird,
 wird der blockierende Task temporär auf die Priorität des wartenden Tasks
-erhöht, wodurch Prioritätsinversion verhindert und sichergestellt wird, dass
-kritische Ressourcen schnell freigegeben werden.
+erhöht~\cite{FreertosForumSemphMtx}, wodurch Prioritätsinversion verhindert und
+sichergestellt wird, dass kritische Ressourcen schnell freigegeben werden.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/prio_inheritance}
+    \caption{Priority Inheritance}
+\end{figure}
 
 \paragraph{Direct Task Notifications}
 

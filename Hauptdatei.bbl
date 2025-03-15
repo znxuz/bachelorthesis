@@ -135,6 +135,13 @@
   --
 \newblock Zugriff: 15. März 2025
 
+\bibitem[Fre22]{FreertosForumSemphMtx}
+\textsc{FreeRTOS}:
+\newblock \emph{Mutex or Semaphore}.
+\newblock \url{https://forums.freertos.org/t/mutex-or-semaphore/14644/3}.
+\newblock \,Version:\,2022. --
+\newblock Zugriff: 15. März 2025
+
 \bibitem[Kou23]{koubaa2023}
 \textsc{Koubaa}, Anis:
 \newblock \emph{Robot Operating System (ROS) The Complete Reference}.
