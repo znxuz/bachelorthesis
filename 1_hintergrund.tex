@@ -68,13 +68,16 @@ Queues aufgebaut \cite{freertos_semphr_incl}.
 
 \paragraph{Semaphore}
 
-Wie bereits kurz erwähnt, sind Semaphore und Mutexe Synchronisationsmechanismen,
-die den Zugriff auf gemeinsame Ressourcen koordinieren, um Race Conditions zu
-verhindern. Semaphore sind einfache Mechanismen, die keine Prioritätsvererbung
-unterstützen, sodass ein wartender Task seine ursprüngliche Priorität beibehält.
-Dies kann zu Prioritätsinversion führen, bei der ein niedriger priorisierter
-Task eine Ressource blockiert, die ein höher priorisierter Task benötigt
-\cite{wikipedia_priority_inversion}.
+Wie bereits kurz erwähnt, sind Semaphore und Mutexe Tools, die den Zugriff auf
+gemeinsame Ressourcen koordinieren, wobei Semaphore auch zur Synchronisation von
+Tasks genutzt werden können. Semaphoren sind einfache Mechanismen ohne
+Unterstützung von Prioritätsvererbung, bei der ein Task mit Besitz von einem
+Mutex mit einer niedrigeren Priorität künstlich auf die gleiche Priorität des
+auf den Mutex wartenden Task angehoben
+wird~\cite{wikipedia_priority_inheritance}. Wenn eine Ressource mit einem
+Semaphor geschützt ist, kann dies zu Prioritätsinversion führen, bei der ein
+niedriger priorisierter Task die Ressource weiter blockiert, die ein höher
+priorisierter Task benötigt~\cite{wikipedia_priority_inversion}.
 
 \begin{figure}[htb]
     \centering
@@ -84,12 +87,12 @@ Task eine Ressource blockiert, die ein höher priorisierter Task benötigt
 
 \paragraph{Mutexe}
 
-Im Gegensatz dazu sind Mutexe („Mutual Exclusion“) Semaphore in FreeRTOS, die
-Prioritätsvererbung implementieren \cite{freertos_mutexes}. Wenn ein Task auf
-einen Mutex wartet, der von einem niedriger priorisierten Task gehalten wird,
-wird der blockierende Task temporär auf die Priorität des wartenden Tasks
-erhöht~\cite{FreertosForumSemphMtx}, wodurch Prioritätsinversion verhindert und
-sichergestellt wird, dass kritische Ressourcen schnell freigegeben werden.
+Im Gegensatz dazu sind Mutexe („Mutual Exclusion“) Synchronisationsmechanismen
+in FreeRTOS, die Prioritätsvererbung implementieren \cite{freertos_mutexes}.
+Wenn ein Task auf einen Mutex wartet, der von einem niedriger priorisierten Task
+gehalten wird, wird dieser Task temporär auf die Priorität des wartenden Tasks
+erhöht~\cite{FreertosForumSemphMtx}, so dass er den Mutex schnell wieder
+freigeben kann.
 
 \begin{figure}[htb]
     \centering
@@ -99,7 +102,7 @@ sichergestellt wird, dass kritische Ressourcen schnell freigegeben werden.
 
 \paragraph{Direct Task Notifications}
 
-Direct Task Notifications sind ein effizienter und ressourcensparender
+Direct Task Notifications sind ein effizienterer und ressourcensparender
 Mechanismus zur Task-Synchronisation \cite{freertos_task_notifications_desc}. Im
 Gegensatz zu Semaphoren oder den zugrunde liegenden Queues senden sie direkte
 Signale an einen Task, ohne zusätzliche Datenstrukturen zu benötigen, indem sie

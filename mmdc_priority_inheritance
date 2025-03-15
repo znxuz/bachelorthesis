@@ -1,0 +1,24 @@
+---
+config:
+  theme: default
+---
+sequenceDiagram
+    participant H as High Priority Task
+    participant M as Medium Priority Task
+    participant L as Low Priority Task
+    participant Mutex
+    Note over L: Running while holding the Mutex
+    Note over H, M: Ready
+    L->>H: Schedules task
+    H<<-->>Mutex: Attempts to get the Mutex and fails
+    Note over H: Blocked
+    H->>L: Schedules task
+	Note over L: Preferred over Medium Priority Task -> *Priority Inheritance*
+    Note over L: Running
+    note over L: Done
+    L->>Mutex: Releases the Mutex
+    Note over Mutex: Mutex is released
+    L->>H: Schedules Task
+    H<<-->>Mutex: Acquires Mutex
+    Note over H: Running
+    Note over H: Not delayed

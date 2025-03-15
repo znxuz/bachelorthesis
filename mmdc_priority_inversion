@@ -4,24 +4,25 @@ config:
 ---
 sequenceDiagram
     participant H as High Priority Task
-    participant S as Medium Priority Task
+    participant M as Medium Priority Task
     participant L as Low Priority Task
     participant Semaphore
     Note over L: Running while holding the semaphore
-    Note over H, S: Ready
+    Note over H, M: Ready
     L->>H: Schedules task
     H<<-->>Semaphore: Attempts to get the semaphore and fails
     Note over H: Blocked
-    H->>S: Schedules task
-    Note over S: *Priority Inversion*
-    Note over S: Running
-    Note over S: Blocks Low Priority Task
-    note over S: Done
-    S->>L: Schedules task
+    H->>M: Schedules task
+    Note over M: Blocks Low Priority Task from releasing the semaphore
+    Note over M: Thus also blocks High Priority Task -> *Priority Inversion*
+    Note over M: Running
+    note over M: Done
+    M->>L: Schedules task
+    Note over L: Running
     Note over L: Done
     L->>Semaphore: Releases the semaphore
     Note over Semaphore: Semaphore is released
     L->>H: Schedules Task
     H<<-->>Semaphore: Acquires semaphore
-    Note over H: Task resumes
+    Note over H: Running
     Note over H: Delayed

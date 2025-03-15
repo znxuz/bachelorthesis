@@ -46,7 +46,13 @@
 \newblock \url{https://developer.arm.com/documentation/ka001499/latest/}. --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{Fre}a]{freertos_mutexes}
+\bibitem[Frea]{FreertosForumSemphMtx}
+\textsc{FreeRTOS}:
+\newblock \emph{Mutex or Semaphore}.
+\newblock \url{https://forums.freertos.org/t/mutex-or-semaphore/14644/3}. --
+\newblock Zugriff: 15. März 2025
+
+\bibitem[{Fre}b]{freertos_mutexes}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Mutexes}.
 \newblock
@@ -54,7 +60,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}b]{freertos_queues}
+\bibitem[{Fre}c]{freertos_queues}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Queues}.
 \newblock
@@ -62,7 +68,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}c]{freertos_rtos_tick}
+\bibitem[{Fre}d]{freertos_rtos_tick}
 \textsc{{FreeRTOS}}:
 \newblock \emph{The RTOS Tick}.
 \newblock
@@ -70,7 +76,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}d]{freertos_rtos_trace_hooks}
+\bibitem[{Fre}e]{freertos_rtos_trace_hooks}
 \textsc{{FreeRTOS}}:
 \newblock \emph{RTOS Trace Feature}.
 \newblock
@@ -78,7 +84,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}e]{freertos_semphr_incl}
+\bibitem[{Fre}f]{freertos_semphr_incl}
 \textsc{{FreeRTOS}}:
 \newblock \emph{semphr.h}.
 \newblock
@@ -86,7 +92,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}f]{freertos_task_notifications_desc}
+\bibitem[{Fre}g]{freertos_task_notifications_desc}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Task Notifications}.
 \newblock
@@ -94,7 +100,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}g]{freertos_task_notifications_usage}
+\bibitem[{Fre}h]{freertos_task_notifications_usage}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Task Notifications - Performance Benefits and Usage
   Restrictions}.
@@ -103,7 +109,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}h]{freertos_tasks_c_213}
+\bibitem[{Fre}i]{freertos_tasks_c_213}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
@@ -111,7 +117,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}i]{freertos_tasks_c_4296}
+\bibitem[{Fre}j]{freertos_tasks_c_4296}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
@@ -119,7 +125,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}j]{freertos_tasks_c_3926}
+\bibitem[{Fre}k]{freertos_tasks_c_3926}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
@@ -127,19 +133,12 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}k]{freertos_tick_resolution}
+\bibitem[{Fre}l]{freertos_tick_resolution}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Tick Resolution}.
 \newblock
   \url{https://mobile.freertos.org/Documentation/02-Kernel/05-RTOS-implementation-tutorial/02-Building-blocks/11-Tick-Resolution}.
   --
-\newblock Zugriff: 15. März 2025
-
-\bibitem[Fre22]{FreertosForumSemphMtx}
-\textsc{FreeRTOS}:
-\newblock \emph{Mutex or Semaphore}.
-\newblock \url{https://forums.freertos.org/t/mutex-or-semaphore/14644/3}.
-\newblock \,Version:\,2022. --
 \newblock Zugriff: 15. März 2025
 
 \bibitem[Kou23]{koubaa2023}
@@ -175,7 +174,13 @@
   --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{Wik}]{wikipedia_priority_inversion}
+\bibitem[Wika]{wikipedia_priority_inheritance}
+\textsc{Wikipedia}:
+\newblock \emph{Priority Inheritance}.
+\newblock \url{https://en.wikipedia.org/wiki/Priority_inheritance}. --
+\newblock Zugriff: 15. März 2025
+
+\bibitem[{Wik}b]{wikipedia_priority_inversion}
 \textsc{{Wikipedia}}:
 \newblock \emph{Priority Inversion}.
 \newblock \url{https://en.wikipedia.org/wiki/Priority_inversion}. --
