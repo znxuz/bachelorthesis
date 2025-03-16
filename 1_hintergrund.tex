@@ -100,7 +100,7 @@ watenden Task benötigte Ressource so schnell wie möglich wieder freigeben kann
     \caption{Priority Inheritance}
 \end{figure}
 
-\paragraph{Direct Task Notifications}
+\paragraph{Direct Task Notifications} \label{sec:direct_task_notification}
 
 Direct Task Notifications sind ein effizienterer und ressourcenschonenderer
 Mechanismus zur Task-Synchronisation \cite{freertos_task_notifications_desc}. Im
@@ -143,20 +143,14 @@ Präzision under normaler Operation \cite{ARMv7_ref_man_dwt}.
 \subsubsection{Beispiel: SEGGER SystemView}
 
 Ein Beispiel hierfür ist SEGGER SystemView, ein Echtzeit-Analysewerkzeug, das
-den DWT-Zyklenzähler einsetzt, um Live-Code-Profiling auf eingebetteten Systemen
+die DWT einsetzt, um Live-Code-Profiling auf eingebetteten Systemen
 durchzuführen \cite{SEGGER_SystemView}.
 
-% TODO maybe not inline code to bloat the thesis
-Das SEGGER SystemView nutzt den DWT, indem die Funktion \linebreak
-\mintinline{c}|SEGGER_SYSVIEW_GET_TIMESTAMP()| einfach die hardkodierte
-Registeradresse des Zyklenzählers zurückgibt, anstatt die interne Funktion
-\mintinline{c}|SEGGER_SYSVIEW_X_GetTimestamp()| aufzurufen
-\cite{SystemView_Config, Arm_DWT_Programmers_Model}. Dies erfolgt, sofern das
-Macro \mintinline{c}|SEGGER_SYSVIEW_CORE_CM3| definiert ist
-\cite{SystemView_Config_79}. Aus dieser Definition wird gezeigt, dass die
-Nutzung des DWT für Cortex-M3, M4 sowie M7 Prozessoren aktiviert wird. Daraus
-könnte sich eventuell auch schlussfolgern lassen, dass der DWT nur auf diesen
-Prozessoren verfügbar ist.
+Das SEGGER SystemView nutzt den DWT-Zyklenzähler, indem die Funktion \linebreak
+\mintinline{c}|SEGGER_SYSVIEW_GET_TIMESTAMP()| für Cortex-M3/4/7-Prozessoren
+einfach die hardkodierte Registeradresse des Zyklenzählers zurückgibt \cite[S.
+65]{Segger_SystemView_manual}\cite{Arm_DWT_Programmers_Model}, anstatt die
+interne Funktion \mintinline{c}|SEGGER_SYSVIEW_X_GetTimestamp()| aufzurufen.
 
-Aufgrund dieser Eigenschaften der DWT wird die Implementierung für die
-Echtzeitanalyse auf dieser Komponente aufbauen.
+% Aufgrund dieser Eigenschaften wird die bevorstehende Implementierung der
+% Echtzeitanalyse auf dieser Komponente aufbauen.

@@ -1,8 +1,247 @@
 \section{Vorbereitung}
 
+Die Vorbereitungsphase umfasst die Umstellung auf FreeRTOS und damit die
+vollständige Ablösung von Micro-ROS. Der Datenaustausch wird intern über
+FreeRTOS-Queues realisiert, während die Task-Synchronisation auf
+Direct-Task-Notification anstatt von Semaphoren basiert. Zusätzlich wird die
+Eingabe von Sollgeschwindigkeiten über UART mit CRC implementiert. Die
+Aktivierung des Caches bildet den Abschluss dieser Vorbereitungen. Die Details
+zu diesen Maßnahmen werden in den folgenden Abschnitten erläutert.
+
 \subsection{Umstellung auf FreeRTOS}
 
-% TODO
+\subsubsection{Geschwindigkeitsempfang über UART auf Mikrocontroller}
+
+In der bisherigen Implementierung wurde der Geschwindigkeitssollwert vom
+Host-System über ROS2 von dem Micro-ROS-Agent an den Client auf den MCU
+übertragen. Um die Abhängigkeit von Micro-ROS komplett zu beseitigen, muss die
+Übertragung und Interpretierung der Geschwindigkeitssollwerte manuell
+implementiert werden.
+
+Es wird zunächst ein einfacher Struct \mintinline{cpp}|Vel2d| definiert, um die
+Geschwindigkeitswerte zu interpretieren, die vom Benutzer an den MCU gesendet
+werden.
+
+\begin{code}
+\begin{minted}{cpp}
+struct Vel2d {
+  double x;
+  double y;
+  double omega;
+};
+\end{minted}
+    \captionof{listing}{Definition der Struktur für die Sollgeschwindigkeit}
+\end{code}
+
+Darauf aufbauend wird eine weitere Struct \mintinline{cpp}|Vel2dFrame|
+definiert, die als UART-Daten-Frame dient. Dieser enthält ein zusätzliches Feld
+\mintinline{cpp}|crc| für die CRC-Überprüfung und eine Methode
+\mintinline{cpp}|compare()|, die einen lokal kalkulierten CRC-Wert als Parameter
+entgegennimmt, um diesen mit dem empfangenen zu vergleichen. Mit dem Attribut
+\linebreak\mintinline{cpp}|__attribute__((packed))| wird verhindert, dass
+zusätzliches Padding für die Speicherausrichtung dieses Typs eingefügt wird,
+Damit die über UART empfangenen Bytes direkt als Objekt dieses Typs
+interpretiert werden können.
+
+\begin{code}
+\begin{minted}{cpp}
+struct Vel2dFrame {
+  Vel2d vel;
+  uint32_t crc;
+
+  bool compare(uint32_t rhs) { return crc == rhs; }
+} __attribute__((packed));
+
+inline constexpr std::size_t VEL2D_FRAME_LEN = sizeof(Vel2dFrame);
+\end{minted}
+    \captionof{listing}{Definition der Data-Frame für die Sollgeschwindigkeit}
+\end{code}
+
+Für die Übertragung über UART kann die Setup-Funktion \linebreak
+\mintinline{cpp}|HAL_UARTEx_ReceiveToIdle_IT()| aus der STM32-HAL-Bibliothek
+verwendet werden, um die serialisierten Bytes eines Data-Frames zu empfangen.
+Sie nimmt das UART-Handle, die Adresse eines Datenpuffers und dessen Größe
+entgegen und empfängt die eingehenden Daten über Interrupts in diesen vorab
+zugewiesenen Puffer.
+
+Dies ist gepaart mit einer Interrupt-Callback
+\mintinline{cpp}|HAL_UARTEx_RxEventCallback()|, die entweder ausgelöst wird,
+wenn - wie der Name der UART-Setup-Funktion bereits andeutet - die UART-Leitung
+feststellt, dass die Übertragung für eine bestimmte Zeit (abhängig von der
+Baudrate) inaktiv war, oder wenn der Puffer für die Übertragung voll ist, was
+darauf hinweist, dass der gesamte Inhalt des Puffers verarbeitet werden kann
+\cite{HAL_UARTEx_ReceiveToIdle_IT}. Der zweite Parameter dieser
+Interrupt-Callback gibt die Größe der in den Puffer geschriebenen Daten an
+\cite{HAL_UARTEx_RxEventCallback}.
+
+Mit diesem Setup kann die Software nun Bytes beispielsweise über UART direkt von
+einem Linux-Host-Rechner empfangen, der mit dem MCU-Board verbunden ist.
+
+\begin{code}
+\begin{minted}{cpp}
+// preallocated buffer with the exact size of a data frame
+static uint8_t uart_rx_buf[VEL2D_FRAME_LEN];
+volatile static uint16_t rx_len;
+
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t size) {
+  if (huart->Instance != huart3.Instance) return;
+
+  rx_len = size;
+  static BaseType_t xHigherPriorityTaskWoken;
+  configASSERT(task_handle != NULL);
+  vTaskNotifyGiveFromISR(task_handle, &xHigherPriorityTaskWoken);
+  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+  // reset reception from UART
+  HAL_UARTEx_ReceiveToIdle_IT(&huart3, uart_rx_buf, sizeof(uart_rx_buf));
+}
+
+// setup reception from UART in task init
+HAL_UARTEx_ReceiveToIdle_IT(&huart3, uart_rx_buf, sizeof(uart_rx_buf));
+\end{minted}
+    \captionof{listing}{Nutzung STM32-HAL-API für den Datenempfang über UART via
+    Interrupt}
+\end{code}
+
+Um die empfangenen Bytes zu parsen, ohne dies aber während der Ausführung der
+Interrupt-Callback zu tun, wird ein eigenständiger FreeRTOS-Task erstellt.
+Diesem Task wird von der Interrupt-Callback mittels
+\mintinline{cpp}|vTaskNotifyGiveFromISR()|
+signalisiert~\ref{sec:direct_task_notification} und die empfangenen Bytes werden
+wieder in ein Data-Frame deserialisiert, um die Geschwindigkeit und die CRC zu
+extrahieren.
+
+Demnach kann dann eine CRC zur Kontrolle lokal aus den empfangenen
+Geschwindigkeitswert berechnet werden und sie mit der empfangenen vergleichen.
+Durch die Nutzung der dedizierten CRC-Peripherie ist die Berechnung
+beispielsweise auf einem STM32-F37x-Gerät das 60-fache schneller, und verwendet
+dabei nur 1,6\% der Taktzyklen im Vergleich zur Softwareberechnung \cite[S.
+9]{AN4187}.
+
+\begin{code}
+\begin{minted}{cpp}
+  while (true) {
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+    len = rx_len;  // access atomic by default on ARM
+    if (len != VEL2D_FRAME_LEN) {
+      ULOG_ERROR("parsing velocity failed: insufficient bytes received");
+      continue;
+    }
+
+    auto frame = *reinterpret_cast<const Vel2dFrame*>(uart_rx_buf);
+    auto* vel_data = reinterpret_cast<uint8_t*>(&frame.vel);
+    if (!frame.compare(HAL_CRC_Calculate(
+            &hcrc, reinterpret_cast<uint32_t*>(vel_data), sizeof(frame.vel)))) {
+      ULOG_ERROR("crc mismatch!");
+      ++crc_err;
+      continue;
+    }
+
+    frame.vel.x *= 1000;  // m to mm
+    frame.vel.y *= 1000;  // m to mm
+
+    xQueueSend(freertos::vel_sp_queue, &frame.vel, NO_BLOCK);
+  }
+\end{minted}
+    \captionof{listing}{FreeRTOS-Task Dauerschleife}
+\end{code}
+
+\subsubsection{Geschwindigkeitsübertragung über UART auf Host}
+
+Um den vom Benutzer festzulegenden Geschwindigkeitssollwert für den mobilen
+Roboter zu übertragen, ist dem MCU-Board, auf dem die Steuerungssoftware läuft,
+physisch per UART mit einem Linux-Host (einem Raspberry Pi 5) verbunden. Auf dem
+Host wird das vorhandene ROS2-Paket \mintinline{text}|teleop_twist_keyboard|
+verwendet, um Geschwindigkeitseingaben des Benutzers über die Tastatur zu
+interpretieren. Um die Werten über UART zu senden, wird ein kleiner ROS2-Node
+als Brücke erstellt, der den Micro-ROS-Agent ersetzt.
+
+Dabei empfängt der Node über das ROS2-Framework die Geschwindigkeitssollwerte
+und überträgt sie zusammen mit der im Konstruktur kalkulierten CRC an die
+UART-Schnittstelle, die als abstrahierter serieller Port geöffnet ist.
+
+\begin{code}
+\begin{minted}{cpp}
+class Vel2dBridge : public rclcpp::Node {
+ public:
+  Vel2dBridge() : Node{"vel2d_bridge"} {
+    twist_sub_ = create_subscription<Twist>(
+        "cmd_vel", 10, [this](Twist::UniquePtr twist) {
+          auto frame =
+              Vel2dFrame{{twist->linear.x, twist->linear.y, twist->angular.z}};
+
+          if (!uart.send(frame.data())) {
+            RCLCPP_ERROR(this->get_logger(), "write failed");
+            return;
+          }
+          RCLCPP_INFO(this->get_logger(), "sending [%f, %f, %f], crc: %u",
+                      frame.vel.x, frame.vel.y, frame.vel.omega, frame.crc);
+        });
+  }
+
+ private:
+  rclcpp::Subscription<Twist>::SharedPtr twist_sub_;
+  SerialPort<VEL2D_FRAME_LEN> uart =
+      SerialPort<VEL2D_FRAME_LEN>(DEFAULT_PORT, B115200);
+};
+\end{minted}
+    \captionof{listing}{ROS2-Node Implementierung für
+    Geschwindigkeitsübertragung}
+\end{code}
+
+Die CRC-Berechnung auf dem Host erfolgt mithilfe einer C++-Bibliothek von Daniel
+Bahr \cite{CRCpp}. Der Algorithmus \mintinline{cpp}|CRC::CRC_32_MPEG2()|
+entspricht demjenigen, der von der CRC-Peripherie des STM32-Boards verwendet
+wird.
+
+\begin{code}
+\begin{minted}{cpp}
+Vel2dFrame::Vel2dFrame(Vel2d vel)
+    : vel{std::move(vel)},
+      crc{CRC::Calculate(&vel, sizeof(vel), CRC::CRC_32_MPEG2())} {}
+\end{minted}
+    \captionof{listing}{CRC-Berechnung im Konstruktur}
+\end{code}
+
+Mithilfe dieser Implementierungen werden die Übertragung der
+Geschwindigkeitssollwerte vom Host und deren Empfang auf dem MCU ermöglicht.
+Dadurch, dass der Empfang detektiert, dass keine weiteren Bytes übertragen
+werden, und ebenso durch die Überprüfung der CRC, werden unvollständige oder
+fehlerhafte Bytes erkannt und verworfen, ohne den Programmablauf zu blockieren.
+
+\subsubsection{Steuerungskomponenten als FreeRTOS-Task}
+
+Analog zur Implementierung basierend auf Micro-ROS, bei der alle logischen
+Komponenten als Single-Threaded-Executor abstrahiert werden, sind diese
+Komponenten in FreeRTOS ebenfalls als eigenständige Tasks implementiert. Der
+Fokus liegt darauf, den grundlegenden Datenaustausch in Form einer
+Publisher-Subscriber-Architektur zu realisieren.
+
+Zunächst wird ein eigenständiger Task zur Abfrage der Encoderwerte erstellt,
+damit jeder Task bei jeder Iteration auf einheitliche Werte zugreifen kann.
+Innerhalb dieses Tasks werden die Encoderwerte mit der konfigurierten Abtastrate
+abgefragt und an jede logische Komponente geschickt.
+
+Darauf basierend entsteht eine Kommunikationskanal-Matrix, die wie folgt
+dargestellt wird.
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\diagbox{Sendertask}{Empfängertask} & \textbf{Drehzahlregelung} & \textbf{Posenregelung} \\ \hline
+\textbf{Encoder}                    & $\rightarrow$             & $\rightarrow$                      \\ \hline
+\textbf{Geschwindigkeitssollwert}   &                           & $\rightarrow$                      \\ \hline
+\textbf{Odometrie}                  &                           & $\rightarrow$                      \\ \hline
+\textbf{Drehzahlregelung}           & \cellcolor{gray!20}       & $\rightarrow$                      \\ \hline
+\end{tabular}
+\caption{Kommunikationskanal-Matrix}
+% \label{tab:kommunikationsmatrix}
+\end{table}
+
+% Der Code sowohl für die MCU-Software, als auch für den ROS2-Node auf dem Host
+% ist in dem Respository~\cite{mecarover_freertos_profiling} zu finden.
 
 \newpage
 

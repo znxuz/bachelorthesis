@@ -29,13 +29,16 @@
 % mehrseitige Tabellen ermöglichen
 \usepackage{longtable}
 
+\usepackage{diagbox}
+\usepackage{colortbl}
+
 % Unterstützung für Schriftarten
 %\newcommand{\changefont}[3]{ 
 %\fontfamily{#1} \fontseries{#2} \fontshape{#3} \selectfont}
 
 % Packet für Seitenrandabständex und Einstellung für Seitenränder
 \usepackage{geometry}
-\geometry{left=3.5cm, right=2.5cm, top=3cm, bottom=2.5cm}
+\geometry{left=3.5cm, right=2cm, top=2.5cm, bottom=2cm}
 
 % Paket für Boxen im Text
 \usepackage{fancybox}
@@ -122,7 +125,7 @@
 \SetupFloatingEnvironment{listing}{name=Quellcode}
 \setminted{
     linenos,
-	frame=single,
+    frame=single,
     bgcolor=black!5,
     fontsize=\footnotesize
 }
@@ -222,13 +225,13 @@
 %\endgroup
 
 
-% % das Tabellenverzeichnis
-% \newpage
-% % \fancyhead[L]{Abbildungsverzeichnis / Abkürzungsverzeichnis} %Kopfzeile links
-% % Tabellenverzeichnis endgültig anzeigen
-% \listoftables
-% % Tabellenverzeichnis soll im Inhaltsverzeichnis auftauchen
-% \addcontentsline{toc}{section}{Tabellenverzeichnis}
+% das Tabellenverzeichnis
+\newpage
+% \fancyhead[L]{Abbildungsverzeichnis / Abkürzungsverzeichnis} %Kopfzeile links
+% Tabellenverzeichnis endgültig anzeigen
+\listoftables
+% Tabellenverzeichnis soll im Inhaltsverzeichnis auftauchen
+\addcontentsline{toc}{section}{Tabellenverzeichnis}
 
 % das Quellcodeverzeichnis
 \newpage

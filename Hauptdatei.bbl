@@ -53,6 +53,13 @@
 \newblock \url{https://developer.arm.com/documentation/ka001499/latest/}. --
 \newblock Zugriff: 14. März 2025
 
+\bibitem[Bä22]{CRCpp}
+\textsc{Bähr}, D.:
+\newblock \emph{CRCpp}.
+\newblock \url{https://github.com/d-bahr/CRCpp}.
+\newblock \,Version:\,2022. --
+\newblock Zugriff: 16. März 2025
+
 \bibitem[Frea]{FreertosForumSemphMtx}
 \textsc{FreeRTOS}:
 \newblock \emph{Mutex or Semaphore}.
@@ -155,7 +162,13 @@
 \newblock Springer Verlag, 2023. --
 \newblock ISBN 978--3--031--09061--5
 
-\bibitem[{SEG}]{SEGGER_SystemView}
+\bibitem[SEGa]{Segger_SystemView_manual}
+\textsc{SEGGER}:
+\newblock \emph{SEGGER SystemView User Manual},
+  \url{https://www.segger.com/downloads/jlink/UM08027_SystemView.pdf}. --
+\newblock Zugriff: 14. März 2025
+
+\bibitem[{SEG}b]{SEGGER_SystemView}
 \textsc{{SEGGER Microcontroller}}:
 \newblock \emph{{What is SystemView?}}
 \newblock
@@ -163,23 +176,28 @@
   --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{SiF}a]{SystemView_Config}
-\textsc{{SiFive}}:
-\newblock \emph{{Segger\_SystemView-metal Repository:
-  SEGGER\_SYSVIEW\_Conf.h}}.
+\bibitem[STMa]{HAL_UARTEx_ReceiveToIdle_IT}
+\textsc{STMicroelectronics}:
+\newblock \emph{HAL\_UARTEx\_ReceiveToIdle\_IT}.
 \newblock
-  \url{https://github.com/sifive/Segger_SystemView-metal/blob/cd89dbc2f3d5222d9856780517261ad7a2804805/SystemView/Config/SEGGER_SYSVIEW_Conf.h#L138}.
+  \url{https://sourcevu.sysprogs.com/stm32/HAL/symbols/HAL_UARTEx_ReceiveToIdle_IT}.
   --
-\newblock Zugriff: 14. März 2025
+\newblock Zugriff: 16. März 2025
 
-\bibitem[{SiF}b]{SystemView_Config_79}
-\textsc{{SiFive}}:
-\newblock \emph{{Segger\_SystemView-metal Repository:
-  SEGGER\_SYSVIEW\_Conf.h}}.
+\bibitem[STMb]{HAL_UARTEx_RxEventCallback}
+\textsc{STMicroelectronics}:
+\newblock \emph{HAL\_UARTEx\_RxEventCallback Documentation}.
 \newblock
-  \url{https://github.com/sifive/Segger_SystemView-metal/blob/cd89dbc2f3d5222d9856780517261ad7a2804805/SystemView/Config/SEGGER_SYSVIEW_Conf.h#L79}.
+  \url{https://sourcevu.sysprogs.com/stm32/HAL/symbols/HAL_UARTEx_RxEventCallback}.
   --
-\newblock Zugriff: 14. März 2025
+\newblock Zugriff: 16. März 2025
+
+\bibitem[STMc]{AN4187}
+\textsc{STMicroelectronics}:
+\newblock \emph{Using the CRC Peripheral on STM32 Microcontrollers},
+  \url{https://www.st.com/resource/en/application_note/an4187-using-the-crc-peripheral-on-stm32-microcontrollers-stmicroelectronics.pdf}.
+  --
+\newblock Zugriff: 16. März 2025
 
 \bibitem[Wika]{wikipedia_priority_inheritance}
 \textsc{Wikipedia}:
