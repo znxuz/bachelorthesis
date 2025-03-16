@@ -24,5 +24,4 @@ sequenceDiagram
     Note over Semaphore: Semaphore is released
     L->>H: Schedules Task
     H<<-->>Semaphore: Acquires semaphore
-    Note over H: Running
-    Note over H: Delayed
+    Note over H: Running but delayed

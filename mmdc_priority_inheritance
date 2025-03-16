@@ -20,5 +20,4 @@ sequenceDiagram
     Note over Mutex: Mutex is released
     L->>H: Schedules Task
     H<<-->>Mutex: Acquires Mutex
-    Note over H: Running
-    Note over H: Not delayed
+    Note over H: Running and didn't delay
