@@ -211,4 +211,11 @@
 \newblock \url{https://en.wikipedia.org/wiki/Priority_inversion}. --
 \newblock Zugriff: 15. März 2025
 
+\bibitem[Xu25]{mecarover_freertos_profiling}
+\textsc{Xu}, Zijian:
+\newblock \emph{Mecarover - FreeRTOS Profiling Branch}.
+\newblock \url{https://github.com/zijian-x/mecarover/tree/freertos-profiling}.
+\newblock \,Version:\,2025. --
+\newblock Zugriff: 16. März 2025
+
 \end{thebibliography}

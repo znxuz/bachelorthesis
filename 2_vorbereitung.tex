@@ -215,34 +215,155 @@ fehlerhafte Bytes erkannt und verworfen, ohne den Programmablauf zu blockieren.
 Analog zur Implementierung basierend auf Micro-ROS, bei der alle logischen
 Komponenten als Single-Threaded-Executor abstrahiert werden, sind diese
 Komponenten in FreeRTOS ebenfalls als eigenständige Tasks implementiert. Der
-Fokus liegt darauf, den grundlegenden Datenaustausch in Form einer
-Publisher-Subscriber-Architektur zu realisieren.
+Fokus liegt hierbei darauf, den grundlegenden Datenaustausch in Form einer
+Publisher-Subscriber-Architektur mittels Queues zu realisieren. Dadurch müssen
+die Daten nicht mehr durch Semaphoren oder Mutexe geschützt werden, welche in
+FreeRTOS auch nur mittels Queue-Objekte abstrahiert werden.
 
-Zunächst wird ein eigenständiger Task zur Abfrage der Encoderwerte erstellt,
-damit jeder Task bei jeder Iteration auf einheitliche Werte zugreifen kann.
-Innerhalb dieses Tasks werden die Encoderwerte mit der konfigurierten Abtastrate
-abgefragt und an jede logische Komponente geschickt.
+Zunächst wird ein eigenständiger Task zur Abfrage und Übertragung der
+Encoderwerte erstellt, die von der Hardware bzw. der Hardwareabstraktion durch
+Timer bereitgestellt werden, damit die anderen Tasks bei jeder Iteration auf
+einheitliche Encoderwerte zugreifen können.
 
-Darauf basierend entsteht eine Kommunikationskanal-Matrix, die wie folgt
-dargestellt wird.
+\begin{code}
+\begin{minted}{cpp}
+static void task_impl(void*) {
+  constexpr TickType_t NO_BLOCK = 0;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const TickType_t xFrequency = pdMS_TO_TICKS(WHEEL_CTRL_PERIOD_MS.count());
+
+  while (true) {
+    auto enc_delta = FourWheelData(hal_encoder_delta_rad());
+
+    xQueueSend(freertos::enc_delta_wheel_ctrl_queue, &enc_delta, NO_BLOCK);
+    xQueueOverwrite(freertos::enc_delta_odom_queue, &enc_delta);
+
+    vTaskDelayUntil(&xLastWakeTime, xFrequency);
+  }
+}
+\end{minted}
+    \captionof{listing}{FreeRTOS-Task für Encoderwertabfrage und -übertragung}
+\end{code}
+
+
+Der Empfänger-Task welchen mit \mintinline{cpp}|xQueueSend()| addressiert wird,
+läuft mit einer höhreren Frequenz, sodass er die Daten immer sofort verarbeitet
+und auf neue Daten wartet. Im Gegensatz dazu ist
+\mintinline{cpp}|xQueueOverwrite()| eine spezielle Funktion, die ausschließlich
+für Queues mit einer maximalen Kapazität von einem Objekt vorgesehen ist. Sie
+überschreibt das vorhandene Objekt in der Queue, falls es existiert. In diesem
+Kontext ist dies jedoch irrelevant, da der zugehörige Empfänger-Task, der mit
+der gleichen Frequenz wie der Encoderwert-Task läuft, die Daten synchron
+verarbeitet. Dennoch dient die Überschreibbarkeit als zusätzliche
+Sicherheitsmaßnahme für den Fall, dass unerwartete Szenarien auftreten.
+
+Darauf basierend kann die Kommunikation als Matrix wie folgt illustriert werden:
 
 \begin{table}[h!]
 \centering
-\begin{tabular}{|c|c|c|}
+\small
+\setlength{\tabcolsep}{4pt} % Reduce column padding
+\begin{tabular}{|c|c|c|c|}
 \hline
-\diagbox{Sendertask}{Empfängertask} & \textbf{Drehzahlregelung} & \textbf{Posenregelung} \\ \hline
-\textbf{Encoder}                    & $\rightarrow$             & $\rightarrow$                      \\ \hline
-\textbf{Geschwindigkeitssollwert}   &                           & $\rightarrow$                      \\ \hline
-\textbf{Odometrie}                  &                           & $\rightarrow$                      \\ \hline
-\textbf{Drehzahlregelung}           & \cellcolor{gray!20}       & $\rightarrow$                      \\ \hline
+    \diagbox{Sendertask}{Empfängertask} & \textbf{Odometrie} & \textbf{Drehzahlregelung} & \textbf{Posenregelung} \\ \hline
+\textbf{Encoderwerte}               & $\rightarrow$             & $\rightarrow$       &               \\ \hline
+\textbf{Geschwindigkeitssollwert}   &                           &                     & $\rightarrow$ \\ \hline
+\textbf{Odometrie}                  & \cellcolor{gray!20}       &                     & $\rightarrow$ \\ \hline
+\textbf{Drehzahlregelung}           &                           & \cellcolor{gray!20} & $\rightarrow$ \\ \hline
 \end{tabular}
 \caption{Kommunikationskanal-Matrix}
 % \label{tab:kommunikationsmatrix}
 \end{table}
 
-% Der Code sowohl für die MCU-Software, als auch für den ROS2-Node auf dem Host
-% ist in dem Respository~\cite{mecarover_freertos_profiling} zu finden.
+Die Kanäle werden dementsprechend durch Queue-Objekte repräsentiert.
+
+\begin{code}
+\begin{minted}{cpp}
+extern QueueHandle_t enc_delta_odom_queue;
+extern QueueHandle_t enc_delta_wheel_ctrl_queue;
+extern QueueHandle_t vel_sp_queue;
+extern QueueHandle_t odom_queue;
+extern QueueHandle_t vel_wheel_queue;
+\end{minted}
+    \captionof{listing}{Queue-Objekte in FreeRTOS}
+\end{code}
+
+Die grundlegende Implementierung der jeweiligen Steuerungstasks bleibt
+größententeils von der Micro-ROS-Struktur erhalten. Die Initialisierung der
+jeweiligen Steuerungstasks erfolgt in \mintinline{cpp}|freertos::init()|:
+
+\begin{code}
+\begin{minted}{cpp}
+void init() {
+  hal_init();
+  queues_init();
+  task_hal_fetch_init();
+  task_vel_recv_init();
+  task_pose_ctrl_init();
+  task_wheel_ctrl_init();
+  task_odom_init();
+}
+\end{minted}
+    \captionof{listing}{Initialisierung von FreeRTOS-Tasks}
+\end{code}
+
+Eine üblicher Ansatz in einem FreeRTOS-System, um unter anderem sowohl den
+Speicherverbrauch zu optimieren als auch die Programmdeterminiertheit zu
+verbessern, besteht darin, die Erstellung der FreeRTOS-Objekte statisch
+durchzuführen.
+
+Um diese zu realisieren, wird im Makefile ein Macro
+\mintinline{text}|-DFREERTOS_STATIC_INIT| definiert, das zur
+Übersetzungszeit festlegt, ob die Objekte dynamisch innerhalb der FreeRTOS-API
+oder statisch mit benutzerdefinierten Speicherorten zugewiesen werden sollen.
+
+Für einen Task, der dynamisch allokiert wird, ist der Funktionsaufruf so einfach
+wie der folgende:
+
+\begin{code}
+\begin{minted}{cpp}
+xTaskCreate(task_impl, "hal_fetch", STACK_SIZE,
+            NULL, osPriorityNormal, &task_handle);
+\end{minted}
+    \captionof{listing}{Dymanische Allokation eines FreeRTOS-Tasks}
+\end{code}
+
+Wenn ein Task statisch allokiert werden soll, muss der Benutzer manuell jeweils
+einen Speicherpuffer für den Task-Stack und für den Task selbst deklarieren und
+an die API übergeben.
+
+\begin{code}
+\begin{minted}{cpp}
+static StackType_t taskStack[STACK_SIZE];
+static StaticTask_t taskBuffer;
+task_handle = xTaskCreateStatic(
+                    task_impl, "hal_fetch", STACK_SIZE, NULL, osPriorityNormal,
+                    taskStack, &taskBuffer);
+\end{minted}
+    \captionof{listing}{Dymanische Allokation eines FreeRTOS-Tasks}
+\end{code}
+
+Analog dazu muss der Benutzer für die statische Allokation einer Queue auch
+jeweils einen Speicherpuffer mit der maximalen Kapazität für die Queue und für
+die Queue selbst deklarieren:
+
+\begin{code}
+\begin{minted}{cpp}
+ constexpr size_t QUEUE_SIZE = 10;
+ static FourWheelData buf[QUEUE_SIZE];
+ static StaticQueue_t static_queue;
+ return xQueueCreateStatic(QUEUE_SIZE, sizeof(*buf),
+                           reinterpret_cast<uint8_t*>(buf), &static_queue);
+\end{minted}
+    \captionof{listing}{Dymanische Allokation einer FreeRTOS-Queue}
+\end{code}
+
+Damit schließt der Abschnitt zur Umstellung auf FreeRTOS. Der Code für die
+MCU-Software sowie für den ROS2-Node auf dem Host ist im
+Repository~\cite{mecarover_freertos_profiling} verfügbar.
 
 \newpage
 
 \subsection{Aktivierung von Caches}
+
+TODO
