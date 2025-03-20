@@ -153,13 +153,13 @@ Um den vom Benutzer festzulegenden Geschwindigkeitssollwert für den mobilen
 Roboter zu übertragen, ist dem MCU-Board, auf dem die Steuerungssoftware läuft,
 physisch per UART mit einem Linux-Host (einem Raspberry Pi 5) verbunden. Auf dem
 Host wird das vorhandene ROS2-Paket \mintinline{text}|teleop_twist_keyboard|
-verwendet, um Geschwindigkeitseingaben des Benutzers über die Tastatur zu
-interpretieren. Um die Werten über UART zu senden, wird ein kleiner ROS2-Node
-als Brücke erstellt, der den Micro-ROS-Agent ersetzt.
+weiter verwendet, um Geschwindigkeitseingaben des Benutzers über die Tastatur zu
+interpretieren. Um die Werten dann über UART zu übertragen, wird ein kleiner
+ROS2-Node als Brücke erstellt, der die Funktion des Micro-ROS-Agents ersetzt.
 
 Dabei empfängt der Node über das ROS2-Framework die Geschwindigkeitssollwerte
 und überträgt sie zusammen mit der im Konstruktur kalkulierten CRC an die
-UART-Schnittstelle, die als abstrahierter serieller Port geöffnet ist.
+UART-Schnittstelle, die auf Linux als abstrahierter serieller Port geöffnet ist.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -344,8 +344,8 @@ task_handle = xTaskCreateStatic(
 \end{code}
 
 Analog dazu muss der Benutzer für die statische Allokation einer Queue auch
-jeweils einen Speicherpuffer mit der maximalen Kapazität für die Queue und für
-die Queue selbst deklarieren:
+jeweils einen Speicherpuffer mit der maximalen Kapazität für die Queue und die
+Queue-Struktur selbst deklarieren:
 
 \begin{code}
 \begin{minted}{cpp}
@@ -362,110 +362,16 @@ Damit schließt der Abschnitt zur Umstellung auf FreeRTOS. Der Code für die
 MCU-Software sowie für den ROS2-Node auf dem Host ist im
 Repository~\cite{mecarover_freertos_profiling} verfügbar.
 
-\newpage
-
-
-\subsection{Nutzung von Caches}
-
-Caches sind schnelle Speicherkomponenten, die dazu dienen, Zugriffe auf häufig
-verwendete Daten und Befehle zu beschleunigen und den Energieverbrauch zu
-reduzieren \cite{ka001150}. In vielen modernen Mikrocontrollern, wie dem
-Cortex-M7, ist der L1-Cache (Level 1 Cache) jeweils in einen Daten-Cache
-(D-Cache) und einen Befehls-Cache (I-Cache) unterteilt \cite[S. 6]{an4667}. Da
-der Zugriff auf den Hauptspeicher generell viel langsamer ist und oft mehrere
-Taktzyklen dauert~\cite{stm32_memory_sections}, können mit L1-Caches
-0-Waitstate-Zugriffe ermöglicht werden \cite[S. 6]{an4667}.
-
-Der L1-Cache kann nur mit Speicherschnittstellen auf der \ac{AXI}-Busarchitektur
-genutzt werden~\cite[S. 4]{an4839}. Hierzu zählen insbesondere der
-Flash-Speicher, der SRAM-Speicher sowie die beiden \ac{AHB}-Busse, die alle an
-den AXI-Bus angebunden sind (siehe Abbildung \ref{fig:m7_sys_arch}).
-
-\begin{figure}[htb]
-    \centering
-    \includegraphics[width=1\textwidth]{assets/m7_system_arch}
-    \caption{STM32F7 Systemarchitektur \cite[S. 9]{an4667}}
-    \label{fig:m7_sys_arch}
-\end{figure}
-
-Kurz gesagt, kann jeder normale, nicht gemeinsam genutzte (non-shared)
-Speicherbereich gecacht werden, sofern er über das AXI-Bus zugänglich ist
-\cite[S. 4]{an4839}~\cite[S. 7]{an4667}.
-
-Aus der Tabelle für den internen Speicher wird deutlich, dass der Flash-Speicher
-ab der Adresse $0x0800,0000$ über das AHB-Bus angesprochen wird (siehe
-\ref{fig:internal_mem_table}). Diese Adresse ist auch im generierten
-Linker-Skript als die Standard-Flash-Adresse für die Firmware festgelegt. Daher
-kann der Instruktionscache über den AXI-Bus für den Programm-Flash aktiviert
-werden.
-
-\begin{figure}[htb]
-    \centering
-    \includegraphics[width=1\textwidth]{assets/internal_mem_table}
-    \caption{STM32F7 Systemarchitektur \cite[S. 14]{an4667}}
-    \label{fig:internal_mem_table}
-\end{figure}
-
-\begin{code}
-\begin{minted}{c}
-MEMORY
-{
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 512K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 2048K
-}
-\end{minted}
-    \captionof{listing}{Definition Speicherbereich im Linker-Script für STM32F7}
-\end{code}
-
-Um Caches zu nutzen, bietet die STM-\ac{HAL} dedizierte Funktionsaufrufe in der
-API an \cite[S. 4]{an4839}:
-
-\begin{code}
-\begin{minted}{c}
-void SCB_EnableICache(void)
-void SCB_DisableICache(void)
-void SCB_InvalidateICache(void)
-void SCB_EnableDCache(void)
-void SCB_DisableDCache(void)
-void SCB_InvalidateDCache(void)
-void SCB_CleanDCache(void)
-void SCB_CleanInvalidateDCache(void)
-\end{minted}
-    \captionof{listing}{Cache-Funktionen}
-\end{code}
-
-Bei einer Cache-Clean-Operation werden modifizierte Cache-Zeilen (Dirty Cache
-Lines), die durch das Programm aktualisiert wurden, zurück in den Hauptspeicher
-geschrieben. Dieser Vorgang wird gelegentlich auch als „flush” bezeichnet
-\cite[S. 4]{an4839}. Eine Cache-Invalidierungsoperation markiert den Inhalt des
-Caches als ungültig, sodass bei einem erneuten Zugriff auf dieselben Daten der
-Speicher neu ausgelesen und der Cache aktualisiert werden muss.
-
-Allerdings kann beim Aktivieren von Caches für Speicherbereiche, die vom
-DMA-Controller genutzt werden, ein Problem der Cache-Kohärenz (Cache Coherency)
-entstehen, da der Prozessor in diesem Fall nicht der einzige Master ist, der auf
-diese Speicherbereiche schreibt und liest. Daher sind Operationen wie
-Cache-Clean und Cache-Invalidierung essentiell, um die Konsistenz zwischen Cache
-und Speicher sicherzustellen.
-
-\subsubsection{Cache-Clean bei DMA}
-
-Damit der DMA-Controller stets auf aktuelle Daten zugreifen kann, ist eine
-Cache-Clean nach jeder Datenmodifikation erforderlich. Sie stellt sicher, dass
-die Daten nicht nur im Cache modifiziert, sondern auch noch zurück in den
-Speicher geschrieben werden \cite[S. 6]{an4839}. Ohne diesen Schritt würden die
-Änderungen nicht im SRAM widergespiegelt, und der DMA-Controller würde weiterhin
-veraltete Daten verwenden.
-
-\subsubsection{Cache-Invalidierung bei DMA}
-
-Bei Daten, die aus Speicherbereichen gelesen werden, auf die auch der
-DMA-Controller zugreift, muss zuvor eine Cache-Invalidierung erfolgen
-\cite{embeddedexpert_cache}. Dies garantiert, dass die Daten immer direkt aus
-dem RAM gelesen werden. Da der DMA-Controller die Daten jederzeit ändern kann,
-sind die gecachten Daten per se ungültig und müssen durch eine Aktualisierung
-ersetzt werden.
-
 \subsection{Aktivierung von Instruktionscache}
+
+Zum Aktivieren des Instruktionscaches muss die Funktion
+\mintinline{cpp}|SCB_EnableICache()| aufgerufen werden. Da der Instruktionscache
+ausschließlich schreibgeschützte Befehle zwischenspeichert, ist keine
+Synchronisation mit modifizierbaren Daten erforderlich.
+
+\subsection{Aktivierung von Datencache}
+
+Analog zu Instruktionscache wird die Funktion
+\mintinline{cpp}|SCB_EnableICache()| aufgerufen, um Datencache zu nutzen.
 
 TODO
