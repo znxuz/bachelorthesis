@@ -7,6 +7,14 @@
   \providecommand{\doi}[1]{doi: #1}\else
   \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
 
+\bibitem[Alm]{ST_Forum_Post_2018}
+\textsc{Almgren}, Sven:
+\newblock \emph{STM32H7 LwIP Cache Bug Fix}.
+\newblock
+  \url{https://community.st.com/t5/stm32-mcus-embedded-software/stm32h7-lwip-cache-bug-fix/m-p/383712},
+  . --
+\newblock Accessed: [Insert Date Here]
+
 \bibitem[{ARM}a]{ARMv7_ref_man_dwt_profiling}
 \textsc{{ARM Limited}}:
 \newblock \emph{{ARMv7-M Architecture Reference Manual}}.
@@ -61,8 +69,8 @@
   --
 \newblock Document ID: DEN0042A
 
-\bibitem[Bä22]{CRCpp}
-\textsc{Bähr}, D.:
+\bibitem[Bah22]{CRCpp}
+\textsc{Bahr}, Daniel:
 \newblock \emph{CRCpp}.
 \newblock \url{https://github.com/d-bahr/CRCpp}.
 \newblock \,Version:\,2022. --
@@ -75,14 +83,6 @@
   \url{https://docs.contiki-ng.org/en/release-v4.5/_api/group__CMSIS__Core__CacheFunctions.html#ga696fadbf7b9cc71dad42fab61873a40d},
   2023. --
 \newblock Zugriff: 21. März 2025
-
-\bibitem[Com18]{ST_Forum_Post_2018}
-\textsc{Community}, ST:
-\newblock \emph{STM32H7 LwIP Cache Bug Fix}.
-\newblock
-  \url{https://community.st.com/t5/stm32-mcus-embedded-software/stm32h7-lwip-cache-bug-fix/m-p/383712},
-  2018. --
-\newblock Accessed: [Insert Date Here]
 
 \bibitem[Emb]{embeddedexpert_cache}
 \textsc{EmbeddedExpert.io}:
@@ -214,17 +214,23 @@
 \newblock \url{https://developer.arm.com/documentation/ka001150/latest/}. --
 \newblock Zugriff: 19. März 2025
 
-\bibitem[RC23]{microROS_STM32CubeMX_Issue139}
-\textsc{ROS~Community} micro:
+\bibitem[Mau24]{microROS_STM32CubeMX_Issue139}
+\textsc{Maubeuge}, Nicolas de:
 \newblock \emph{Issue \#139: Cache Coherency Problems in STM32CubeMX
   Integration}.
 \newblock
   \url{https://github.com/micro-ROS/micro_ros_stm32cubemx_utils/issues/139},
-  2023. --
+  2024. --
 \newblock Zugriff: 21. März 2025
 
-\bibitem[Rhy19]{stm32_memory_sections}
-\textsc{Rhye}:
+\bibitem[Plo]{StackOverflow_DWT_Activation}
+\textsc{Plouch}, Howard:
+\newblock \emph{Activation of DWT on Cortex-M7}.
+\newblock \url{https://stackoverflow.com/a/37345912}, . --
+\newblock Accessed: [Insert Date Here]
+
+\bibitem[Sch19]{stm32_memory_sections}
+\textsc{Schlaikjer}, Ross:
 \newblock \emph{Memories and Latency}.
 \newblock Blog post.
 \newblock \url{https://rhye.org/post/stm32-with-opencm3-4-memory-sections/}.

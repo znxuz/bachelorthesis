@@ -232,7 +232,7 @@ dem RAM gelesen werden. Da der DMA-Controller die Daten jederzeit ändern kann,
 sind die gecachten Daten per se ungültig und müssen durch eine Aktualisierung
 ersetzt werden.
 
-\subsection{Methode zur Echtzeitanalyse}
+\subsection{Methode zur Echtzeitanalyse} \label{sec:dwt}
 
 Um die Echtzeitanalyse der Steuerungssoftware durchzuführen, ist eine Methode
 erforderlich, mit der beliebige Ausführungsabschnitte der Software flexibel,
@@ -243,20 +243,20 @@ Scheduling sowie Interrupts korrekt und zyklengetreu durchgeführt werden könne
 Basierend auf den oben genannten Herausforderungen bietet die \ac{DWT} als eine
 geeignete Lösung \cite{ARM_KA001499}. Die DWT ist ein Debug-Einheit in
 Prozessoren inklusive ARMv7-M \cite{ARMv7_ref_man_dwt_about}, die das Profiling
-mittels Zähler unterstützen \cite{ARMv7_ref_man_dwt_profiling}. Ein für diese
-Arbeit zentraler Teil der DWT ist der Zyklenzähler \mintinline{c}|DWT_CYCCNT|,
-der bei jedem Takt inkrementiert wird, solange sich der Prozessor nicht im
-Debug-Zustand befindet \cite{ARMv7_ref_man_dwt_cycle}. Dadurch ermöglicht die
-DWT beispielsweise die Erfassung von Echtzeitaspekten mit zyklengenauer
-Präzision under normaler Operation \cite{ARMv7_ref_man_dwt}.
+mittels verschiedener Zähler unterstützen \cite{ARMv7_ref_man_dwt_profiling}.
+Ein für diese Arbeit zentraler Teil der DWT ist der Zyklenzähler
+\mintinline{c}|DWT_CYCCNT|, der bei jedem Takt inkrementiert wird, solange sich
+der Prozessor nicht im Debug-Zustand befindet \cite{ARMv7_ref_man_dwt_cycle}.
+Dadurch ermöglicht die DWT beispielsweise die Erfassung von Echtzeitaspekten mit
+zyklengenauer Präzision under normaler Operation \cite{ARMv7_ref_man_dwt}.
 
-\subsubsection{Beispiel: SEGGER SystemView}
+\subsubsection{Beispiel: Segger SystemView}
 
-Ein Beispiel hierfür ist SEGGER SystemView, ein Echtzeit-Analysewerkzeug, das
+Ein Beispiel hierfür ist Segger SystemView, ein Echtzeit-Analysewerkzeug, das
 die DWT einsetzt, um Live-Code-Profiling auf eingebetteten Systemen
 durchzuführen \cite{SEGGER_SystemView}.
 
-Das SEGGER SystemView nutzt den DWT-Zyklenzähler, indem die Funktion \linebreak
+Das Segger SystemView nutzt den DWT-Zyklenzähler, indem die Funktion \linebreak
 \mintinline{c}|SEGGER_SYSVIEW_GET_TIMESTAMP()| für Cortex-M3/4/7-Prozessoren
 einfach die hardkodierte Registeradresse des Zyklenzählers zurückgibt \cite[S.
 65]{Segger_SystemView_manual}\cite{Arm_DWT_Programmers_Model}, anstatt die

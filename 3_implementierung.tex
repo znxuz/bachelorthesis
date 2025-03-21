@@ -1,0 +1,30 @@
+\section{Implementierung zur Echtzeitanalyse}
+
+Nachdem die Steuerungssoftware auf zwei verschiedenen Architekturen, nämlich
+FreeRTOS und Micro-ROS, aufgebaut wurde, kann nun die Implementierung einer
+konkreten, threadsicheren Methode zur Echtzeitanalyse erfolgen. Ziel der Analyse
+ist es, Informationen darüber zu gewinnen, wie lange ein bestimmter Task oder
+eine bestimmte zeitkritische Funktion benötigt. Die daraus resultierenden Daten
+müssen mit einer angemessenen Genauigkeit erfasst werden, um sicherzustellen,
+dass die Echtzeitaspekte korrekt widergespiegelt werden.
+
+% TODO uart streambuf impl
+
+\subsection{Aktivierung der DWT}
+
+Wie im vorherigen Abschnitt erläutert \ref{sec:dwt}, stellt die DWT einen
+geeigneten Ansatz zur Generierung von Analysedaten dar. Sie ist standardmäßig
+auf Cortex-M7-Prozessoren verfügbar und kann durch die folgenden
+Konfigurationsschritte aktiviert werden:
+
+\begin{code}
+\begin{minted}{cpp}
+void enable_dwt() {
+  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+  DWT->LAR = 0xC5ACCE55;  // software unlock
+  DWT->CYCCNT = 1;
+  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+}
+\end{minted}
+    \captionof{listing}{Aktivierung der DWT \cite{StackOverflow_DWT_Activation}}
+\end{code}

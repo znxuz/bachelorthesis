@@ -218,7 +218,7 @@ Komponenten in FreeRTOS ebenfalls als eigenständige Tasks implementiert. Der
 Fokus liegt hierbei darauf, den grundlegenden Datenaustausch in Form einer
 Publisher-Subscriber-Architektur mittels Queues zu realisieren. Dadurch müssen
 die Daten nicht mehr durch Semaphoren oder Mutexe geschützt werden, welche in
-FreeRTOS auch nur mittels Queue-Objekte abstrahiert werden.
+FreeRTOS auch nur mittels Queue-Objekte abstrahiert sind.
 
 Zunächst wird ein eigenständiger Task zur Abfrage und Übertragung der
 Encoderwerte erstellt, die von der Hardware bzw. der Hardwareabstraktion durch
@@ -246,16 +246,16 @@ static void task_impl(void*) {
 \end{code}
 
 
-Der Empfänger-Task welchen mit \mintinline{cpp}|xQueueSend()| addressiert wird,
-läuft mit einer höhreren Frequenz, sodass er die Daten immer sofort verarbeitet
-und auf neue Daten wartet. Im Gegensatz dazu ist
+Der Empfänger-Task, welchen mit \mintinline{cpp}|xQueueSend()| addressiert wird,
+läuft mit einer höhreren Frequenz, sodass er die Daten immer schneller
+verarbeitet und auf neue Daten wartet. Im Gegensatz dazu ist
 \mintinline{cpp}|xQueueOverwrite()| eine spezielle Funktion, die ausschließlich
 für Queues mit einer maximalen Kapazität von einem Objekt vorgesehen ist. Sie
 überschreibt das vorhandene Objekt in der Queue, falls es existiert. In diesem
 Kontext ist dies jedoch irrelevant, da der zugehörige Empfänger-Task, der mit
 der gleichen Frequenz wie der Encoderwert-Task läuft, die Daten synchron
 verarbeitet. Dennoch dient die Überschreibbarkeit als zusätzliche
-Sicherheitsmaßnahme für den Fall, dass unerwartete Szenarien auftreten.
+Sicherheitsmaßnahme für den Fall einer Verzögerung.
 
 Darauf basierend kann die Kommunikation als Matrix wie folgt illustriert werden:
 
@@ -459,11 +459,11 @@ werden~\cite{CMSIS_Core_CacheFunctions}. Nach der Anpassung der Adresse für die
 32-Byte-Ausrichtung muss auch die Größe entsprechend ergänzt werden, um die
 fehlenden Bytes nach der Ausrichtung zu berücksichtigen.
 
-Hierbei ist zu beachten, dass die Modifizierung direkt im generierten
+Hierbei ist zu beachten, dass ein Teil der Modifizierung direkt im generierten
 ST-Treiber-Quellcode vorgenommen wird, der bei jeder Neugenerierung
 überschrieben wird. In der Funktion \mintinline{cpp}|low_level_output()| ist
 kein durch ST bereitgestellter User-Code-Guard vorhanden, und ein manuell
 hinzugefügter User-Code-Guard wird ebenfalls überschrieben. Um dieses Problem zu
 umgehen, wurde eine Patch-Datei erstellt, die nach jeder Generierung der
-Konfigurationsdateien auf die Quelldatei
+Konfigurationsdateien auf die Quelldatei \linebreak
 \mintinline{text}|LWIP/Target/ethernetif.c| angewendet werden muss.
