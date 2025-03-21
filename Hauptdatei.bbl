@@ -285,7 +285,13 @@
   --
 \newblock Zugriff: 19. März 2025
 
-\bibitem[STMe]{AN4187}
+\bibitem[STMe]{stm32_datasheet}
+\textsc{STMicroelectronics}:
+\newblock \emph{STM32F767ZI Datasheet}.
+\newblock \url{https://www.st.com/resource/en/datasheet/stm32f767zi.pdf}. --
+\newblock Zugriff: 20. März 2025
+
+\bibitem[STMf]{AN4187}
 \textsc{STMicroelectronics}:
 \newblock \emph{Using the CRC Peripheral on STM32 Microcontrollers},
   \url{https://www.st.com/resource/en/application_note/an4187-using-the-crc-peripheral-on-stm32-microcontrollers-stmicroelectronics.pdf}.
@@ -303,6 +309,13 @@
 \newblock \emph{Priority Inversion}.
 \newblock \url{https://en.wikipedia.org/wiki/Priority_inversion}. --
 \newblock Zugriff: 15. März 2025
+
+\bibitem[Wik24]{waitstate_wiki}
+\textsc{Wikipedia}:
+\newblock \emph{Waitstate}.
+\newblock \url{https://de.wikipedia.org/wiki/Waitstate}.
+\newblock \,Version:\,2024. --
+\newblock Zugriff: 19. März 2025
 
 \bibitem[Xu25]{mecarover_freertos_profiling}
 \textsc{Xu}, Zijian:

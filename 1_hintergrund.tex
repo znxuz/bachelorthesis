@@ -132,8 +132,10 @@ reduzieren \cite{ka001150}. In vielen modernen Mikrocontrollern, wie dem
 Cortex-M7, ist der L1-Cache (Level 1 Cache) jeweils in einen Datencache
 (D-Cache) und einen Instruktionscache (I-Cache) unterteilt \cite[S. 6]{an4667}.
 Da der Zugriff auf den Hauptspeicher sowie auf den Flash generell viel langsamer
-ist und mehrere Taktzyklen dauert~\cite{stm32_memory_sections}, können mit
-L1-Caches 0-Waitstate-Zugriffe ermöglicht werden \cite[S. 6]{an4667}.
+ist und mehrere Taktzyklen dauert~\cite{stm32_memory_sections}, kann mit
+L1-Caches Null-Waitstate ermöglicht werden~\cite[S. 6]{an4667}, wodurch der
+Prozessor ohne zusätzliche Wartezyklen auf die Daten zugreift
+\cite{waitstate_wiki}.
 
 Der L1-Cache kann nur mit Speicherschnittstellen auf der \ac{AXI}-Busarchitektur
 genutzt werden~\cite[S. 4]{an4839}. Hierzu zählen unter anderem der Flash, der
@@ -148,22 +150,25 @@ sind (siehe Abbildung \ref{fig:m7_sys_arch}).
 \end{figure}
 
 Aus der Matrix wird deutlich, dass für den Speicher zwischen SRAM und TCM-RAM
-unterschieden wird. Die \ac{TCM} bietet niedrigere Zugriffszeiten als SRAM für
-den Prozessor und ist nicht cachefähig. Während bei cachefähigem Speicher die
-Zugriffszeit variiert (schnell aus dem Cache oder langsam aus dem externen
+unterschieden wird. Der \ac{TCM} verfügt jeweils für Instruktionen und Daten
+über einen dedizierten Kanal zum Prozessor und ist nicht cachefähig, bietet aber
+als Besonderheit niedrigere Zugriffszeiten als SRAM. Während bei SRAM die
+Zugriffszeit variieren kann (schnell aus dem Cache oder langsam aus dem
 Speicher), ist die Zugriffszeit bei TCM konsistent und deterministisch. Dies
-macht sie ideal für zeitkritische Routinen wie Interrupt-Handler oder
-Echtzeitaufgaben. (\cite{arm_den0042})
+macht sie besonders geeignet für zeitkritische Routinen wie Interrupt-Handler
+oder Echtzeitaufgaben. (\cite{arm_den0042})
 
 Zusammenfassend lässt sich sagen, dass jeder normale, nicht gemeinsam genutzte
 (non-shared) Speicherbereich gecacht werden kann, sofern er über das AXI-Bus
 zugänglich ist \cite[S. 4]{an4839}~\cite[S. 7]{an4667}.
 
 Aus der Tabelle für den internen Speicher wird deutlich, dass der Flash ab der
-Adresse $0x0800 0000$ über das AHB-Bus angesprochen wird (siehe
+Adresse $0x0800 0000$ über das AXI-Bus angesprochen wird (siehe
 \ref{fig:internal_mem_table}). Diese Adresse ist auch im Linker-Skript
-standardmäßig für den Flash festgelegt. Daher kann der Instruktionscache über
-den AXI-Bus für den Programm-Flash genutzt werden.
+standardmäßig für den Flash festgelegt. Daher kann der I-Cache über den AXI-Bus
+für den Flash genutzt werden, sofern der Boot-Pin sowie die assoziierten
+\mintinline{text}|BOOT_ADDx| Option unverändert bleiben und die Firmware an die
+Standardadresse geflasht wird \cite[S. 28]{stm32_datasheet}.
 
 \begin{figure}[htb]
     \centering
@@ -200,37 +205,32 @@ void SCB_CleanInvalidateDCache(void)
     \captionof{listing}{Cache-Funktionen}
 \end{code}
 
-Bei einer Cache-Clean-Operation werden modifizierte Cache-Zeilen (Dirty Cache
-Lines), die durch das Programm aktualisiert wurden, zurück in den Hauptspeicher
-geschrieben \cite[S. 4]{an4839}. Dieser Vorgang wird gelegentlich auch als
-„flush” bezeichnet. Eine Cache-Invalidierungsoperation markiert den Inhalt des
-Caches als ungültig, sodass bei einem erneuten Zugriff auf dieselben Daten der
-Speicher neu ausgelesen und der Cache aktualisiert werden muss.
+Bei einer Cache-Clean werden modifizierte Cache-Zeilen (Dirty Cache Lines), die
+durch das Programm aktualisiert wurden, zurück in den Hauptspeicher geschrieben
+\cite[S. 4]{an4839}. Dieser Vorgang wird gelegentlich auch als „flush”
+bezeichnet. Eine Cache-Invalidierung markiert den Inhalt des Caches als
+ungültig, sodass bei einem erneuten Zugriff auf dieselben Daten der Speicher neu
+ausgelesen und der Cache aktualisiert werden muss.
 
 Allerdings kann beim Aktivieren von Caches für Speicherbereiche, die vom
 DMA-Controller genutzt werden, ein Problem der Cache-Kohärenz (Cache Coherency)
-entstehen, da der Prozessor in diesem Fall nicht der einzige Master ist, der auf
-diese Speicherbereiche schreibt und liest. Daher sind Operationen wie
-Cache-Clean und Cache-Invalidierung essentiell, um die Konsistenz zwischen Cache
-und Speicher sicherzustellen.
+entstehen, da der Prozessor in diesem Fall nicht mehr der einzige Master ist,
+der auf diese Speicherbereiche zugreift.
 
 \subsubsection{Cache-Clean bei DMA} \label{sec:cache_clean}
 
-Damit der DMA-Controller stets auf aktuelle Daten zugreifen kann, ist eine
-Cache-Clean nach jeder Datenmodifikation erforderlich. Sie stellt sicher, dass
-die Daten nicht nur im Cache modifiziert, sondern auch noch zurück in den
-Speicher geschrieben werden \cite[S. 6]{an4839}. Ohne diesen Schritt würden die
-Änderungen nicht im SRAM widergespiegelt, und der DMA-Controller würde weiterhin
-veraltete Daten verwenden.
+Damit der DMA-Controller stets auf korrekte Daten zugreifen kann, ist eine
+Cache-Clean nach jeder Modifikation der Daten erforderlich \cite[S. 6]{an4839}.
+Ohne diesen Schritt würden die Änderungen nicht im SRAM widergespiegelt, und der
+DMA-Controller würde weiterhin veraltete Daten verwenden.
 
 \subsubsection{Cache-Invalidierung bei DMA}
 
-Bei Daten, die aus Speicherbereichen gelesen werden, auf die auch der
-DMA-Controller zugreift, muss zuvor eine Cache-Invalidierung erfolgen
-\cite{embeddedexpert_cache}. Dies garantiert, dass die Daten immer direkt aus
-dem RAM gelesen werden. Da der DMA-Controller die Daten jederzeit ändern kann,
-sind die gecachten Daten per se ungültig und müssen durch eine Aktualisierung
-ersetzt werden.
+Bei Daten, die aus dem Speicher gelesen werden, auf die auch der DMA-Controller
+zugreift und modifiziert, muss vor jedem Lesevorgang eine Cache-Invalidierung
+erfolgen \cite{embeddedexpert_cache}. Da der DMA-Controller die Daten jederzeit
+ändern kann, sind die gecachten Daten per se ungültig und müssen immer durch
+Aktualisierung ersetzt werden.
 
 \subsection{Methode zur Echtzeitanalyse} \label{sec:dwt}
 

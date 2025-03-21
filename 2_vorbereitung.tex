@@ -12,11 +12,10 @@ zu diesen Maßnahmen werden in den folgenden Abschnitten erläutert.
 
 \subsubsection{Geschwindigkeitsempfang über UART auf Mikrocontroller}
 
-In der bisherigen Implementierung wurde der Geschwindigkeitssollwert vom
-Host-System über ROS2 von dem Micro-ROS-Agent an den Client auf den MCU
-übertragen. Um die Abhängigkeit von Micro-ROS komplett zu beseitigen, muss die
-Übertragung und Interpretierung der Geschwindigkeitssollwerte manuell
-implementiert werden.
+In der bisherigen Implementierung wurde der Geschwindigkeitssollwert vom Host
+über ROS2 von dem Micro-ROS-Agent an den Client auf den MCU übertragen. Um die
+Abhängigkeit von Micro-ROS komplett zu beseitigen, muss die Übertragung und
+Interpretierung der Geschwindigkeitssollwerte manuell implementiert werden.
 
 Es wird zunächst ein einfacher Struct \mintinline{cpp}|Vel2d| definiert, um die
 Geschwindigkeitswerte zu interpretieren, die vom Benutzer an den MCU gesendet
@@ -210,7 +209,7 @@ Dadurch, dass der Empfang detektiert, dass keine weiteren Bytes übertragen
 werden, und ebenso durch die Überprüfung der CRC, werden unvollständige oder
 fehlerhafte Bytes erkannt und verworfen, ohne den Programmablauf zu blockieren.
 
-\subsubsection{Steuerungskomponenten als FreeRTOS-Task}
+\subsubsection{Steuerungskomponenten als FreeRTOS-Tasks}
 
 Analog zur Implementierung basierend auf Micro-ROS, bei der alle logischen
 Komponenten als Single-Threaded-Executor abstrahiert werden, sind diese
