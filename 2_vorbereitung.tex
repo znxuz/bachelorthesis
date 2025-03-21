@@ -27,7 +27,7 @@ werden.
 struct Vel2d {
   double x;
   double y;
-  double omega;
+  double z;
 };
 \end{minted}
     \captionof{listing}{Definition der Struktur für die Sollgeschwindigkeit}
@@ -176,7 +176,7 @@ class Vel2dBridge : public rclcpp::Node {
             return;
           }
           RCLCPP_INFO(this->get_logger(), "sending [%f, %f, %f], crc: %u",
-                      frame.vel.x, frame.vel.y, frame.vel.omega, frame.crc);
+                      frame.vel.x, frame.vel.y, frame.vel.z, frame.crc);
         });
   }
 
@@ -371,7 +371,99 @@ Synchronisation mit modifizierbaren Daten erforderlich.
 
 \subsection{Aktivierung von Datencache}
 
-Analog zu Instruktionscache wird die Funktion
-\mintinline{cpp}|SCB_EnableICache()| aufgerufen, um Datencache zu nutzen.
+Obwohl der Datencache durch den einfachen Funktionsaufruf
+\mintinline{cpp}|SCB_EnableDCache()| aktiviert wird, stellt dies jedoch noch
+nicht den abschließenden Schritt dar.
 
-TODO
+Die Transportfunktionen für Micro-ROS nutzen die Ethernet-Schnittstelle, deren
+Funktionalität durch die Integration des LwIP-Stacks, der intern DMA verwendet,
+erweitert wird. Um sicherzustellen, dass die Daten korrekt verarbeitet werden,
+müssen sowohl der Heap für LwIP als auch die Speicherbereiche für die
+Ethernet-RX- und TX-Deskriptoren mittels \ac{MPU} so konfiguriert werden, dass
+sie nicht gecacht werden \cite{STM32H7_LwIP_Examples}.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/mpu_conf_cubemx}
+    \caption{MPU-Konfiguration aus STM32CubeMX}
+\end{figure}
+
+Hierbei werden die Anfangsadressen sowie die Größe der RX- und TX-Deskriptoren
+und des LwIP-Heaps aus CubeMX entnommen. Wichtig ist es, die Zugriffsrechte
+(Access Permission) korrekt zu konfigurieren und sicherzustellen, dass der Cache
+(Cacheable Permission) deaktiviert ist.
+
+Obwohl die MPU konfiguriert wurde, um die Speicherbereiche für LwIP und die
+Ethernet-Deskriptoren als nicht-cachebar zu markieren, tritt dennoch ein Fehler
+auf, sobald die Verbindung zum Micro-ROS-Agent auf dem Host hergestellt wird.
+Der Fehler (siehe Abbildung \ref{fig:micro_ros_err}), der in den Debugausgaben
+des Micro-ROS-Agents sichtbar ist, deutet darauf hin, dass auf der
+Low-Level-Ebene bei der Übertragung der Daten über UDP weiterhin Probleme mit
+der Cache-Kohärenz auftreten. Insbesondere scheint das
+\mintinline{text}|client_key| oder die assoziierten Daten nicht korrekt gecacht
+zu werden.
+
+\begin{figure}[htb]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/micro_ros_agent_err}
+    \caption{Micro-ROS-Agent Fehlermeldung mit Debugausgaben}
+    \label{fig:micro_ros_err}
+\end{figure}
+
+Bei der Recherche zu diesem Problem wurde ein Issue auf GitHub identifiziert,
+welches genau das selbe Verhalten beschrieb. In diesem Kontext wurde dann der
+Autor um eine Lösung gebeten, die daraufhin bereitgestellt wurde und sich als
+effektiv erwies, um das Problem zu beheben \cite{microROS_STM32CubeMX_Issue139}.
+
+\begin{code}
+\begin{minted}{diff}
+@@ -54,6 +54,10 @@
+ /* USER CODE BEGIN 1 */
+ /* address has to be aligned to 32 bytes */
++#define ALIGN_ADDR(addr) ((uintptr_t)(addr) & ~0x1F)
++#define ALIGN_SIZE(addr, size) ((size) + ((uintptr_t)(addr) & 0x1f))
++#define FLUSH_CACHE_BY_ADDR(addr, size) \
++  SCB_CleanDCache_by_Addr((uint32_t *)ALIGN_ADDR(addr), ALIGN_SIZE(addr, size))
+ /* USER CODE END 1 */
+ 
+ /* Private variables ---------------------------------------------------------*/
+@@ -404,6 +408,8 @@
+     Txbuffer[i].buffer = q->payload;
+     Txbuffer[i].len = q->len;
+ 
++    FLUSH_CACHE_BY_ADDR(Txbuffer[i].buffer, Txbuffer[i].len);
++
+     if(i>0)
+     {
+       Txbuffer[i-1].next = &Txbuffer[i];
+\end{minted}
+    \captionof{listing}{Modifizierung des ST-Treiber-Quellcode in Diffansicht}
+\end{code}
+
+Die Lösung ist in Bezug auf den Codeumfang recht simple: Für jede Übertragung
+muss nur der Cache für die Payload jedes Paketpuffers (\mintinline{cpp}|pbuf|)
+in \mintinline{cpp}|low_level_output()| mittels den Funktionsaufruf
+\mintinline{cpp}|SCB_CleanDCache_by_Addr()| geleert werden, um einen sogenannten
+Cache-Writeback auszulösen (siehe Abschnitt \ref{sec:cache_clean}), so dass die
+Änderungen tatsächlich in den Speicher geschrieben und somit auch beim
+DMA-Controller korrekt widergespiegelt werden. Diese Lösung ist ebenfalls in
+einem Beitrag aus dem Jahr 2018 im ST-Forum dokumentiert
+\cite{ST_Forum_Post_2018}.
+
+Da die Größe jeder Cacheline auf allen Cortex-M7-Prozessoren 32 Byte beträgt
+~\cite[S. 4]{an4839} und bei jedem Caching die gesamte Cacheline gefüllt wird,
+selbst wenn die Daten weniger als 32 Byte umfassen, muss die angegebene Adresse
+der Daten, deren Cache geleert werden soll, durch eine bitweise AND-Operation
+mit \mintinline{text}|~0x1F| auf eine 32-Byte-Grenze ausgerichtet
+werden~\cite{CMSIS_Core_CacheFunctions}. Nach der Anpassung der Adresse für die
+32-Byte-Ausrichtung muss auch die Größe entsprechend ergänzt werden, um die
+fehlenden Bytes nach der Ausrichtung zu berücksichtigen.
+
+Hierbei ist zu beachten, dass die Modifizierung direkt im generierten
+ST-Treiber-Quellcode vorgenommen wird, der bei jeder Neugenerierung
+überschrieben wird. In der Funktion \mintinline{cpp}|low_level_output()| ist
+kein durch ST bereitgestellter User-Code-Guard vorhanden, und ein manuell
+hinzugefügter User-Code-Guard wird ebenfalls überschrieben. Um dieses Problem zu
+umgehen, wurde eine Patch-Datei erstellt, die nach jeder Generierung der
+Konfigurationsdateien auf die Quelldatei
+\mintinline{text}|LWIP/Target/ethernetif.c| angewendet werden muss.

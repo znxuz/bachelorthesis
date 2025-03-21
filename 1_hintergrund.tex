@@ -76,13 +76,15 @@ Unterstützung von Prioritätsvererbung, bei der ein Task mit Besitz von einem
 Priorität des auf den Mutex wartenden Task angehoben
 wird~\cite{wikipedia_priority_inheritance}. Wenn eine Ressource dann nur mit
 einem Semaphor geschützt ist, kann dies zu Prioritätsinversion führen, bei der
-ein niedriger priorisierter Task die Ressource weiter blockiert, die ein höher
-priorisierter Task benötigt~\cite{wikipedia_priority_inversion}.
+ein höher priorisierter Task aufgrund einer blockierten gemeinsam genutzten
+Ressource nicht ausgeführt werden kann, sodass der Scheduler stattdessen einen
+niedriger priorisierten Task auswählen muss, bis die Ressource freigegeben ist.
+\cite{wikipedia_priority_inversion}.
 
 \begin{figure}[htb]
     \centering
     \includegraphics[width=1\textwidth]{assets/prio_inversion}
-    \caption{Priority Inversion}
+    \caption{Prioritätsinversion}
 \end{figure}
 
 \paragraph{Mutexe}
@@ -97,7 +99,7 @@ watenden Task benötigte Ressource so schnell wie möglich wieder freigeben kann
 \begin{figure}[htb]
     \centering
     \includegraphics[width=1\textwidth]{assets/prio_inheritance}
-    \caption{Priority Inheritance}
+    \caption{Prioritätsvererbung}
 \end{figure}
 
 \paragraph{Direct Task Notifications} \label{sec:direct_task_notification}
@@ -212,7 +214,7 @@ diese Speicherbereiche schreibt und liest. Daher sind Operationen wie
 Cache-Clean und Cache-Invalidierung essentiell, um die Konsistenz zwischen Cache
 und Speicher sicherzustellen.
 
-\subsubsection{Cache-Clean bei DMA}
+\subsubsection{Cache-Clean bei DMA} \label{sec:cache_clean}
 
 Damit der DMA-Controller stets auf aktuelle Daten zugreifen kann, ist eine
 Cache-Clean nach jeder Datenmodifikation erforderlich. Sie stellt sicher, dass
@@ -230,7 +232,7 @@ dem RAM gelesen werden. Da der DMA-Controller die Daten jederzeit ändern kann,
 sind die gecachten Daten per se ungültig und müssen durch eine Aktualisierung
 ersetzt werden.
 
-\subsection{Echtzeitanalyse}
+\subsection{Methode zur Echtzeitanalyse}
 
 Um die Echtzeitanalyse der Steuerungssoftware durchzuführen, ist eine Methode
 erforderlich, mit der beliebige Ausführungsabschnitte der Software flexibel,
