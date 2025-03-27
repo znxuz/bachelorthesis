@@ -1,14 +1,49 @@
 \section{Implementierung zur Echtzeitanalyse}
 
 Nachdem die Steuerungssoftware auf zwei verschiedenen Architekturen, nämlich
-FreeRTOS und Micro-ROS, aufgebaut wurde, kann nun die Implementierung einer
-konkreten, threadsicheren Methode zur Echtzeitanalyse erfolgen. Ziel der Analyse
-ist es, Informationen darüber zu gewinnen, wie lange ein bestimmter Task oder
-eine bestimmte zeitkritische Funktion benötigt. Die daraus resultierenden Daten
-müssen mit einer angemessenen Genauigkeit erfasst werden, um sicherzustellen,
-dass die Echtzeitaspekte korrekt widergespiegelt werden.
+FreeRTOS und Micro-ROS, aufgebaut wurde, kann nun eine konkrete Implementierung
+der Echtzeitanalyse basierend auf FreeRTOS erfolgen, um die Portabilität auf
+Micro-ROS zu ermöglichen. Ziel der Analyse ist es, Informationen darüber zu
+gewinnen, wie lange ein bestimmter Task oder eine bestimmte zeitkritische
+Funktion benötigt. Die daraus resultierenden Daten müssen mit einer angemessenen
+Genauigkeit erfasst werden, um sicherzustellen, dass die Echtzeitaspekte korrekt
+widergespiegelt werden.
 
-% TODO uart streambuf impl
+Aufgrund von Hardwarebeschränkungen sowie Einfachheit wurde UART als
+Kommunikationsschnittstelle zur Übertragung der Echtzeitdaten vom
+Mikrocontroller zum Host gewählt. Mit einer theoretischen Übertragungsrate von
+bis zu 12,5 Mbit/s bietet UART ausreichende Bandbreite~\cite[S.
+2]{stm32_datasheet}, um die Profiling-Daten zu übertragen, ohne Überlastung zu
+verursachen.
+
+Daraus ergibt sich als Erstes die Notwendigkeit, eine threadsichere \ac{MPSC}
+Queue, oder besser gesagt eine multi-producer Senke, zu implementieren, welche
+die Echtzeitdaten kontinuierlich konsumiert und sie über UART ausgibt. Die
+FreeRTOS Stream- oder Messagebuffer sind für den Fall mit mehreren Producers
+nicht geeignet~\cite{FreeRTOSStreamBuffer}.
+
+\subsection{Threadsichere Senke}
+
+Da FreeRTOS und dementsprechend auch Micro-ROS multithreaded sind und zur
+Echtzeitanalyse von beliebiger Stelle beim Programmlauf Echtzeitdaten durch IO
+übertragen werden, muss dabei die Thread-Sicherheit gewährleistet werden, damit
+die zu übertragenden Daten nicht durch Race Conditions neu geordnet,
+überschrieben oder zu unbrauchbaren Daten werden.
+
+the basic idea is that data from multiple threads are pushed into the sink or
+saved in a buffer, and are waiting to be consumed by a single consumer. because
+storage is finite, the sink has to be able to know when to block further writing
+data to the buffer thus overwriting the data yet to be consumed.
+
+taking inspiration from a C++ conference talk from year
+2024~\cite{CppCon2024LockFreeQueue}, where each position of the data buffer has
+a unique sequence number, which, upon consumption, gets incremented atomically
+by the total length of the data buffer, indicating that the data at this
+position is ready to be overwritten at the next iteration by the writer, by
+comparing it to the global write sequence number, can the multi-producer sink
+with only one consumer only save a bool state whether the data at a specific
+location is yet to be consumed or can be overwritten. % TODO
+
 
 \subsection{Aktivierung der DWT}
 
@@ -17,14 +52,8 @@ geeigneten Ansatz zur Generierung von Analysedaten dar. Sie ist standardmäßig
 auf Cortex-M7-Prozessoren verfügbar und kann durch die folgenden
 Konfigurationsschritte aktiviert werden:
 
-\begin{code}
-\begin{minted}{cpp}
-void enable_dwt() {
-  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-  DWT->LAR = 0xC5ACCE55;  // software unlock
-  DWT->CYCCNT = 1;
-  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-}
-\end{minted}
-    \captionof{listing}{Aktivierung der DWT \cite{StackOverflow_DWT_Activation}}
+\begin{code} \begin{minted}{cpp} void enable_dwt() { CoreDebug->DEMCR |=
+CoreDebug_DEMCR_TRCENA_Msk; DWT->LAR = 0xC5ACCE55;  // software unlock
+DWT->CYCCNT = 1; DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk; } \end{minted}
+\captionof{listing}{Aktivierung der DWT \cite{StackOverflow_DWT_Activation}}
 \end{code}
