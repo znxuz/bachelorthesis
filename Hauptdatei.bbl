@@ -209,6 +209,14 @@
 \newblock \,Version:\,2021. --
 \newblock Zugriff: 27. März 2025
 
+\bibitem[Fre25]{freertos_runtime_stats}
+\textsc{FreeRTOS}:
+\newblock \emph{Run-time Statistics}.
+\newblock
+  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/08-Run-time-statistics#description},
+  2025. --
+\newblock Zugriff: 28. März 2025
+
 \bibitem[HAL]{HAL_UART_Transmit_DMA}
  ; SourceVu (Veranst.):
 \newblock \emph{HAL\_UART\_Transmit\_DMA Documentation}.
@@ -244,12 +252,6 @@
 \newblock
   \url{https://github.com/micro-ROS/micro_ros_stm32cubemx_utils/issues/139},
   2024. --
-\newblock Zugriff: 21. März 2025
-
-\bibitem[Plo]{StackOverflow_DWT_Activation}
-\textsc{Plouch}, Howard:
-\newblock \emph{Activation of DWT on Cortex-M7}.
-\newblock \url{https://stackoverflow.com/a/37345912}, . --
 \newblock Zugriff: 21. März 2025
 
 \bibitem[Sch19]{stm32_memory_sections}

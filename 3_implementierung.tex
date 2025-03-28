@@ -176,7 +176,7 @@ direkte Zugriff auf Variablen wie \mintinline{cpp}|size_t write_idx| oder
 Elemente des Arrays \mintinline{cpp}|bool consumable[]| standardmäßig
 threadsicher, ohne dass es zu Schreib-Lese-Konflikten kommt.
 
-\subsubsection{Nutzung der Senke per DMA}
+\subsubsection{Nutzung der Senke mit DMA}
 
 Um diese Senke mit DMA und aktiviertem Daten-Cache zu verwenden, muss zunächst
 eine benutzerdefinierte Interrupt-Callback
@@ -215,7 +215,7 @@ void main() {
     \captionof{listing}{Initialisierung der Senke mit DMA}
 \end{code}
 
-\subsubsection{Nutzung der Senke IO-gebunden}
+\subsubsection{Nutzung der Senke mit blockierender IO}
 
 Ähnlich wie bei der Initialisierung über DMA, entfällt hier aber der
 Interrupt-Callback, und die Verarbeitungsfunktion wird durch die Verwendung der
@@ -238,16 +238,14 @@ int main() {
 
 \subsubsection{Benchmark}
 
-Ein Benchmark für die Senke wurde entwickelt, um deren Leistung und
-Zuverlässigkeit unter paralleler Last zu testen. Der Benchmark lässt eine Anzahl
-von \mintinline{text}|BENCHMARK_N = 4| Tasks parallel laufen, die jeweils eine
-Anzahl von \mintinline{cpp}|iteration = 5000| Nachrichten hintereinander über
-die Senke ausgeben. Die Zeitmessung erfolgt über den Zykluszähler des
-Prozessors, um die exakte Ausführungszeit zu erfassen.
+Ein Benchmark für die Senke wurde entwickelt, um deren Leistung unter paralleler
+Last zu testen. Der Benchmark lässt eine Anzahl von
+\mintinline{text}|BENCHMARK_N = 4| Threads gleichzeitig laufen, die jeweils eine
+Anzahl von \mintinline{cpp}|iteration = 5000| Nachrichten mit ca. 60 Charaktern
+hintereinander über die Senke ausgeben.
 
 Nach Abschluss der Benchmarks werden die gemessenen Zeiten und die
-Laufzeitstatistiken der jeweiligen Tasks mittels
-der Funktion \mintinline{cpp}|vTaskGetRunTimeStats()| aus FreeRTOS ausgegeben.
+Laufzeitstatistiken der jeweiligen Task ausgegeben.
 
 \begin{minipage}[t]{0.5\textwidth}
     \begin{code}
@@ -291,25 +289,61 @@ tsink           60752           78%
 print_bench     0               <1%
 Tmr Svc         0               <1%
     \end{minted}
-        \captionof{listing}{Benchmark IO-gebunden}
+        \captionof{listing}{Benchmark mit blockierender IO}
     \end{code}
 \end{minipage}
 
-\subsection{Aktivierung der DWT}
+Die Ausgabe enthält zwei verschiedene Zeitmessungen für den Benchmark. Die erste
+ist die Zeit, die vom Start des jeweiligen Threads bis zum Ende vergangen ist
+sowie die Gesamtdauer vom Beginn des gesamten Benchmark-Prozesses bis zu dessen
+Abschluss, was praktisch auch der Zeit der letzten Benchmarktask entspricht.
 
-Wie im vorherigen Abschnitt erläutert \ref{sec:dwt}, stellt die DWT einen
-geeigneten Ansatz zur Generierung von Analysedaten dar. Sie ist standardmäßig
-auf Cortex-M7-Prozessoren verfügbar und kann durch die folgenden
-Konfigurationsschritte aktiviert werden:
+Die zweite Messung bezieht sich auf die FreeRTOS-Laufzeitstatistiken, die durch
+\linebreak \mintinline{cpp}|vTaskGetRunTimeStats()| formattiert ausgegeben
+werden. Diese liefern die absolute kumulative Zeit für jede Task, die im Zustand
+„Running” verbracht hat, sowie deren prozentualen Anteil an der Gesamtlaufzeit
+\cite{freertos_runtime_stats}.
 
-\begin{code}
-\begin{minted}{cpp}
-void enable_dwt() {
-  CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-  DWT->LAR = 0xC5ACCE55;  // software unlock
-  DWT->CYCCNT = 1;
-  DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
-}
-\end{minted}
-    \captionof{listing}{Aktivierung der DWT \cite{StackOverflow_DWT_Activation}}
-\end{code}
+Der Benchmark zeigt, dass asynchrone Übertragung per DMA die Gesamtlaufzeit des
+Benchmark-Prozesses im Vergleich zur IO-gebundenen Variante um etwa $20\,\%$
+verringerte, während gleichzeitig die IO-gebundene Zeit freigegeben wurde,
+sodass sie von anderen Aufgaben genutzt werden kann.
+
+Ebenso kann abgeleitet werden, dass durch die Verwendung von DMA die
+Datenübertragungsrate nahezu das vorkonfigurierte Maximum der Baudrate von
+$2.000.000\text{ bps}$ erreicht wurde. Insgesamt wurden $1.208.894$ Bytes
+übertragen, wobei ein UART-Frame hierbei eine standardmäßige Wortlänge von 8 Bit
+hat, inklusive je 1 Start- und 1 Stopp-Bit, ohne Paritätsbit.
+
+\begin{align*}
+1.208.894\text{ Bytes} \times 10 = 12.088.940 \text{ Bits} = \text{Gesamte Bits}
+\end{align*}
+
+Teilt man dies durch die gesamte Übertragungszeit, ergibt sich die effektive
+Bitrate sowie der prozentuale Anteil im Vergleich zur maximalen Baudrate:
+
+\begin{align*}
+\text{Bitrate bei DMA} &= \frac{12.088.940}{6,102} \approx 1.981.143,89 \text{ bps} \quad \Rightarrow 99,06\,\% \\
+\text{Bitrate bei blockierender IO} &= \frac{12.088.940}{7,805} \approx 1.548.871,24 \text{ bps} \quad \Rightarrow 77,44\,\%
+\end{align*}
+
+% \subsection{Aktivierung der DWT}
+%
+% Wie im vorherigen Abschnitt erläutert \ref{sec:dwt}, stellt die DWT einen
+% geeigneten Ansatz zur Generierung von Analysedaten dar. Sie ist standardmäßig
+% auf Cortex-M7-Prozessoren verfügbar und kann durch die folgenden
+% Konfigurationsschritte aktiviert werden:
+%
+% \begin{code}
+% \begin{minted}{cpp}
+% void enable_dwt() {
+%   CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+%   DWT->LAR = 0xC5ACCE55;  // software unlock
+%   DWT->CYCCNT = 1;
+%   DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+% }
+% \end{minted}
+%     \captionof{listing}{Aktivierung der DWT \cite{StackOverflow_DWT_Activation}}
+% \end{code}
+
+\subsection{} % TODO
