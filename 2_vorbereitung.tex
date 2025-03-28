@@ -103,8 +103,8 @@ HAL_UARTEx_ReceiveToIdle_IT(&huart3, uart_rx_buf, sizeof(uart_rx_buf));
 \end{code}
 
 Um die empfangenen Bytes zu parsen, ohne dies aber während der Ausführung der
-Interrupt-Callback zu tun, wird ein eigenständiger FreeRTOS-Task erstellt.
-Diesem Task wird von der Interrupt-Callback mittels
+Interrupt-Callback zu tun, wird eine eigenständige FreeRTOS-Task erstellt.
+Dieser Task wird von der Interrupt-Callback mittels
 \mintinline{cpp}|vTaskNotifyGiveFromISR()|
 signalisiert~\ref{sec:direct_task_notification} und die empfangenen Bytes werden
 wieder in ein Data-Frame deserialisiert, um die Geschwindigkeit und die CRC zu
@@ -219,7 +219,7 @@ Publisher-Subscriber-Architektur mittels Queues zu realisieren. Dadurch müssen
 die Daten nicht mehr durch Semaphoren oder Mutexe geschützt werden, welche in
 FreeRTOS auch nur mittels Queue-Objekte abstrahiert sind.
 
-Zunächst wird ein eigenständiger Task zur Abfrage und Übertragung der
+Zunächst wird eine eigenständige Task zur Abfrage und Übertragung der
 Encoderwerte erstellt, die von der Hardware bzw. der Hardwareabstraktion durch
 Timer bereitgestellt werden, damit die anderen Tasks bei jeder Iteration auf
 einheitliche Encoderwerte zugreifen können.
@@ -245,14 +245,14 @@ static void task_impl(void*) {
 \end{code}
 
 
-Der Empfänger-Task, welchen mit \mintinline{cpp}|xQueueSend()| addressiert wird,
+Die Empfänger-Task, welche mit \mintinline{cpp}|xQueueSend()| addressiert wird,
 läuft mit einer höhreren Frequenz, sodass er die Daten immer schneller
 verarbeitet und auf neue Daten wartet. Im Gegensatz dazu ist
 \mintinline{cpp}|xQueueOverwrite()| eine spezielle Funktion, die ausschließlich
 für Queues mit einer maximalen Kapazität von einem Objekt vorgesehen ist. Sie
 überschreibt das vorhandene Objekt in der Queue, falls es existiert. In diesem
-Kontext ist dies jedoch irrelevant, da der zugehörige Empfänger-Task, der mit
-der gleichen Frequenz wie der Encoderwert-Task läuft, die Daten synchron
+Kontext ist dies jedoch irrelevant, da die zugehörige Empfänger-Task, der mit
+der gleichen Frequenz wie die Encoderwert-Task läuft, die Daten synchron
 verarbeitet. Dennoch dient die Überschreibbarkeit als zusätzliche
 Sicherheitsmaßnahme für den Fall einer Verzögerung.
 
@@ -316,7 +316,7 @@ Um diese zu realisieren, wird im Makefile ein Macro
 Übersetzungszeit festlegt, ob die Objekte dynamisch innerhalb der FreeRTOS-API
 oder statisch mit benutzerdefinierten Speicherorten zugewiesen werden sollen.
 
-Für einen Task, der dynamisch allokiert wird, ist der Funktionsaufruf so einfach
+Für eine Task, der dynamisch allokiert wird, ist der Funktionsaufruf so einfach
 wie der folgende:
 
 \begin{code}
@@ -327,8 +327,8 @@ xTaskCreate(task_impl, "hal_fetch", STACK_SIZE,
     \captionof{listing}{Dymanische Allokation eines FreeRTOS-Tasks}
 \end{code}
 
-Wenn ein Task statisch allokiert werden soll, muss der Benutzer manuell jeweils
-einen Speicherpuffer für den Task-Stack und für den Task selbst deklarieren und
+Wenn eine Task statisch allokiert werden soll, muss der Benutzer manuell jeweils
+einen Speicherpuffer für den Task-Stack und für die Task selbst deklarieren und
 an die API übergeben.
 
 \begin{code}
@@ -395,12 +395,11 @@ und des LwIP-Heaps aus CubeMX entnommen. Wichtig ist es, die Zugriffsrechte
 Obwohl die MPU konfiguriert wurde, um die Speicherbereiche für LwIP und die
 Ethernet-Deskriptoren als nicht-cachebar zu markieren, tritt dennoch ein Fehler
 auf, sobald die Verbindung zum Micro-ROS-Agent auf dem Host hergestellt wird.
-Der Fehler (siehe Abbildung \ref{fig:micro_ros_err}), der in den Debugausgaben
-des Micro-ROS-Agents sichtbar ist, deutet darauf hin, dass auf der
-Low-Level-Ebene bei der Übertragung der Daten über UDP weiterhin Probleme mit
-der Cache-Kohärenz auftreten. Insbesondere scheint das
-\mintinline{text}|client_key| oder die assoziierten Daten nicht korrekt gecacht
-zu werden.
+Der Fehler (\ref{fig:micro_ros_err}), der in den Debugausgaben des
+Micro-ROS-Agents sichtbar ist, deutet darauf hin, dass auf der Low-Level-Ebene
+bei der Übertragung der Daten über UDP weiterhin Probleme mit der Cache-Kohärenz
+auftreten. Insbesondere scheint das \mintinline{text}|client_key| oder die
+assoziierten Daten nicht korrekt gecacht zu werden.
 
 \begin{figure}[htb]
     \centering
@@ -443,11 +442,10 @@ Die Lösung ist in Bezug auf den Codeumfang recht simple: Für jede Übertragung
 muss nur der Cache für die Payload jedes Paketpuffers (\mintinline{cpp}|pbuf|)
 in \mintinline{cpp}|low_level_output()| mittels den Funktionsaufruf
 \mintinline{cpp}|SCB_CleanDCache_by_Addr()| geleert werden, um einen sogenannten
-Cache-Writeback auszulösen (siehe Abschnitt \ref{sec:cache_clean}), so dass die
-Änderungen tatsächlich in den Speicher geschrieben und somit auch beim
-DMA-Controller korrekt widergespiegelt werden. Diese Lösung ist ebenfalls in
-einem Beitrag aus dem Jahr 2018 im ST-Forum dokumentiert
-\cite{ST_Forum_Post_2018}.
+Cache-Writeback auszulösen (\ref{sec:cache_clean}), so dass die Änderungen
+tatsächlich in den Speicher geschrieben und somit auch beim DMA-Controller
+korrekt widergespiegelt werden. Diese Lösung ist ebenfalls in einem Beitrag aus
+dem Jahr 2018 im ST-Forum dokumentiert \cite{ST_Forum_Post_2018}.
 
 Da die Größe jeder Cacheline auf allen Cortex-M7-Prozessoren 32 Byte beträgt
 ~\cite[S. 4]{an4839} und bei jedem Caching die gesamte Cacheline gefüllt wird,

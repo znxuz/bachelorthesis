@@ -71,14 +71,14 @@ Queues aufgebaut \cite{freertos_semphr_incl}.
 Wie bereits kurz erwähnt, sind Semaphore und Mutexe Tools, die den Zugriff auf
 gemeinsame Ressourcen koordinieren, wobei Semaphore auch zur Synchronisation von
 Tasks genutzt werden können. Semaphoren sind einfache Mechanismen ohne
-Unterstützung von Prioritätsvererbung, bei der ein Task mit Besitz von einem
+Unterstützung von Prioritätsvererbung, bei der eine Task mit Besitz von einem
 \textit{Mutex} mit einer niedrigeren Priorität künstlich auf die gleiche
-Priorität des auf den Mutex wartenden Task angehoben
+Priorität der auf den Mutex wartenden Task angehoben
 wird~\cite{wikipedia_priority_inheritance}. Wenn eine Ressource dann nur mit
 einem Semaphor geschützt ist, kann dies zu Prioritätsinversion führen, bei der
-ein höher priorisierter Task aufgrund einer blockierten gemeinsam genutzten
-Ressource nicht ausgeführt werden kann, sodass der Scheduler stattdessen einen
-niedriger priorisierten Task auswählen muss, bis die Ressource freigegeben ist.
+eine höher priorisierte Task aufgrund einer blockierten gemeinsam genutzten
+Ressource nicht ausgeführt werden kann, sodass der Scheduler stattdessen eine
+niedriger priorisierte Task auswählen muss, bis die Ressource freigegeben ist.
 \cite{wikipedia_priority_inversion}.
 
 \begin{figure}[htb]
@@ -87,13 +87,13 @@ niedriger priorisierten Task auswählen muss, bis die Ressource freigegeben ist.
     \caption{Prioritätsinversion}
 \end{figure}
 
-\paragraph{Mutexe}
+\paragraph{Mutexe} \label{sec:mutex}
 
 Im Gegensatz dazu sind Mutexe (Mutual Exclusion) Synchronisationsmechanismen,
-die Prioritätsvererbung implementieren \cite{freertos_mutexes}. Wenn ein Task
-auf einen Mutex wartet, der von einem niedriger priorisierten Task gehalten
-wird, wird dieser Task temporär auf die Priorität des wartenden Tasks
-erhöht~\cite{FreertosForumSemphMtx}, so dass er den Mutex und damit die von dem
+die Prioritätsvererbung implementieren \cite{freertos_mutexes}. Wenn eine Task
+auf einen Mutex wartet, der von einer niedriger priorisierten Task gehalten
+wird, wird diese Task temporär auf die Priorität der wartenden Task
+erhöht~\cite{FreertosForumSemphMtx}, so dass er den Mutex und damit die von der
 watenden Task benötigte Ressource so schnell wie möglich wieder freigeben kann.
 
 \begin{figure}[htb]
@@ -106,13 +106,13 @@ watenden Task benötigte Ressource so schnell wie möglich wieder freigeben kann
 
 Direct Task Notifications sind ein effizienterer und ressourcenschonenderer
 Mechanismus zur Task-Synchronisation \cite{freertos_task_notifications_desc}. Im
-Gegensatz zu Semaphoren senden sie direkte Signale an einen Task, ohne die
+Gegensatz zu Semaphoren senden sie direkte Signale an eine Task, ohne die
 zugrunde liegenden Queues zu benötigen, indem sie einfach einen internen Zähler
-eines Tasks verändern \cite{freertos_tasks_c_213}. Analog zu Semaphoren wird
+einer Task verändern \cite{freertos_tasks_c_213}. Analog zu Semaphoren wird
 mittels Funktionen wie zum Beispiel \mintinline{c}|ulTaskNotifyGive()| dieser
 Zähler inkrementiert~\cite{freertos_tasks_c_4296}, während Funktionen wie
 \mintinline{c}|ulTaskNotifyTake()| ihn wieder
-dekrementieren~\cite{freertos_tasks_c_3926}. Das Entblocken eines Tasks mittels
+dekrementieren~\cite{freertos_tasks_c_3926}. Das Entblocken einer Task mittels
 Direct Task Notifications soll bis zu 45\% schneller sein und benötigt weniger
 RAM \cite{freertos_task_notifications_usage}.
 
@@ -140,7 +140,7 @@ Prozessor ohne zusätzliche Wartezyklen auf die Daten zugreift
 Der L1-Cache kann nur mit Speicherschnittstellen auf der \ac{AXI}-Busarchitektur
 genutzt werden~\cite[S. 4]{an4839}. Hierzu zählen unter anderem der Flash, der
 \ac{SRAM} sowie die beiden \ac{AHB}-Busse, die alle an den AXI-Bus angebunden
-sind (siehe Abbildung \ref{fig:m7_sys_arch}).
+sind (\ref{fig:m7_sys_arch}).
 
 \begin{figure}[htb]
     \centering
@@ -163,8 +163,8 @@ Zusammenfassend lässt sich sagen, dass jeder normale, nicht gemeinsam genutzte
 zugänglich ist \cite[S. 4]{an4839}~\cite[S. 7]{an4667}.
 
 Aus der Tabelle für den internen Speicher wird deutlich, dass der Flash ab der
-Adresse $0x0800 0000$ über das AXI-Bus angesprochen wird (siehe
-\ref{fig:internal_mem_table}). Diese Adresse ist auch im Linker-Skript
+Adresse $0x0800 0000$ über das AXI-Bus angesprochen wird
+(\ref{fig:internal_mem_table}). Diese Adresse ist auch im Linker-Skript
 standardmäßig für den Flash festgelegt. Daher kann der I-Cache über den AXI-Bus
 für den Flash genutzt werden, sofern der Boot-Pin sowie die assoziierten
 \mintinline{text}|BOOT_ADDx| Option unverändert bleiben und die Firmware an die

@@ -13,7 +13,7 @@
 \newblock
   \url{https://community.st.com/t5/stm32-mcus-embedded-software/stm32h7-lwip-cache-bug-fix/m-p/383712},
   . --
-\newblock Accessed: [Insert Date Here]
+\newblock Zugriff: 21. März 2025
 
 \bibitem[{ARM}a]{ARMv7_ref_man_dwt_profiling}
 \textsc{{ARM Limited}}:
@@ -68,6 +68,13 @@
   \url{https://developer.arm.com/documentation/den0042/a/Tightly-Coupled-Memory}.
   --
 \newblock Document ID: DEN0042A
+
+\bibitem[ARM21]{ARM_DDI0403_EE}
+\textsc{ARM Limited} (Hrsg.):
+\newblock \emph{ARM Architecture Reference Manual: ARMv7-A and ARMv7-R
+  edition}.
+\newblock ARM Limited, 2021. --
+\newblock Zugriff: 28. März 2025
 
 \bibitem[Bah22]{CRCpp}
 \textsc{Bahr}, Daniel:
@@ -194,6 +201,22 @@
   --
 \newblock Zugriff: 15. März 2025
 
+\bibitem[Fre21]{FreeRTOSStreamBuffer}
+\textsc{FreeRTOS}:
+\newblock \emph{FreeRTOS Kernel: stream\_buffer.h}.
+\newblock
+  \url{https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/include/stream_buffer.h#L41}.
+\newblock \,Version:\,2021. --
+\newblock Zugriff: 27. März 2025
+
+\bibitem[HAL]{HAL_UART_Transmit_DMA}
+ ; SourceVu (Veranst.):
+\newblock \emph{HAL\_UART\_Transmit\_DMA Documentation}.
+\newblock
+  \url{https://sourcevu.sysprogs.com/stm32/HAL/symbols/HAL_UART_Transmit_DMA}.
+  --
+\newblock Zugriff: 28. März 2025
+
 \bibitem[hot23]{STM32H7_LwIP_Examples}
 \textsc{hotspot} stm32:
 \newblock \emph{STM32H7-LwIP-Examples}.
@@ -227,7 +250,7 @@
 \textsc{Plouch}, Howard:
 \newblock \emph{Activation of DWT on Cortex-M7}.
 \newblock \url{https://stackoverflow.com/a/37345912}, . --
-\newblock Accessed: [Insert Date Here]
+\newblock Zugriff: 21. März 2025
 
 \bibitem[Sch19]{stm32_memory_sections}
 \textsc{Schlaikjer}, Ross:
@@ -297,6 +320,12 @@
   \url{https://www.st.com/resource/en/application_note/an4187-using-the-crc-peripheral-on-stm32-microcontrollers-stmicroelectronics.pdf}.
   --
 \newblock Zugriff: 16. März 2025
+
+\bibitem[Str24]{CppCon2024LockFreeQueue}
+\textsc{Strauss]}, [Erez:
+\newblock User API \& C++ Implementation of a Multi Producer, Multi Consumer,
+  Lock Free, Atomic Queue, 2024. --
+\newblock Zugriff: 27. März 2025
 
 \bibitem[Wika]{wikipedia_priority_inheritance}
 \textsc{Wikipedia}:
