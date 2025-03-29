@@ -134,7 +134,6 @@ void task_impl(void*) {
 }
 \end{minted}
     \captionof{listing}{Implementierung der Task zur Datenverarbeitung}
-    \label{code:consume}
 \end{code}
 
 Nachdem die Daten mittels \mintinline{cpp}|consume()| verarbeitet wurden,
@@ -222,8 +221,8 @@ void main() {
 
 Ähnlich wie bei der Initialisierung über DMA, entfällt hier aber der
 Interrupt-Callback, und die Funktion zur Datenverarbeitung wird durch die
-Verwendung der blockierenden API vereinfacht. Dies ist möglich, da ohne DMA
-keine manuelle Sicherstellung der Cache-Kohärenz notwendig ist.
+Verwendung der blockierenden API vereinfacht, da ohne DMA keine manuelle
+Sicherstellung der Cache-Kohärenz notwendig ist.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -387,7 +386,8 @@ struct TaskRecord {
 
 Da das Schreiben in die Senke per se nicht „lock-free” ist, kann es nicht direkt
 in einer ISR zur Generierung von solchen task-Datensätzen aufgerufen werden.
-Stattdessen müssen sie erst in einen temporären Puffer reingeschrieben werden.
+Stattdessen müssen die Aufzeichnungsdaten erst in einen temporären Puffer
+reingeschrieben werden.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -459,10 +459,10 @@ aufgerufen werden können (\ref{sec:trace_hooks}). Das Makro
 \mintinline{cpp}|traceTASK_SWITCHED_IN()| wird aufgerufen, nachdem eine Task zum
 Ausführen ausgewählt wurde. \mintinline{cpp}|traceTASK_SWITCHED_OUT()| wird
 aufgerufen, unmittelbar bevor eine neue Task ausgewählt wird. An diesen
-Zeitpunkten enthält der interne Task-Control-Block von FreeRTOS
-\mintinline{cpp}|pxCurrentTCB| das Handle der Task, die gerade den Zustand
-"Running" betritt oder verlässt, wodurch der Nutzer die Chance hat, direkt auf
-die Metadaten der aktuellen Task zuzugreifen. (\cite{freertos_rtos_trace_hooks})
+Zeitpunkten enthält \mintinline{cpp}|pxCurrentTCB| (der interne
+Task-Control-Block-Struktur von FreeRTOS) die Metadaten der aktuellen Task,
+wodurch der Nutzer die Chance hat, direkt darauf zuzugreifen.
+(\cite{freertos_rtos_trace_hooks})
 
 Da die Definitionen solcher Makros immer vor der Einbindung der
 \mintinline{text}|FreeRTOS.h| erfolgen müssen, können sie einfachheitshalber
@@ -479,7 +479,7 @@ void task_switched_out_isr(const char* name); // forward declaration
 \end{code}
 
 Hierbei werden die Makros jeweils als ein Aufruf einer Funktion mit dem Namen
-der aktuellen Task als Parameter definiert. Das Feld
+der aktuellen Task als Argument definiert. Das Feld
 \mintinline{cpp}|uxTaskNumber| vom Typ \mintinline{cpp}|unsigned long| aus der
 \mintinline{cpp}|pxCurrentTCB|-Struktur, das eigentlich speziell zum
 Identifizieren für Drittanbieter-Software konzipiert
