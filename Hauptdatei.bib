@@ -87,7 +87,7 @@
 @online{freertos_semphr_incl,
   author = {{FreeRTOS}},
   title = {semphr.h},
-  url = {https://github.com/kylemanna/freertos/blob/125e48f028767ed04a7b27f8ceeec3210a7f1c98/FreeRTOS/Source/include/semphr.h#L138},
+  url = {https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/include/semphr.h#L99},
   note = {Zugriff: 15. März 2025},
 }
 
@@ -133,24 +133,24 @@
   note = {Zugriff: 15. März 2025},
 }
 
-@online{freertos_tasks_c_213,
+@online{freertos_tasks_c_308,
   author = {{FreeRTOS}},
   title = {tasks.c},
-  url = {https://github.com/jameswalmsley/FreeRTOS/blob/a7152a969b2b49fce50d759b3972f17bf3b18ed7/FreeRTOS/Source/tasks.c#L213},
+  url = {https://github.com/znxuz/mecarover/blob/5ba898b9051b682c8f6cfce867b99b681a5dda7f/Middlewares/Third_Party/FreeRTOS/Source/tasks.c#L308},
   note = {Zugriff: 15. März 2025},
 }
 
-@online{freertos_tasks_c_4296,
+@online{freertos_tasks_c_4990,
   author = {{FreeRTOS}},
   title = {tasks.c},
-  url = {https://github.com/jameswalmsley/FreeRTOS/blob/a7152a969b2b49fce50d759b3972f17bf3b18ed7/FreeRTOS/Source/tasks.c#L4296},
+  url = {https://github.com/znxuz/mecarover/blob/5ba898b9051b682c8f6cfce867b99b681a5dda7f/Middlewares/Third_Party/FreeRTOS/Source/tasks.c#L4990},
   note = {Zugriff: 15. März 2025},
 }
 
-@online{freertos_tasks_c_3926,
+@online{freertos_tasks_c_4614,
   author = {{FreeRTOS}},
   title = {tasks.c},
-  url = {https://github.com/jameswalmsley/FreeRTOS/blob/a7152a969b2b49fce50d759b3972f17bf3b18ed7/FreeRTOS/Source/tasks.c#L3926},
+  url = {https://github.com/znxuz/mecarover/blob/5ba898b9051b682c8f6cfce867b99b681a5dda7f/Middlewares/Third_Party/FreeRTOS/Source/tasks.c#L4614},
   note = {Zugriff: 15. März 2025},
 }
 
@@ -256,10 +256,9 @@
 
 @manual{arm_den0042,
   title        = {Tightly Coupled Memory},
-  author       = {{Arm Limited}},
   url          = {https://developer.arm.com/documentation/den0042/a/Tightly-Coupled-Memory},
   note         = {Document ID: DEN0042A},
-  organization = {Arm},
+  organization = {Arm Limited},
   version      = {A}
   note = {Zugriff: 20. März 2025},
 }
@@ -284,6 +283,14 @@
   title        = {Issue \#139: Cache Coherency Problems in STM32CubeMX Integration},
   howpublished = {\url{https://github.com/micro-ROS/micro_ros_stm32cubemx_utils/issues/139}},
   year         = {2024},
+  note = {Zugriff: 21. März 2025},
+}
+
+@online{microROS_STM32CubeMX_Issue139_code,
+  author       = {Nicolas de Maubeuge},
+  title        = {Comment to issue \#139: Cache Coherency Problems in STM32CubeMX Integration},
+  howpublished = {\url{https://github.com/micro-ROS/micro_ros_stm32cubemx_utils/issues/139#issuecomment-2710543256}},
+  year         = {2025},
   note = {Zugriff: 21. März 2025},
 }
 
@@ -321,6 +328,7 @@ abstract = {This chapter will examine the Cortex-M7 processor. This processor is
 @online{StackOverflow_DWT_Activation,
   author       = {Howard Plouch},
   title        = {Activation of DWT on Cortex-M7},
+  year = {2016},
   howpublished = {\url{https://stackoverflow.com/a/37345912}},
   note = {Zugriff: 21. März 2025},
 }
@@ -341,8 +349,8 @@ abstract = {This chapter will examine the Cortex-M7 processor. This processor is
   note = {Zugriff: 27. März 2025},
 }
 
-@conference{CppCon2024LockFreeQueue,
-  author = {[Erez Strauss]},
+@online{CppCon2024LockFreeQueue,
+  author = {Erez Strauss},
   title = {User API \& C++ Implementation of a Multi Producer, Multi Consumer, Lock Free, Atomic Queue},
   year = {2024},
   howpublished = {CppCon},
@@ -370,4 +378,34 @@ abstract = {This chapter will examine the Cortex-M7 processor. This processor is
   year         = {2025},
   howpublished = {\url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/08-Run-time-statistics#description}},
   note = {Zugriff: 28. März 2025},
+}
+
+@online{freertos_task_c_410,
+  author       = {FreeRTOS},
+  title        = {FreeRTOS Source Code},
+  howpublished = {\url{https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/tasks.c#L410}},
+  note = {Zugriff: 29. März 2025},
+}
+
+@standard{iso_iec_14882_2020,
+  title        = {ISO/IEC 14882:2020(E): Programming Languages --- C++},
+  organization = {International Organization for Standardization},
+  year         = {2020},
+  address      = {Geneva, Switzerland},
+}
+
+@online{isocpp_dtor_order,
+  author       = {ISO C++ Foundation},
+  title        = {FAQ: Destructor Order for Locals},
+  year         = {2025},
+  howpublished = {\url{https://isocpp.org/wiki/faq/dtors#order-dtors-for-locals}},
+  note = {Zugriff: 29. März 2025},
+}
+
+@reference{cppreference_constexpr_if,
+  author       = {cppreference.com},
+  title        = {if statement - constexpr if},
+  year         = {2023},
+  howpublished = {\url{https://en.cppreference.com/w/cpp/language/if#Constexpr_if}},
+  note = {Zugriff: 29. März 2025},
 }

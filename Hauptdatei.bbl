@@ -61,10 +61,10 @@
 \newblock \url{https://developer.arm.com/documentation/ka001499/latest/}. --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{Arm}g]{arm_den0042}
-\textsc{{Arm Limited}} ; \textsc{Arm} (Hrsg.):
+\bibitem[Armg]{arm_den0042}
+\textsc{Arm Limited} (Hrsg.):
 \newblock \emph{Tightly Coupled Memory}.
-\newblock Arm,
+\newblock Arm Limited,
   \url{https://developer.arm.com/documentation/den0042/a/Tightly-Coupled-Memory}.
   --
 \newblock Document ID: DEN0042A
@@ -83,6 +83,14 @@
 \newblock \,Version:\,2022. --
 \newblock Zugriff: 16. März 2025
 
+\bibitem[Bar19]{FreeRTOSForumPrintf}
+\textsc{Barry}, Richard:
+\newblock \emph{Implementation of printf that works in threads}.
+\newblock
+  \url{https://forums.freertos.org/t/implementation-of-printf-that-works-in-threads/8117/2}.
+\newblock \,Version:\,2019. --
+\newblock Zugriff: 27. März 2025
+
 \bibitem[CMS23]{CMSIS_Core_CacheFunctions}
 \textsc{CMSIS}:
 \newblock \emph{CMSIS Core Cache Functions}.
@@ -91,6 +99,13 @@
   2023. --
 \newblock Zugriff: 21. März 2025
 
+\bibitem[cpp23]{cppreference_constexpr_if}
+\textsc{cppreference.com}:
+\newblock \emph{if statement - constexpr if}.
+\newblock \url{https://en.cppreference.com/w/cpp/language/if#Constexpr_if},
+  2023. --
+\newblock Zugriff: 29. März 2025
+
 \bibitem[Emb]{embeddedexpert_cache}
 \textsc{EmbeddedExpert.io}:
 \newblock \emph{Understanding Cache Memory in Embedded Systems}.
@@ -98,13 +113,28 @@
 \newblock \url{https://blog.embeddedexpert.io/?p=2707}. --
 \newblock Zugriff: 19. März 2025
 
-\bibitem[Frea]{FreertosForumSemphMtx}
+\bibitem[Fou25]{isocpp_dtor_order}
+\textsc{Foundation}, ISO~C.:
+\newblock \emph{FAQ: Destructor Order for Locals}.
+\newblock \url{https://isocpp.org/wiki/faq/dtors#order-dtors-for-locals}, 2025.
+  --
+\newblock Zugriff: 29. März 2025
+
+\bibitem[Frea]{freertos_task_c_410}
+\textsc{FreeRTOS}:
+\newblock \emph{FreeRTOS Source Code}.
+\newblock
+  \url{https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/tasks.c#L410},
+  . --
+\newblock Zugriff: 29. März 2025
+
+\bibitem[Freb]{FreertosForumSemphMtx}
 \textsc{FreeRTOS}:
 \newblock \emph{Mutex or Semaphore}.
 \newblock \url{https://forums.freertos.org/t/mutex-or-semaphore/14644/3}. --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}b]{freertos_mutexes}
+\bibitem[{Fre}c]{freertos_mutexes}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Mutexes}.
 \newblock
@@ -112,7 +142,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}c]{freertos_queues}
+\bibitem[{Fre}d]{freertos_queues}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Queues}.
 \newblock
@@ -120,7 +150,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}d]{freertos_rtos_tick}
+\bibitem[{Fre}e]{freertos_rtos_tick}
 \textsc{{FreeRTOS}}:
 \newblock \emph{The RTOS Tick}.
 \newblock
@@ -128,7 +158,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}e]{freertos_rtos_trace_hooks}
+\bibitem[{Fre}f]{freertos_rtos_trace_hooks}
 \textsc{{FreeRTOS}}:
 \newblock \emph{RTOS Trace Feature}.
 \newblock
@@ -136,15 +166,15 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}f]{freertos_semphr_incl}
+\bibitem[{Fre}g]{freertos_semphr_incl}
 \textsc{{FreeRTOS}}:
 \newblock \emph{semphr.h}.
 \newblock
-  \url{https://github.com/kylemanna/freertos/blob/125e48f028767ed04a7b27f8ceeec3210a7f1c98/FreeRTOS/Source/include/semphr.h#L138}.
+  \url{https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/include/semphr.h#L99}.
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}g]{freertos_memory_management}
+\bibitem[{Fre}h]{freertos_memory_management}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Static vs Dynamic Memory Allocation}.
 \newblock
@@ -152,7 +182,7 @@
   --
 \newblock Zugriff: 19. März 2025
 
-\bibitem[{Fre}h]{freertos_task_notifications_desc}
+\bibitem[{Fre}i]{freertos_task_notifications_desc}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Task Notifications}.
 \newblock
@@ -160,7 +190,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}i]{freertos_task_notifications_usage}
+\bibitem[{Fre}j]{freertos_task_notifications_usage}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Task Notifications - Performance Benefits and Usage
   Restrictions}.
@@ -169,31 +199,31 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}j]{freertos_tasks_c_213}
+\bibitem[{Fre}k]{freertos_tasks_c_308}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
-  \url{https://github.com/jameswalmsley/FreeRTOS/blob/a7152a969b2b49fce50d759b3972f17bf3b18ed7/FreeRTOS/Source/tasks.c#L213}.
+  \url{https://github.com/znxuz/mecarover/blob/5ba898b9051b682c8f6cfce867b99b681a5dda7f/Middlewares/Third_Party/FreeRTOS/Source/tasks.c#L308}.
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}k]{freertos_tasks_c_4296}
+\bibitem[{Fre}l]{freertos_tasks_c_4990}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
-  \url{https://github.com/jameswalmsley/FreeRTOS/blob/a7152a969b2b49fce50d759b3972f17bf3b18ed7/FreeRTOS/Source/tasks.c#L4296}.
+  \url{https://github.com/znxuz/mecarover/blob/5ba898b9051b682c8f6cfce867b99b681a5dda7f/Middlewares/Third_Party/FreeRTOS/Source/tasks.c#L4990}.
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}l]{freertos_tasks_c_3926}
+\bibitem[{Fre}m]{freertos_tasks_c_4614}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
-  \url{https://github.com/jameswalmsley/FreeRTOS/blob/a7152a969b2b49fce50d759b3972f17bf3b18ed7/FreeRTOS/Source/tasks.c#L3926}.
+  \url{https://github.com/znxuz/mecarover/blob/5ba898b9051b682c8f6cfce867b99b681a5dda7f/Middlewares/Third_Party/FreeRTOS/Source/tasks.c#L4614}.
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}m]{freertos_tick_resolution}
+\bibitem[{Fre}n]{freertos_tick_resolution}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Tick Resolution}.
 \newblock
@@ -232,6 +262,11 @@
   --
 \newblock Zugriff: 21. März 2025
 
+\bibitem[iso20]{iso_iec_14882_2020}
+ ; International Organization for Standardization (Veranst.):
+\newblock \emph{ISO/IEC 14882:2020(E): Programming Languages --- C++}.
+\newblock Geneva, Switzerland, 2020
+
 \bibitem[Kou23]{koubaa2023}
 \textsc{Koubaa}, Anis:
 \newblock \emph{Robot Operating System (ROS) The Complete Reference}.
@@ -252,6 +287,21 @@
 \newblock
   \url{https://github.com/micro-ROS/micro_ros_stm32cubemx_utils/issues/139},
   2024. --
+\newblock Zugriff: 21. März 2025
+
+\bibitem[Mau25]{microROS_STM32CubeMX_Issue139_code}
+\textsc{Maubeuge}, Nicolas de:
+\newblock \emph{Comment to issue \#139: Cache Coherency Problems in STM32CubeMX
+  Integration}.
+\newblock
+  \url{https://github.com/micro-ROS/micro_ros_stm32cubemx_utils/issues/139#issuecomment-2710543256},
+  2025. --
+\newblock Zugriff: 21. März 2025
+
+\bibitem[Plo16]{StackOverflow_DWT_Activation}
+\textsc{Plouch}, Howard:
+\newblock \emph{Activation of DWT on Cortex-M7}.
+\newblock \url{https://stackoverflow.com/a/37345912}, 2016. --
 \newblock Zugriff: 21. März 2025
 
 \bibitem[Sch19]{stm32_memory_sections}
@@ -324,9 +374,12 @@
 \newblock Zugriff: 16. März 2025
 
 \bibitem[Str24]{CppCon2024LockFreeQueue}
-\textsc{Strauss]}, [Erez:
-\newblock User API \& C++ Implementation of a Multi Producer, Multi Consumer,
-  Lock Free, Atomic Queue, 2024. --
+\textsc{Strauss}, Erez:
+\newblock \emph{User API \& C++ Implementation of a Multi Producer, Multi
+  Consumer, Lock Free, Atomic Queue}.
+\newblock CppCon.
+\newblock \url{https://youtu.be/bjz_bMNNWRk?t=2130}.
+\newblock \,Version:\,2024. --
 \newblock Zugriff: 27. März 2025
 
 \bibitem[Wika]{wikipedia_priority_inheritance}

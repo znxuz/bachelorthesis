@@ -435,17 +435,19 @@ effektiv erwies, um das Problem zu beheben \cite{microROS_STM32CubeMX_Issue139}.
      {
        Txbuffer[i-1].next = &Txbuffer[i];
 \end{minted}
-    \captionof{listing}{Modifizierung des ST-Treiber-Quellcode in Diffansicht}
+    \captionof{listing}{Modifizierung des ST-Treiber-Quellcode in Diffansicht
+    \cite{microROS_STM32CubeMX_Issue139_code}}
+    \label{code:cache_clean}
 \end{code}
 
 Die Lösung ist in Bezug auf den Codeumfang recht simple: Für jede Übertragung
 muss nur der Cache für die Payload jedes Paketpuffers (\mintinline{cpp}|pbuf|)
 in \mintinline{cpp}|low_level_output()| mittels den Funktionsaufruf
-\mintinline{cpp}|SCB_CleanDCache_by_Addr()| geleert werden, um einen sogenannten
-Cache-Writeback auszulösen (\ref{sec:cache_clean}), so dass die Änderungen
-tatsächlich in den Speicher geschrieben und somit auch beim DMA-Controller
-korrekt widergespiegelt werden. Diese Lösung ist ebenfalls in einem Beitrag aus
-dem Jahr 2018 im ST-Forum dokumentiert \cite{ST_Forum_Post_2018}.
+\mintinline{cpp}|SCB_CleanDCache_by_Addr()| geleert werden
+(\ref{sec:cache_clean}), so dass die Änderungen tatsächlich in den Speicher
+geschrieben und somit auch beim DMA-Controller korrekt widergespiegelt werden.
+Diese Lösung ist ebenfalls in einem Beitrag aus dem Jahr 2018 im ST-Forum
+dokumentiert \cite{ST_Forum_Post_2018}.
 
 Da die Größe jeder Cacheline auf allen Cortex-M7-Prozessoren 32 Byte beträgt
 ~\cite[S. 4]{an4839} und bei jedem Caching die gesamte Cacheline gefüllt wird,
