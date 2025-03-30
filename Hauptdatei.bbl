@@ -11,8 +11,8 @@
 \textsc{Almgren}, Sven:
 \newblock \emph{STM32H7 LwIP Cache Bug Fix}.
 \newblock
-  \url{https://community.st.com/t5/stm32-mcus-embedded-software/stm32h7-lwip-cache-bug-fix/m-p/383712},
-  . --
+  \url{https://community.st.com/t5/stm32-mcus-embedded-software/stm32h7-lwip-cache-bug-fix/m-p/383712}.
+  --
 \newblock Zugriff: 21. März 2025
 
 \bibitem[{ARM}a]{ARMv7_ref_man_dwt_profiling}
@@ -95,15 +95,15 @@
 \textsc{CMSIS}:
 \newblock \emph{CMSIS Core Cache Functions}.
 \newblock
-  \url{https://docs.contiki-ng.org/en/release-v4.5/_api/group__CMSIS__Core__CacheFunctions.html#ga696fadbf7b9cc71dad42fab61873a40d},
-  2023. --
+  \url{https://docs.contiki-ng.org/en/release-v4.5/_api/group__CMSIS__Core__CacheFunctions.html#ga696fadbf7b9cc71dad42fab61873a40d}.
+\newblock \,Version:\,2023. --
 \newblock Zugriff: 21. März 2025
 
 \bibitem[cpp23]{cppreference_constexpr_if}
 \textsc{cppreference.com}:
 \newblock \emph{if statement - constexpr if}.
-\newblock \url{https://en.cppreference.com/w/cpp/language/if#Constexpr_if},
-  2023. --
+\newblock \url{https://en.cppreference.com/w/cpp/language/if#Constexpr_if}.
+\newblock \,Version:\,2023. --
 \newblock Zugriff: 29. März 2025
 
 \bibitem[Emb]{embeddedexpert_cache}
@@ -116,16 +116,16 @@
 \bibitem[Fou25]{isocpp_dtor_order}
 \textsc{Foundation}, ISO~C.:
 \newblock \emph{FAQ: Destructor Order for Locals}.
-\newblock \url{https://isocpp.org/wiki/faq/dtors#order-dtors-for-locals}, 2025.
-  --
+\newblock \url{https://isocpp.org/wiki/faq/dtors#order-dtors-for-locals}.
+\newblock \,Version:\,2025. --
 \newblock Zugriff: 29. März 2025
 
 \bibitem[Frea]{freertos_task_c_410}
 \textsc{FreeRTOS}:
 \newblock \emph{FreeRTOS Source Code}.
 \newblock
-  \url{https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/tasks.c#L410},
-  . --
+  \url{https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/tasks.c#L410}.
+  --
 \newblock Zugriff: 29. März 2025
 
 \bibitem[Freb]{FreertosForumSemphMtx}
@@ -243,8 +243,8 @@
 \textsc{FreeRTOS}:
 \newblock \emph{Run-time Statistics}.
 \newblock
-  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/08-Run-time-statistics#description},
-  2025. --
+  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/08-Run-time-statistics#description}.
+\newblock \,Version:\,2025. --
 \newblock Zugriff: 28. März 2025
 
 \bibitem[HAL]{HAL_UART_Transmit_DMA}
@@ -258,8 +258,8 @@
 \bibitem[hot23]{STM32H7_LwIP_Examples}
 \textsc{hotspot} stm32:
 \newblock \emph{STM32H7-LwIP-Examples}.
-\newblock \url{https://github.com/stm32-hotspot/STM32H7-LwIP-Examples}, 2023.
-  --
+\newblock \url{https://github.com/stm32-hotspot/STM32H7-LwIP-Examples}.
+\newblock \,Version:\,2023. --
 \newblock Zugriff: 21. März 2025
 
 \bibitem[iso20]{iso_iec_14882_2020}
@@ -285,8 +285,8 @@
 \newblock \emph{Issue \#139: Cache Coherency Problems in STM32CubeMX
   Integration}.
 \newblock
-  \url{https://github.com/micro-ROS/micro_ros_stm32cubemx_utils/issues/139},
-  2024. --
+  \url{https://github.com/micro-ROS/micro_ros_stm32cubemx_utils/issues/139}.
+\newblock \,Version:\,2024. --
 \newblock Zugriff: 21. März 2025
 
 \bibitem[Mau25]{microROS_STM32CubeMX_Issue139_code}
@@ -294,14 +294,15 @@
 \newblock \emph{Comment to issue \#139: Cache Coherency Problems in STM32CubeMX
   Integration}.
 \newblock
-  \url{https://github.com/micro-ROS/micro_ros_stm32cubemx_utils/issues/139#issuecomment-2710543256},
-  2025. --
+  \url{https://github.com/micro-ROS/micro_ros_stm32cubemx_utils/issues/139#issuecomment-2710543256}.
+\newblock \,Version:\,2025. --
 \newblock Zugriff: 21. März 2025
 
 \bibitem[Plo16]{StackOverflow_DWT_Activation}
 \textsc{Plouch}, Howard:
 \newblock \emph{Activation of DWT on Cortex-M7}.
-\newblock \url{https://stackoverflow.com/a/37345912}, 2016. --
+\newblock \url{https://stackoverflow.com/a/37345912}.
+\newblock \,Version:\,2016. --
 \newblock Zugriff: 21. März 2025
 
 \bibitem[Sch19]{stm32_memory_sections}
@@ -401,7 +402,13 @@
 \newblock \,Version:\,2024. --
 \newblock Zugriff: 19. März 2025
 
-\bibitem[Xu25]{mecarover_freertos_profiling}
+\bibitem[Xu25a]{freertos_threadsafe_sink}
+\textsc{Xu}, Zijian:
+\newblock \emph{freertos-threadsafe-sink}.
+\newblock \url{https://github.com/znxuz/freertos-threadsafe-sink}.
+\newblock \,Version:\,2025
+
+\bibitem[Xu25b]{mecarover_freertos_profiling}
 \textsc{Xu}, Zijian:
 \newblock \emph{Mecarover - FreeRTOS Profiling Branch}.
 \newblock \url{https://github.com/zijian-x/mecarover/tree/freertos-profiling}.

@@ -56,16 +56,14 @@ inline constexpr std::size_t VEL2D_FRAME_LEN = sizeof(Vel2dFrame);
     \captionof{listing}{Definition der Data-Frame für die Sollgeschwindigkeit}
 \end{code}
 
-Für die Übertragung über UART kann die Setup-Funktion \linebreak
+Für die Übertragung über UART kann die Funktion
 \mintinline{cpp}|HAL_UARTEx_ReceiveToIdle_IT()| aus der STM32-HAL-Bibliothek
-verwendet werden, um die serialisierten Bytes eines Data-Frames zu empfangen.
-Sie nimmt das UART-Handle, die Adresse eines Datenpuffers und dessen Größe
-entgegen und empfängt die eingehenden Daten über Interrupts in diesen vorab
-zugewiesenen Puffer.
+verwendet werden, um die serialisierten Bytes eines Data-Frames in den
+vorallokierten Puffer zu empfangen.
 
 Dies ist gepaart mit einer Interrupt-Callback
 \mintinline{cpp}|HAL_UARTEx_RxEventCallback()|, die entweder ausgelöst wird,
-wenn - wie der Name der UART-Setup-Funktion bereits andeutet - die UART-Leitung
+wenn - wie der Name der UART-Funktion bereits andeutet - die UART-Leitung
 feststellt, dass die Übertragung für eine bestimmte Zeit (abhängig von der
 Baudrate) inaktiv war, oder wenn der Puffer für die Übertragung voll ist, was
 darauf hinweist, dass der gesamte Inhalt des Puffers verarbeitet werden kann
@@ -284,7 +282,7 @@ extern QueueHandle_t vel_sp_queue;
 extern QueueHandle_t odom_queue;
 extern QueueHandle_t vel_wheel_queue;
 \end{minted}
-    \captionof{listing}{Queue-Objekte in FreeRTOS}
+    \captionof{listing}{Deklaration der Queue-Objekte in der Header-Datei}
 \end{code}
 
 Die grundlegende Implementierung der jeweiligen Steuerungstasks bleibt
@@ -312,12 +310,12 @@ verbessern, besteht darin, die Erstellung der FreeRTOS-Objekte statisch
 durchzuführen \cite{freertos_memory_management}.
 
 Um diese zu realisieren, wird im Makefile ein Makro
-\mintinline{text}|-DFREERTOS_STATIC_INIT| definiert, das zur Übersetzungszeit
-festlegt, ob die Objekte dynamisch innerhalb der FreeRTOS-API oder statisch mit
-benutzerdefinierten Speicherorten zugewiesen werden sollen.
+\mintinline{text}|-DFREERTOS_STATIC_INIT| definiert, womit zur Übersetzungszeit
+entschieden wird, ob die Objekte dynamisch von der FreeRTOS-API oder statisch
+mit vorallokierten Speicherorten zugewiesen werden sollen.
 
-Für eine Task, der dynamisch allokiert wird, ist der Funktionsaufruf so einfach
-wie der folgende:
+Für eine Task, die dynamisch allokiert wird, ist die Initialisierung so einfach
+wie die folgende:
 
 \begin{code}
 \begin{minted}{cpp}
@@ -327,9 +325,9 @@ xTaskCreate(task_impl, "hal_fetch", STACK_SIZE,
     \captionof{listing}{Dynamische Allokation eines FreeRTOS-Tasks}
 \end{code}
 
-Wenn eine Task statisch allokiert werden soll, muss der Benutzer manuell jeweils
-einen Speicherpuffer für den Task-Stack und für die Task selbst deklarieren und
-an die API übergeben.
+Wenn eine Task statisch erzeugt werden soll, muss der Benutzer manuell sowohl
+einen Speicherpuffer für den Task-Stack, als auch für die Task-Struktur selbst
+allokieren und an die API übergeben.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -342,7 +340,7 @@ task_handle = xTaskCreateStatic(
     \captionof{listing}{Statische Allokation eines FreeRTOS-Tasks}
 \end{code}
 
-Analog dazu muss der Benutzer für die statische Allokation einer Queue auch
+Analog dazu muss der Benutzer für eine statische Erzeugung einer Queue auch
 jeweils einen Speicherpuffer mit der maximalen Kapazität für die Queue und die
 Queue-Struktur selbst deklarieren:
 
@@ -358,8 +356,8 @@ Queue-Struktur selbst deklarieren:
 \end{code}
 
 Damit schließt der Abschnitt zur Umstellung auf FreeRTOS. Der Code für die
-MCU-Software sowie für den ROS2-Node auf dem Host ist im
-Repository~\cite{mecarover_freertos_profiling} verfügbar.
+MCU-Software und für den ROS2-Node auf dem Host befindet sich im
+Repository~\cite{mecarover_freertos_profiling}.
 
 \subsection{Aktivierung von Instruktionscache}
 
@@ -423,12 +421,12 @@ effektiv erwies, um das Problem zu beheben \cite{microROS_STM32CubeMX_Issue139}.
 +#define FLUSH_CACHE_BY_ADDR(addr, size) \
 +  SCB_CleanDCache_by_Addr((uint32_t *)ALIGN_ADDR(addr), ALIGN_SIZE(addr, size))
  /* USER CODE END 1 */
- 
+
  /* Private variables ---------------------------------------------------------*/
 @@ -404,6 +408,8 @@
      Txbuffer[i].buffer = q->payload;
      Txbuffer[i].len = q->len;
- 
+
 +    FLUSH_CACHE_BY_ADDR(Txbuffer[i].buffer, Txbuffer[i].len);
 +
      if(i>0)

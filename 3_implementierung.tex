@@ -337,7 +337,10 @@ Bitrate sowie der prozentuale Anteil im Vergleich zur maximalen Baudrate:
     \quad \Rightarrow 77,44\,\% \text{ des Maximums}
 \end{align*}
 
-\subsection{Implementierung der Messung}
+Der Code zur Implementierung der Senke befindet sich in dem
+Repository~\cite{freertos_threadsafe_sink}.
+
+\subsection{Implementierung des Messverfahrens}
 
 Nachdem die threadsichere Datenausgabe implementiert wurde, kann nun die Frage
 geklärt werden, wie die Dauer eines beliebigen Funktionsaufrufs oder einer Task
@@ -365,46 +368,47 @@ void enable_dwt() {
 Danach kann die aktuelle Zyklenzahl direkt über \mintinline{cpp}|DWT->CYCCNT|
 ausgelesen werden.
 
-\subsection{Aufzeichnung von Task-Informationen}
+\subsection{Aufzeichnung von Zyklenstempeln}
 
-Drei wesentliche Informationen werden bei der Aufzeichnung von
-Task-Informationen erfasst: der Identifikator der zugehörigen Task oder
-Funktion, der aktuelle Zyklenzahl und ein Marker, der angibt, ob der Zeitstempel
-den Beginn oder das Ende einer Taskdauer markiert. Diese Daten werden in einem
-Strukturtyp gespeichert.
+Drei wesentliche Informationen werden bei der Aufzeichnung von Zyklenstempeln
+erfasst: der Identifikator der zugehörigen Task oder Funktion, der aktuelle
+Zyklenzahl und ein Marker, der angibt, ob der Zyklenstempel den Beginn oder das
+Ende einer Dauer markiert. Diese Daten werden in einem Strukturtyp gespeichert.
 
 \begin{code}
 \begin{minted}{cpp}
-struct TaskRecord {
+struct cycle_stamp {
   const char* name;
   uint32_t cycle;
   bool is_begin;
 } __attribute__((packed));
 \end{minted}
-    \captionof{listing}{Strukturtyp zur Task-Aufzeichnung}
+    \captionof{listing}{Definition des Zyklenstempels}
 \end{code}
 
-Da das Schreiben in die Senke per se nicht „lock-free” ist, kann es nicht direkt
-in einer ISR zur Generierung von solchen task-Datensätzen aufgerufen werden.
-Stattdessen müssen die Aufzeichnungsdaten erst in einen temporären Puffer
+Da das Schreiben in die Senke per se nicht „lock-free“ ist, kann es nicht direkt
+in einer ISR zur Generierung und zugleich zur Übertragung solcher Zyklenstempel
+aufgerufen werden. Stattdessen müssen die Daten erst in einen temporären Puffer
 reingeschrieben werden.
 
 \begin{code}
 \begin{minted}{cpp}
-inline std::array<TaskRecord, 512> records{};
-volatile inline size_t record_idx = 0;
-volatile inline bool task_profiling_enabled = 0;
+inline constexpr size_t STAMP_BUF_SIZE = 512;
+
+inline std::array<cycle_stamp, STAMP_BUF_SIZE> stamps{};
+volatile inline size_t stamp_idx = 0;
+volatile inline bool stamping_enabled = 0;
 \end{minted}
-    \captionof{listing}{Globaler Temporärbuffer mit dessen Schreibindex und
+    \captionof{listing}{Globaler Temporärpuffer mit dessen Schreibindex und
     Aktivierungsflag}
 \end{code}
 
-Eine Funktion zur Aufzeichnung von Task-Datensätzen ist wie folgt definiert:
+Eine Funktion zur Aufzeichnung von Zyklenstempeln ist wie folgt definiert:
 
 \begin{code}
 \begin{minted}{cpp}
 template <bool from_isr>
-inline void record(const char* name, bool is_begin) {
+inline void stamp(const char* name, bool is_begin) {
   struct disable_isr_guard {
     disable_isr_guard() { taskENTER_CRITICAL(); }
     ~disable_isr_guard() { taskEXIT_CRITICAL(); }
@@ -412,24 +416,22 @@ inline void record(const char* name, bool is_begin) {
 
   if constexpr (!from_isr) volatile auto _ = disable_isr_guard();
 
-  records[record_idx] = {name, DWT->CYCCNT, is_begin};
-  record_idx = (record_idx + 1) % records.size();
+  stamps[stamp_idx] = {name, DWT->CYCCNT, is_begin};
+  stamp_idx = (stamp_idx + 1) % stamps.size();
 }
 \end{minted}
-    \captionof{listing}{Funktionsdefinition zur Aufzeichnung von
-    Task-Datensätzen}
+    \captionof{listing}{Funktion zur Aufzeichnung von Zyklenstempeln}
 \end{code}
 
 Innerhalb der Funktion ist die Definition eines Typs \mintinline{cpp}|struct
 disable_isr_guard| zu finden, welcher dafür sorgt, dass diese Funktion, wenn
-auch von einem nicht-ISR-Kontext aufgerufen wird, die Aufzeichnung
-beziehungsweise den gesamten Funktionsblock als ein kritischer Abschnitt
-ausführt.
+auch von einem nicht-ISR-Kontext aufgerufen wird, den gesamten Funktionsblock
+beziehungsweise die Aufzeichnung als ein kritischer Abschnitt ausführt.
 
 Das Konzept von \ac{RAII} wird hierbei angewendet, um beim Konstruieren eines
 Objekts von diesem Typ automatisch die Funktion
 \mintinline{cpp}|taskENTER_CRITICAL()| sowie bei dessen Dekonstruktion – beim
-Verlassen der Funktion \mintinline{cpp}|record()| –
+Verlassen der Funktion \mintinline{cpp}|stamp()| –
 \mintinline{cpp}|taskEXIT_CRITICAL()| aufzurufen und dadurch einen kritischen
 Abschnitt bilden. Laut des ISO-C++-Standards wird der Aufruf von Destruktoren
 mit „Side Effects” nicht durch Optimierung eliminiert, und erfolgt garantiert am
@@ -438,12 +440,12 @@ in der umgekehrten Reihenfolge, wie die Objekte kreiert worden sind
 \cite{isocpp_dtor_order}.
 
 Mit einem kritischen Abschnitt kann somit sichergestellt werden, dass zwischen
-der Lesezugriff auf den Schreibindex \mintinline{cpp}|record_idx| und dessen
+der Lesezugriff auf den Schreibindex \mintinline{cpp}|stamp_idx| und dessen
 Inkrementierung nicht durch Kontextwelchsel unterbrochen wird, so dass die
 geschriebene Daten nicht unmittelbar vor der Inkrementierung des Schreibindexes
 von anderen Threads überschrieben werden.
 
-Mittels einer booleschen Variable als Template-Argument, gepaart mit
+Mittels einer booleschen Variable als Template-Argument, kombiniert mit
 \mintinline{cpp}|if constexpr|, kann zur Übersetzungszeit festgelegt werden, ob
 das Objekt erzeugt oder weggelassen werden soll. Konkret werden dabei zwei
 unterschiedliche Versionen dieser Funktion durch den Compiler generiert, wodurch
@@ -452,7 +454,46 @@ das Branching zur Laufzeit vollständig eliminiert wird
 ist, wird die entsprechende Version mit oder ohne die Erzeugung des Objekts für
 den kritischen Abschnitt aufgerufen.
 
-\subsubsection{Nutzung von Trace Hooks zur Task-Aufzeichnung}
+\subsubsection{Aufzeichnung in Anwendungscode}
+
+Auch hier kann erneut auf die RAII zurückgegriffen werden, da sie es ermöglicht,
+Code automatisch zu Beginn und am Ende eines beliebigen, kontinuierlichen
+Abschnitts im Anwendungscode auszuführen.
+
+\begin{code}
+\begin{minted}{cpp}
+struct cycle_stamp_raii {
+  cycle_stamp_raii(const char* name) : name{name} {
+    if (stamping_enabled) stamp<false>(name, true);
+  }
+  ~cycle_stamp_raii() {
+    if (stamping_enabled) stamp<false>(name, false);
+  }
+
+  const char* name;
+};
+\end{minted}
+    \captionof{listing}{Definition des Strukturtyps zur manuellen Aufzeichnung}
+\end{code}
+
+Um die Dauer einer Funktion zu messen, kann einfach ein Objekt dieses Typs zu
+Beginn der Funktion definiert werden; dasselbe gilt auch für einen spezifischen
+Code-Abschnitt.
+
+\begin{code}
+\begin{minted}{cpp}
+void func()
+{ // --> stamped at the start of this function
+  volatile cycle_stamp_raii _{"func"};
+  { // --> stamped at the start of this code block
+    volatile cycle_stamp_raii _{"code block"};
+  } // --> stamped when this block ends
+} // --> stamped when this function goes out of scope
+\end{minted}
+    \captionof{listing}{Beispielnutzung des RAII-Strukturtyps}
+\end{code}
+
+\subsubsection{Aufzeichnung beim Scheduling}
 
 FreeRTOS bietet eine Vielzahl von Makros, die beim Scheduling als ISR-Callbacks
 aufgerufen werden können (\ref{sec:trace_hooks}). Das Makro
@@ -479,13 +520,15 @@ void task_switched_out_isr(const char* name); // forward declaration
 \end{code}
 
 Hierbei werden die Makros jeweils als ein Aufruf einer Funktion mit dem Namen
-der aktuellen Task als Argument definiert. Das Feld
-\mintinline{cpp}|uxTaskNumber| vom Typ \mintinline{cpp}|unsigned long| aus der
-\mintinline{cpp}|pxCurrentTCB|-Struktur, das eigentlich speziell zum
-Identifizieren für Drittanbieter-Software konzipiert
+der aktuellen Task \mintinline{cpp}|pcTaskName| als Argument definiert. Das
+andere Feld \mintinline{cpp}|uxTaskNumber| vom Typ \mintinline{cpp}|unsigned
+long| aus dem \mintinline{cpp}|pxCurrentTCB|-Objekt, das eigentlich speziell zur
+Task-Identifizierung für Drittanbieter-Softwares konzipiert
 ist~\cite{freertos_task_c_410}, kann in dem Falle auch als möglicherweise der
 leichtgewichtigste Identifikator genutzt werden. Da das Ausgeben des
-menschenlesbaren Namens kein Bottleneck verursacht und man in der
-Nachbearbeitung nicht jede generierte Task-Aufzeichnung manuell mit der
-zugehörigen Task abgleichen muss, wird einfachheitshalber auf den Namen
-entschieden.
+menschenlesbaren Namens kein Bottleneck bei der IO-Übertragung verursacht und
+man in der Nachbearbeitung nicht jeden generierten Zyklenstempel manuell mit der
+zugehörigen Task- oder Funktionsname abgleichen muss, wird hier
+einfachheitshalber auf den Namen entschieden.
+
+% TODO
