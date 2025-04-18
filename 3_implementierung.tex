@@ -2,12 +2,12 @@
 
 Nachdem die Steuerungssoftware auf zwei verschiedenen Architekturen, nämlich
 FreeRTOS und Micro-ROS, aufgebaut wurde, kann nun eine konkrete Implementierung
-der Echtzeitanalyse basierend auf FreeRTOS erfolgen, um die Portabilität auf
-Micro-ROS zu ermöglichen. Ziel der Analyse ist es, Informationen darüber zu
-gewinnen, wie lange eine bestimmte Task oder eine bestimmte zeitkritische
-Funktion benötigt. Die daraus resultierenden Daten müssen mit einer angemessenen
-Genauigkeit erfasst werden, um sicherzustellen, dass die Echtzeitaspekte korrekt
-widergespiegelt werden.
+einer Methode zur Analyse der Echtzeitfähigkeit basierend auf FreeRTOS erfolgen,
+um die Portabilität auf Micro-ROS zu ermöglichen. Ziel der Analyse ist es,
+Informationen darüber zu gewinnen, wie lange eine bestimmte Task oder eine
+bestimmte zeitkritische Funktion benötigt. Die daraus resultierenden Daten
+müssen mit einer angemessenen Genauigkeit erfasst werden, um sicherzustellen,
+dass die Echtzeitaspekte korrekt widergespiegelt werden.
 
 Aufgrund von Hardwarebeschränkungen sowie Einfachheit wurde UART als
 Kommunikationsschnittstelle zur Übertragung der Echtzeitdaten vom
@@ -302,9 +302,9 @@ Abschluss, was praktisch auch der Zeit der letzten Benchmarktask entspricht.
 
 Die zweite Messung bezieht sich auf die FreeRTOS-Laufzeitstatistiken, die durch
 \linebreak \mintinline{cpp}|vTaskGetRunTimeStats()| formattiert ausgegeben
-werden. Diese liefern die absolute kumulative Zeit für jede Task, die im Zustand
-„Running” verbracht hat, sowie deren prozentualen Anteil an der Gesamtlaufzeit
-\cite{freertos_runtime_stats}.
+werden. Diese liefern die absolute akkumulierte Zeit für jede Task, die im
+Zustand „Running” verbracht hat, sowie deren prozentualen Anteil an der
+Gesamtlaufzeit \cite{freertos_runtime_stats}.
 
 Der Benchmark zeigt, dass asynchrone Übertragung per DMA die Gesamtlaufzeit des
 Benchmark-Prozesses im Vergleich zur IO-gebundenen Variante um etwa $20\,\%$
@@ -386,10 +386,12 @@ struct cycle_stamp {
     \captionof{listing}{Definition des Zyklenstempels}
 \end{code}
 
+% TODO packed for smaller memory foot print in exchange for lesser performance
+
 Da das Schreiben in die Senke per se nicht „lock-free“ ist, kann es nicht direkt
-in einer ISR zur Generierung und zugleich zur Übertragung solcher Zyklenstempel
-aufgerufen werden. Stattdessen müssen die Daten erst in einen temporären Puffer
-reingeschrieben werden.
+in einer ISR bei der Erstellung eines Zyklenstempels aufgerufen werden.
+Stattdessen müssen die Daten erst in einen temporären Puffer reingeschrieben
+werden.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -403,7 +405,7 @@ volatile inline bool stamping_enabled = 0;
     Aktivierungsflag}
 \end{code}
 
-Eine Funktion zur Aufzeichnung von Zyklenstempeln ist wie folgt definiert:
+Die Funktion zur Aufzeichnung eines Zyklenstempels ist wie folgt definiert:
 
 \begin{code}
 \begin{minted}{cpp}
@@ -434,14 +436,19 @@ Objekts von diesem Typ automatisch die Funktion
 Verlassen der Funktion \mintinline{cpp}|stamp()| –
 \mintinline{cpp}|taskEXIT_CRITICAL()| aufzurufen und dadurch einen kritischen
 Abschnitt bilden. Laut des ISO-C++-Standards wird der Aufruf von Destruktoren
-mit „Side Effects” nicht durch Optimierung eliminiert, und erfolgt garantiert am
-Ende eines Funktionsblocks~\cite[§ 6.7.5.4 Abs. 3]{iso_iec_14882_2020}, und zwar
-in der umgekehrten Reihenfolge, wie die Objekte kreiert worden sind
+mit „Side Effects”\footnotemark{} nicht durch Optimierung eliminiert und erfolgt
+garantiert am Ende des Ausführungsblocks, selbst wenn das Objekt nicht genutzt
+zu sein scheint~\cite[§6.7.5.4 Abs. 3]{iso_iec_14882_2020}, und zwar in der
+umgekehrten Reihenfolge, wie die Objekte kreiert worden sind
 \cite{isocpp_dtor_order}.
+
+\footnotetext{Zu „Side Effects” zählen unter anderem Lese- oder Schreibzugriffe
+auf ein Objekt, das als \mintinline{cpp}|volatile| gekennzeichnet ist, sowie
+Modifikationen eines Objekts.~\cite{cppreference_eval_order}}
 
 Mit einem kritischen Abschnitt kann somit sichergestellt werden, dass zwischen
 der Lesezugriff auf den Schreibindex \mintinline{cpp}|stamp_idx| und dessen
-Inkrementierung nicht durch Kontextwelchsel unterbrochen wird, so dass die
+Inkrementierung nicht durch Kontextwechsel unterbrochen wird, so dass die
 geschriebene Daten nicht unmittelbar vor der Inkrementierung des Schreibindexes
 von anderen Threads überschrieben werden.
 
@@ -493,10 +500,12 @@ void func()
     \captionof{listing}{Beispielnutzung des RAII-Strukturtyps}
 \end{code}
 
-\subsubsection{Aufzeichnung beim Scheduling}
+\subsubsection{Aufzeichnung beim Kontextwechsel}
 
-FreeRTOS bietet eine Vielzahl von Makros, die beim Scheduling als ISR-Callbacks
-aufgerufen werden können (\ref{sec:trace_hooks}). Das Makro
+FreeRTOS bietet eine Vielzahl von Makros, die beim Kontextwechsel, genauer
+gesagt zu Beginn und Abschluss jedes Zeitabschnitts (engl. Time Slice) der
+aktuell laufenden Task, als ISR-Callbacks aufgerufen werden
+können.(\ref{sec:trace_hooks}). Das Makro
 \mintinline{cpp}|traceTASK_SWITCHED_IN()| wird aufgerufen, nachdem eine Task zum
 Ausführen ausgewählt wurde. \mintinline{cpp}|traceTASK_SWITCHED_OUT()| wird
 aufgerufen, unmittelbar bevor eine neue Task ausgewählt wird. An diesen
@@ -511,24 +520,51 @@ am Ende der \mintinline{text}|FreeRTOSConfig.h| definiert werden.
 
 \begin{code}
 \begin{minted}{cpp}
-void task_switched_in_isr(const char* name); // forward declaration
-#define traceTASK_SWITCHED_IN() task_switched_in_isr(pxCurrentTCB->pcTaskName)
-void task_switched_out_isr(const char* name); // forward declaration
-#define traceTASK_SWITCHED_OUT() task_switched_out_isr(pxCurrentTCB->pcTaskName)
+void task_switched_isr(const char* name, uint8_t start);
+#define traceTASK_SWITCHED_IN() \
+    task_switched_isr(pxCurrentTCB->pcTaskName, 1)
+#define traceTASK_SWITCHED_OUT() \
+    task_switched_isr(pxCurrentTCB->pcTaskName, 0)
 \end{minted}
     \captionof{listing}{Konkrete Definition der Trace Hook Makros}
 \end{code}
 
-Hierbei werden die Makros jeweils als ein Aufruf einer Funktion mit dem Namen
-der aktuellen Task \mintinline{cpp}|pcTaskName| als Argument definiert. Das
-andere Feld \mintinline{cpp}|uxTaskNumber| vom Typ \mintinline{cpp}|unsigned
-long| aus dem \mintinline{cpp}|pxCurrentTCB|-Objekt, das eigentlich speziell zur
+Hierbei werden die Makros jeweils als ein Aufruf der Funktion
+\mintinline{cpp}|task_switched_isr()| mit dem Namen der aktuellen Task
+\mintinline{cpp}|pcTaskName| sowie einen boolesche Start/End-Marker, definiert
+als \mintinline{cpp}|uint8_t| um das Einbinden von \mintinline{cpp}|<stdbool.h>|
+zu sparen, definiert.
+
+Das Feld \mintinline{cpp}|uxTaskNumber| vom Typ \mintinline{cpp}|unsigned long|
+aus dem \mintinline{cpp}|pxCurrentTCB|-Objekt, das eigentlich speziell zur
 Task-Identifizierung für Drittanbieter-Softwares konzipiert
 ist~\cite{freertos_task_c_410}, kann in dem Falle auch als möglicherweise der
 leichtgewichtigste Identifikator genutzt werden. Da das Ausgeben des
-menschenlesbaren Namens kein Bottleneck bei der IO-Übertragung verursacht und
+menschenlesbaren Namens keinen Bottleneck bei der IO-Übertragung verursacht und
 man in der Nachbearbeitung nicht jeden generierten Zyklenstempel manuell mit der
 zugehörigen Task- oder Funktionsname abgleichen muss, wird hier
 einfachheitshalber auf den Namen entschieden.
 
+\begin{code}
+\begin{minted}{cpp}
+void task_switched_isr(const char* name, uint8_t start) {
+  if (!stamping_enabled) return;
+
+  stamp<true>(name, start);
+  ctx_switch_cnt += 1;
+}
+\end{minted}
+    \captionof{listing}{Funktion zur Zyklenstempelgenerierung beim
+    Kontextwechsel}
+\end{code}
+
+Die Funktion überprüft zunächst, ob die Aufzeichnung beim Kontextwechsel
+durchgeführt werden soll, und ruft anschließend \mintinline{cpp}|record()| auf,
+falls dies der Fall ist. Nebenbei wird ein Zähler inkrementiert, der die
+akkumulierte Anzahl der Kontextwechsel repräsentiert.
+
 % TODO
+
+Mit den Trace Hooks, die zu Beginn und Abschluss jedes Task-Zeitabschnitts
+ausgelöst werden, und dem RAII-Strukturtyp zur manuellen Generierung von
+Zyklenstempeln

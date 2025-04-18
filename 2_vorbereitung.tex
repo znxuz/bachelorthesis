@@ -10,7 +10,7 @@ zu diesen Maßnahmen werden in den folgenden Abschnitten erläutert.
 
 \subsection{Umstellung auf FreeRTOS}
 
-\subsubsection{Geschwindigkeitsempfang über UART auf Mikrocontroller}
+\subsubsection{Empfang von Sollgeschwindigkeiten}
 
 In der bisherigen Implementierung wurde der Geschwindigkeitssollwert vom Host
 über ROS2 von dem Micro-ROS-Agent an den Client auf den MCU übertragen. Um die
@@ -144,7 +144,7 @@ dabei nur 1,6\% der Taktzyklen im Vergleich zur Softwareberechnung \cite[S.
     \captionof{listing}{FreeRTOS-Task Dauerschleife}
 \end{code}
 
-\subsubsection{Geschwindigkeitsübertragung über UART auf Host}
+\subsubsection{Übertragung von Sollgeschwindigkeiten}
 
 Um den vom Benutzer festzulegenden Geschwindigkeitssollwert für den mobilen
 Roboter zu übertragen, ist dem MCU-Board, auf dem die Steuerungssoftware läuft,
@@ -314,13 +314,13 @@ Um diese zu realisieren, wird im Makefile ein Makro
 entschieden wird, ob die Objekte dynamisch von der FreeRTOS-API oder statisch
 mit vorallokierten Speicherorten zugewiesen werden sollen.
 
-Für eine Task, die dynamisch allokiert wird, ist die Initialisierung so einfach
-wie die folgende:
+Für eine Task, deren Speicher dynamisch von FreeRTOS allokiert wird, ist die
+Initialisierung wie folgt:
 
 \begin{code}
 \begin{minted}{cpp}
-xTaskCreate(task_impl, "hal_fetch", STACK_SIZE,
-            NULL, osPriorityNormal, &task_handle);
+xTaskCreate(task_impl, "hal_fetch", STACK_SIZE, NULL, osPriorityNormal,
+            &task_handle);
 \end{minted}
     \captionof{listing}{Dynamische Allokation eines FreeRTOS-Tasks}
 \end{code}
@@ -385,17 +385,18 @@ sie nicht gecacht werden \cite{STM32H7_LwIP_Examples}.
     \caption{MPU-Konfiguration aus STM32CubeMX}
 \end{figure}
 
-Hierbei werden die Anfangsadressen sowie die Größe der RX- und TX-Deskriptoren
-und des LwIP-Heaps aus CubeMX entnommen. Wichtig ist es, die Zugriffsrechte
-(Access Permission) korrekt zu konfigurieren und sicherzustellen, dass der Cache
-(Cacheable Permission) deaktiviert ist.
+Hierbei sind die Anfangsadressen sowie die Größe der RX- und TX-Deskriptoren
+und des LwIP-Heaps aus CubeMX-Standardkonfigurationen entnommen.
+% Wichtig ist es,
+% die Zugriffsrechte (Access Permission) korrekt zu konfigurieren und
+% sicherzustellen, dass der Cache (Cacheable Permission) deaktiviert ist.
 
 Obwohl die MPU konfiguriert wurde, um die Speicherbereiche für LwIP und die
 Ethernet-Deskriptoren als nicht-cachebar zu markieren, tritt dennoch ein Fehler
 auf, sobald die Verbindung zum Micro-ROS-Agent auf dem Host hergestellt wird.
 Der Fehler (\ref{fig:micro_ros_err}), der in den Debugausgaben des
 Micro-ROS-Agents sichtbar ist, deutet darauf hin, dass auf der Low-Level-Ebene
-bei der Übertragung der Daten über UDP weiterhin Probleme mit der Cache-Kohärenz
+bei der Übertragung der Daten über UDP weiterhin Probleme mit Kohärenz von Cache
 auftreten. Insbesondere scheint das \mintinline{text}|client_key| oder die
 assoziierten Daten nicht korrekt gecacht zu werden.
 
@@ -447,20 +448,18 @@ geschrieben und somit auch beim DMA-Controller korrekt widergespiegelt werden.
 Diese Lösung ist ebenfalls in einem Beitrag aus dem Jahr 2018 im ST-Forum
 dokumentiert \cite{ST_Forum_Post_2018}.
 
-Da die Größe jeder Cacheline auf allen Cortex-M7-Prozessoren 32 Byte beträgt
+Da die Größe der Cachelines auf allen Cortex-M7-Prozessoren 32 Byte beträgt
 ~\cite[S. 4]{an4839} und bei jedem Caching die gesamte Cacheline gefüllt wird,
-selbst wenn die Daten weniger als 32 Byte umfassen, muss die angegebene Adresse
-der Daten, deren Cache geleert werden soll, durch eine bitweise AND-Operation
-mit \mintinline{text}|~0x1F| auf eine 32-Byte-Grenze ausgerichtet
+muss die übergebene Speicheradresse als Parameter durch eine bitweise
+AND-Operation mit \mintinline{text}|~0x1F| auf eine 32-Byte-Grenze ausgerichtet
 werden~\cite{CMSIS_Core_CacheFunctions}. Nach der Anpassung der Adresse für die
-32-Byte-Ausrichtung muss auch die Größe entsprechend ergänzt werden, um die
-fehlenden Bytes nach der Ausrichtung zu berücksichtigen.
+32-Byte-Ausrichtung muss die Größe dementsprechend wieder ergänzt werden, um die
+ausgegrenzten Bytes nach der Ausrichtung wieder zu berücksichtigen.
 
 Hierbei ist zu beachten, dass ein Teil der Modifizierung direkt im generierten
 ST-Treiber-Quellcode vorgenommen wird, der bei jeder Neugenerierung
 überschrieben wird. In der Funktion \mintinline{cpp}|low_level_output()| ist
 kein durch ST bereitgestellter User-Code-Guard vorhanden, und ein manuell
 hinzugefügter User-Code-Guard wird ebenfalls überschrieben. Um dieses Problem zu
-umgehen, wurde eine Patch-Datei erstellt, die nach jeder Generierung der
-Konfigurationsdateien auf die Quelldatei \linebreak
-\mintinline{text}|LWIP/Target/ethernetif.c| angewendet werden muss.
+umgehen, wurde eine Patch-Datei erstellt, die nach jeder Neugenerierung der
+Datei \mintinline{text}|LWIP/Target/ethernetif.c| angewendet werden muss.

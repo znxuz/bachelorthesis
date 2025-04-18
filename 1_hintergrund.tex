@@ -109,18 +109,19 @@ Mechanismus zur Task-Synchronisation \cite{freertos_task_notifications_desc}. Im
 Gegensatz zu Semaphoren senden sie direkte Signale an eine Task, ohne die
 zugrunde liegenden Queues zu benötigen, indem sie einfach einen internen Zähler
 einer Task verändern \cite{freertos_tasks_c_308}. Analog zu Semaphoren wird
-mittels Funktionen wie zum Beispiel \mintinline{c}|ulTaskNotifyGive()| dieser
+mittels Funktionen wie zum Beispiel \mintinline{c}|xTaskNotifyGive()| dieser
 Zähler inkrementiert~\cite{freertos_tasks_c_4990}, während Funktionen wie
 \mintinline{c}|ulTaskNotifyTake()| ihn wieder
 dekrementieren~\cite{freertos_tasks_c_4614}. Das Entblocken einer Task mittels
 Direct Task Notifications soll bis zu 45\% schneller sein und benötigt weniger
+%FIXME
 RAM \cite{freertos_task_notifications_usage}.
 
 \paragraph{Trace Hooks} \label{sec:trace_hooks}
 
-„Trace Hooks“ sind spezielle Mackos von der FreeRTOS-API, deren Nutzung es
-beispielsweise ermöglicht, Ereignisse im System zu verfolgen und zu
-protokollieren. Diese Makros werden innerhalb von Interrupts beim Schedulen
+„Trace Hooks“ sind spezielle Makros bereitgestellt von FreeRTOS, deren Nutzung
+es beispielsweise ermöglicht, Ereignisse im System zu verfolgen und zu
+protokollieren. Diese Makros werden innerhalb von Interrupts beim Scheduling
 aufgerufen und sollten immer vor der Einbindung von
 \mintinline{text}|FreeRTOS.h| definiert werden \cite{freertos_rtos_trace_hooks}.
 
@@ -154,9 +155,9 @@ unterschieden wird. Der \ac{TCM} verfügt jeweils für Instruktionen und Daten
 über einen dedizierten Kanal zum Prozessor und ist nicht cachefähig, bietet aber
 als Besonderheit niedrigere Zugriffszeiten als SRAM. Während bei SRAM die
 Zugriffszeit variieren kann (schnell aus dem Cache oder langsam aus dem
-Speicher), ist die Zugriffszeit bei TCM konsistent und deterministisch. Dies
-macht sie besonders geeignet für zeitkritische Routinen wie Interrupt-Handler
-oder Echtzeitaufgaben. (\cite{arm_den0042})
+Speicher), ist die Zugriffszeit bei TCM konsistent und deterministisch.
+Dies macht sie besonders geeignet für zeitkritische Routinen wie Interrupt-Handler
+oder Echtzeitaufgaben. (\cite{arm_den0042}) % TODO TCM wird nicht in der arbeit betrachtet
 
 Zusammenfassend lässt sich sagen, dass jeder normale, nicht gemeinsam genutzte
 (non-shared) Speicherbereich gecacht werden kann, sofern er über das AXI-Bus

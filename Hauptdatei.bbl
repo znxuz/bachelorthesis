@@ -99,6 +99,12 @@
 \newblock \,Version:\,2023. --
 \newblock Zugriff: 21. März 2025
 
+\bibitem[cpp]{cppreference_eval_order}
+\textsc{cppreference.com}:
+\newblock \emph{Order of evaluation}.
+\newblock \url{https://en.cppreference.com/w/c/language/eval_order}. --
+\newblock Zugriff: 29. März 2025
+
 \bibitem[cpp23]{cppreference_constexpr_if}
 \textsc{cppreference.com}:
 \newblock \emph{if statement - constexpr if}.
@@ -258,7 +264,8 @@
 \bibitem[hot23]{STM32H7_LwIP_Examples}
 \textsc{hotspot} stm32:
 \newblock \emph{STM32H7-LwIP-Examples}.
-\newblock \url{https://github.com/stm32-hotspot/STM32H7-LwIP-Examples}.
+\newblock
+  \url{https://github.com/stm32-hotspot/STM32H7-LwIP-Examples?tab=readme-ov-file#cortex-m7-configuration}.
 \newblock \,Version:\,2023. --
 \newblock Zugriff: 21. März 2025
 
