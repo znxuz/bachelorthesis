@@ -1,165 +1,270 @@
-\section{Implementierung zur Echtzeitanalyse}
+\section{Echtzeitanalyse - Erster Ansatz}
 
 Nachdem die Steuerungssoftware auf zwei verschiedenen Architekturen, nämlich
-FreeRTOS und Micro-ROS, aufgebaut wurde, kann nun eine konkrete Implementierung
-einer Methode zur Analyse der Echtzeitfähigkeit basierend auf FreeRTOS erfolgen,
-um die Portabilität auf Micro-ROS zu ermöglichen. Ziel der Analyse ist es,
-Informationen darüber zu gewinnen, wie lange eine bestimmte Task oder eine
-bestimmte zeitkritische Funktion benötigt. Die daraus resultierenden Daten
-müssen mit einer angemessenen Genauigkeit erfasst werden, um sicherzustellen,
-dass die Echtzeitaspekte korrekt widergespiegelt werden.
+FreeRTOS und Micro-ROS, entwickelt wurde, kann nun eine konkrete
+Implementierung einer Methode zur Analyse der Echtzeitfähigkeit basierend auf
+FreeRTOS erfolgen, um die Portabilität auf Micro-ROS zu ermöglichen. Ziel der
+Analyse ist es, Informationen darüber zu gewinnen, wie lange eine bestimmte Task
+oder eine bestimmte zeitkritische Funktion benötigt. Die daraus resultierenden
+Daten müssen mit einer angemessenen Genauigkeit erfasst werden, um
+sicherzustellen, dass die Echtzeitaspekte korrekt widergespiegelt werden.
 
-Aufgrund von Hardwarebeschränkungen sowie Einfachheit wurde UART als
+Aufgrund von Einfachheit sowie Hardwarebeschränkungen wurde UART als
 Kommunikationsschnittstelle zur Übertragung der Echtzeitdaten vom
 Mikrocontroller zum Host gewählt. Mit einer theoretischen Übertragungsrate von
 bis zu 12,5 Mbit/s bietet UART ausreichende Bandbreite~\cite[S.
 2]{stm32_datasheet}, um die Profiling-Daten zu übertragen, ohne Überlastung zu
 verursachen.
 
-Daraus ergibt sich als Erstes die Notwendigkeit, eine threadsichere \ac{MPSC}
-Queue, oder besser gesagt eine Multi Producer Senke, zu implementieren, welche
-die Profiling-Daten kontinuierlich in Echtzeit konsumiert und sie über UART
-ausgibt. Die FreeRTOS Stream- oder Messagebuffer sind für den Fall mit mehreren
-Producers nicht geeignet~\cite{FreeRTOSStreamBuffer}.
+% TODO: check
+der erste ansatz besteht grundsätzlich daraus, dass zu begin und am Ende der
+jeweiligen Task sowie der zeitkritischen Funktion die aktuelle Zyklenzahl
+aufzeichnen, um daraus die Ecvhtzeitinformationen abzuleiten.
 
-\subsection{Threadsichere Senke}
+Daraus ergibt sich als Erstes die Notwendigkeit, eine threadsichere Multi
+Producer Senke, oder besser gesagt eine \ac{MPSC} Queue, zu implementieren,
+welche die Echtzeitdaten kontinuierlich konsumiert und sie über UART ausgibt.
+Die FreeRTOS Stream- oder Messagebuffer sind für den Fall mit mehreren Producers
+nicht geeignet~\cite{FreeRTOSStreamBuffer}.
 
-Da FreeRTOS und dementsprechend auch Micro-ROS multithreaded sind und zur
-Echtzeitanalyse Daten von beliebiger Stelle beim Programmlauf durch IO
-übertragen werden, muss dabei die Thread-Sicherheit gewährleistet werden, damit
-die zu übertragenden Daten nicht durch Race Conditions neu geordnet,
-überschrieben oder zu unbrauchbaren Daten werden.
+\subsection{Umsetzung mit einer Multi-Producer-Senke}
 
-Die grundlegende Idee besteht darin, dass Daten aus mehreren Threads in die
-Senke gepusht, oder besser gesagt in einen internen Puffer gespeichert werden
-und dann darauf warten, von einem einzelnen Verbraucher verarbeitet zu werden.
-Da der Speicher begrenzt ist, muss die Senke in der Lage sein zu erkennen, wann
-sie das weitere Schreiben von Daten in den Puffer blockieren muss, um zu
-verhindern, dass zuvor geschriebene, aber noch nicht verarbeitete Daten
-überschrieben werden.
+Da FreeRTOS und dementsprechend auch Micro-ROS von Natur aus multithreaded sind
+und zur Echtzeitanalyse Daten von beliebiger Stelle in einem beliebigen Thread
+beim Programmlauf aufgezeichnet werden, muss dabei die Threadsicherheit
+gewährleistet werden, damit die zu übertragenden Daten in Form von mehreren
+Bytes nicht durch Race Conditions teils überschrieben und zu unbrauchbaren Daten
+werden.
 
-Inspiriert von einem C++-Konferenzvortrag über eine \ac{MPMC}-Warteschlange aus
-dem Jahr 2024~\cite{CppCon2024LockFreeQueue}, in dem jede Position des
-Datenpuffers eine eindeutige Sequenznummer besitzt, diese bei der Entnahme der
-Daten atomar um die Gesamtlänge des Datenpuffers $N$ erhöht, wodurch angezeigt
-wird, dass die Daten an dieser Position bereits in der Iteration $N$ verarbeitet
-wurden und somit in der nächsten Iteration $N + 1$ vom Schreiber überschrieben
-werden können, was durch den Vergleich mit der globalen Schreibsequenznummer
-ermöglicht wird, die ebenfalls nach jedem Schreibvorgang atomar erhöht wird.
+% TODO: check
+Die grundlegende Idee besteht darin, dass Daten von mehreren Threads direkt in
+die Senke gepusht, oder besser gesagt direkt in einen internen Ringpuffer
+gespeichert werden, da das Schreiben der Daten in einen statischen
+Speicherpuffer wesentlich schneller ist in comparison to enqueueing the data
+into a linked list, because the latter requires dynamic heap memory allocation
+which costs hundreds of cycles each per syscall, where as writing to a
+In-Memory-Puffer with byte alignment typischerweise $N$ zyklen kostet wobei $N$
+die anzahl der Bytes ist und der schreibvorgang deterministisch ist.
 
-Für den Fall einer Senke mit aber nur einem einzigen Verbraucher reicht es aus,
-den Zustand als \mintinline{cpp}|bool| zu speichern, der angibt, ob die Daten an
-einer bestimmten Position noch verarbeitet werden müssen oder bereits
+Da der Speicher begrenzt ist, muss die Senke im schlimmsten Fall in der Lage
+sein zu erkennen, wann sie das weitere Schreiben von Daten in den Puffer
+blockieren muss, um zu verhindern, dass zuvor geschriebene, aber noch nicht
+verarbeitete Daten überschrieben werden.
+
+Aber durch die Verwendung von DMA kombiniert mit einem Interrupt ausgelöst bei
+jedem Abschluss einer DMA-Übertragung kann die IO-gebundene Wartezeit zum
+Konsumieren der Bytes in der Senke eliminiert werden, da in diesem Fall die
+tatsächliche Ausgabe von Daten aus der Senke einfach zum Schreiben in einen
+anderen In-Memory-Puffer wird, während die eigentlichen IO-Operationen auf den
+DMA-Controller fern vom Prozessor ausgelagert werden. Wenn die tatsächliche IO
+die Daten schnell genug überträgt, um mit den eingehenden Daten Schritt zu
+halten, entsteht dabei keine Situation, in der eine Task blockiert werden muss,
+dass die Senke Speicherplatz freigibt, um den Schreibvorgang fortzusetzen.
+
+Daher wurde als der erste Ansatz mit der Umsetzung mit einer
+Multi-Producer-Senke mittels DMA fortgefahren, da in diesem Fall das Schreiben
+von mehreren Bytes in die Senke idealerweise nur einige Zyklen kosten und würde
+sich nahezu als eine nicht-blockierende Operation vom Sicht des Prozessors oder
+Threads verhalten.
+
+\subsection{Aufbau der Multi-Producer-Senke}
+
+Wie kurz erwähnt, besteht die Senke einfacherweise hauptsächlich aus einem
+statisch vorallokierten Ringpuffer gepaart mit einem Schreib- und Lesezeiger.
+Mit den beiden Zeigern wird dann ermöglicht, die Größe der bereits geschriebenen
+Daten sowie der restliche verfügbare Speicherplatz zu ermitteln.
+
+In der ersten Version der Implementierung wurde die Anzahl der Daten in der
+Senke so kalkuliert, dass wenn sich der Schreibzeiger beziehungsweise der Index
+im numerischen Sinne vor dem Lesezeiger befindet, ist die Anzahl von
+verbrauchbaren Daten einfach die Differenz von den beiden Indexen, ansonsten
+sind die zu verarbeiteten Daten von dem Lesezeiger bis zum Ende des Ringpuffers
+inklusive die Daten vom Anfang des Puffers bis zum Schreibzeiger, da die Zeiger
+immer auch auf die korrekte Position zeigen.
+
+Dabei muss aber zwischen dem Fall unterschieden werden, wenn beide Zeiger
+gleichzeitig auf dieselbe Position zeigen: entweder ist der Ringpuffer leer,
+oder komplett voll beschrieben. Also muss der Schreiber noch wissen, ob das
+aktuelle Byte bereits verbraucht wurde und deshalb überschrieben werden kann, da
+er sonst in keiner Weise unterscheiden kann, ob die Senke voll ist und dann das
+Schreiben verzögern soll.
+
+Inspiriert von einem C++-Konferenzvortrag über eine
+\ac{MPMC}-Warteschlange~\cite{CppCon2024LockFreeQueue}, in dem jede Position des
+Datenpuffers eine eindeutige Schreibsequenznummer besitzt, diese bei der
+Entnahme der Daten atomar um die Gesamtlänge des Datenpuffers $N$ erhöht,
+wodurch signalisiert wird, dass die Daten an dieser Position bereits in der
+Iteration $N$ verarbeitet wurden und somit einwandfrei in der nächsten Iteration
+$N + 1$ vom Schreiber überschrieben werden können, was durch den Vergleich mit
+der globalen Schreibsequenznummer ermöglicht wird, die ebenfalls nach jedem
+Schreibvorgang atomar erhöht wird.
+
+Für den Fall mit einer Senke mit aber nur einem einzigen Verbraucher reicht es
+aus, den Zustand als \mintinline{cpp}|bool| zu speichern, der angibt, ob die
+Daten an einer bestimmten Position noch verarbeitet werden müssen oder bereits
 überschrieben werden können.
 
-Durch die Verwendung von DMA gepaart mit einem Interrupt-Callback ausgelöst bei
-jedem Abschluss einer DMA-Übertragung wird die typische IO-gebundene Zeit
-eliminiert, da in diesem Fall das Schreiben von Daten in das IO einfach zum
-Schreiben in einen In-Memory-Puffer wird, während die eigentlichen
-IO-Operationen auf den DMA-Controller verlagert werden. Wenn das tatsächliche IO
-die Daten schnell genug überträgt, um mit den eingehenden Daten Schritt zu
-halten, entsteht keine Situation, in der eine Task darauf warten muss, dass die
-Senke Speicherplatz freigibt, um den Schreibvorgang weiter durchzuführen.
-
-\subsubsection{Schreibvorgang in die Senke}
-
-Um das Schreiben in die Senke threadsicher zu machen, wird ein Mutex verwendet.
-Dies stellt sicher, dass ein Thread, der ein Mutex hält, niemals vom Scheduler
-ausgeschlossen wird (\ref{sec:mutex}). Bei jedem zu schreibenden Byte in den
-Puffer wird überprüft, ob die Daten an der aktuellen Position bereits
-verarbeitet wurden. Falls dies nicht der Fall ist, verzögert sich der Thread
-durch präemptives Warten und gibt die Kontrolle an den Scheduler zurück, um
-Polling to vermeiden. Nachdem das Byte in den Puffer geschrieben wurde, wird der
-globale Schreibindex samt dem Zustand dieser Position aktualisiert. Erst nachdem
-alle Bytes in den Puffer geschrieben wurden, wird das Mutex freigegeben
-\cite{FreeRTOSForumPrintf}.
+Um diese zusätzliche Speicheranforderung verursacht durch das explizites
+Markieren des Zustands für jedes Byte in dem Puffer für die finale
+Implementierung wegzuoptimieren, brauchen die Zeiger nicht mehr immer auf die
+korrekte Stelle zeigen, stattdessen können sie einfach über den Puffer hinaus
+zählen und bei jeder Nutzung der Zeiger deren Wert mittels einer
+Modulo-Operation mit der Gesamtgröße des Puffer normalisieren, so dass sie dann
+auf die tatsächliche Stelle zeigen. Dadurch kann die Kalkulation für die Anzahl
+der verfügbaren Daten auf eine simple Subtraktion zwischen den beiden Zeigern
+reduziert werden. Wenn die Größe des Puffers a power of two entspricht, kann die
+Kosten der Modulo-Operation auf ein Zyklus reduziert werden, which is a good
+trade-off and a small price to pay for eliminating the need for extra speicher
+space for the Zustand.
 
 \begin{code}
 \begin{minted}{cpp}
-void tsink_write(const char* ptr, size_t len) {
-  xSemaphoreTake(write_mtx, portMAX_DELAY);
-  for (size_t i = 0; i < len; ++i) {
-    while (consumable[write_idx]) vTaskDelay(1);
+#ifndef TSINK_CAPACITY
+constexpr size_t TSINK_CAPACITY = 2048;
+#endif
+uint8_t sink[TSINK_CAPACITY]{};
+volatile size_t read_idx = 0;
+std::atomic<size_t> write_idx = 0;
 
-    sink[write_idx] = ptr[i];
-    taskENTER_CRITICAL();
-    consumable[write_idx] = true;
-    write_idx = (write_idx + 1) % SINK_SIZE;
-    taskEXIT_CRITICAL();
-  }
-  xSemaphoreGive(write_mtx);
-}
+size_t size() { return write_idx - read_idx; }
+size_t space() { return TSINK_CAPACITY - size(); }
+size_t normalize(size_t idx) { return idx % TSINK_CAPACITY; }
 \end{minted}
-    \captionof{listing}{Schreib-API von der Senke}
+    \captionof{listing}{Struktur der Senke}
 \end{code}
 
-\subsubsection{Lesevorgang aus der Senke}
+\subsection{Schreibvorgang in die Senke}
+
+Auf ARM-Architekturen sind alle Zugriffe auf im Speicher ausgerichteten Bytes,
+Halbwörter (16-Bit) und Wörter (32-Bit) standardmäßig atomar und verursachen
+keine Schreib-Lese-Konflikte, sowohl beim Lesen als auch beim Schreiben~\cite[S.
+A3-79]{ARM_DDI0403_EE}.
+
+Es muss jedoch sichergestellt werden, dass jeweils nur exakt ein einziger Thread
+an eine Position des Ringpuffers schreiben kann, wenn mehrere Threads
+gleichzeitig auf dieselbe Position zugreifen wollen.
+
+Anbei kann eine \ac{CAS}-Operation durchgeführt werden, damit der Schreibindex
+jeweils nur von einem einzigen Thread inkrementiert wird. Nach der
+Inkrementierung hat somit der Thread den Anspruch, das Byte an den vorherigen
+Index zu schreiben, welcher den Index erfolgreich inkrementiert hat.
+
+\begin{code}
+\begin{minted}{cpp}
+bool write_or_fail(uint8_t elem) {
+  auto expected = write_idx.load();
+  if (expected - read_idx == TSINK_CAPACITY) return false;
+  if (write_idx.compare_exchange_strong(expected, expected + 1)) {
+    sink[normalize(expected)] = elem;
+    return true;
+  }
+  return false;
+}
+\end{minted}
+    \captionof{listing}{atomare Schreiboperation in die Senke}
+\end{code}
+
+Die Vorgehensweise ist wie folgt: zuerst wird der aktuelle Schreibindex als
+lokale Variable \mintinline{cpp}|expected| zwischengespeichert und es wird damit
+überprüft, ob der Puffer bereits voll ist und liefert vorzeitig zurück wenn dies
+der Fall ist, sonst bedeutet es, dass die Position mit dem aktuellen Index zu
+dieser Zeit noch beschreibbar ist. Danach wird die atomare CAS-Operation
+durchgeführt, indem der Schreibindex mit dem zwischengespeicherten Wert
+vergleicht und gleichzeitig um eins inkrementiert wird, wenn die beiden Werten
+derselbe sind. Die Fähigkeit, den Vergleich und auch den darauffolgenden
+Inkrement unter der Voraussetzung von Äquivalenz alle zusammen als eine atomare
+Operation durchführen zu können, ermöglicht, dass nur ein Thread am Ende den
+Schreibindex erfolgreich inkrementieren und folglich Daten über den
+zwischengespeicherten Index schreiben kann. Dabei wird die Synchonisation also
+in einer nicht-blockierenden Weise („lock-free”) garantiert.
+
+Um das Schreiben von mehreren Bytes auch threadsicher und fehlerfrei
+durchzuführen, muss ein Mutex eingesetzt werden~\cite{FreeRTOSForumPrintf}. Dies
+stellt sicher im Vergleich zu einem einfach Semaphor, dass ein Thread, der ein
+Mutex hält, es möglichst schnell wieder freigibt und auch niemals vom Scheduler
+ausgeschlossen wird (\ref{sec:mutex}).
+
+\begin{code}
+\begin{minted}{cpp}
+struct mtx_guard {
+  mtx_guard() { configASSERT(xSemaphoreTake(write_mtx, portMAX_DELAY)); }
+  ~mtx_guard() { configASSERT(xSemaphoreGive(write_mtx)); }
+};
+
+void write_blocking(const uint8_t* ptr, size_t len) {
+  while (true) {
+    if (volatile auto _ = mtx_guard{}; space() >= len) {
+      for (size_t i = 0; i < len; ++i) configASSERT(write_or_fail(ptr[i]));
+      return;
+    }
+    vTaskDelay(pdMS_TO_TICKS(1));
+  }
+}
+\end{minted}
+    \captionof{listing}{Blockierende Schreiboperation in die Senke}
+\end{code}
+
+\subsection{Lesevorgang aus der Senke}
 
 Eine kleine, statisch allokierte FreeRTOS-Task wird erstellt, um kontinuierlich
 zu versuchen, verfügbare Daten aus der Senke zu entnehmen und verarbeiten.
-Mithilfe des Lese- und Schreibzeigers kann die Größe der verarbeitbaren Daten
-berechnet werden, und zusammen mit dem Zeiger auf die Daten werden diese in die
-vom Benutzer bereitgestellte Funktion zur Verarbeitung von Daten übergeben.
 
 \begin{code}
 \begin{minted}{cpp}
-using tsink_consume_f = void (*)(const uint8_t* buf, size_t size);
-tsink_consume_f consume;
-
-void consume_and_wait(size_t pos, size_t size) {
-  auto update_for_writer = [](size_t pos, size_t size) static {
-    for (size_t i = 0; i < size; ++i) consumable[pos + i] = false;
-  };
-
-  consume(sink + pos, size);
-  ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
-  update_for_writer(pos, size);
-}
+using consume_fn = void (*)(const uint8_t*, size_t);
+consume_fn consume;
 
 void task_impl(void*) {
-  size_t pos = 0;
+  auto consume_and_wait = [](size_t pos, size_t size) static {
+    if (!size) return;
+    consume(sink + pos, size);
+    ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
+  };
+
   while (true) {
-    auto end = write_idx;
-    if (pos == end && !consumable[pos]) {
-      vTaskDelay(1);
-      continue;
+    if (size_t sz = size(); sz) {
+      auto wrap_around = ((normalize(read_idx) + sz) / TSINK_CAPACITY) *
+                         normalize(read_idx + sz);
+      auto immediate = sz - wrap_around;
+      consume_and_wait(normalize(read_idx), immediate);
+      consume_and_wait(0, wrap_around);
+      read_idx += sz;
+    } else {
+      vTaskDelay(pdMS_TO_TICKS(1));
     }
-
-    auto size = (pos < end ? end : SINK_SIZE) - pos;
-    consume_and_wait(pos, size);
-    if (pos >= end && end) consume_and_wait(0, end);
-
-    pos = end;
   }
 }
 \end{minted}
     \captionof{listing}{Implementierung der Task zur Datenverarbeitung}
 \end{code}
 
-Nachdem die Daten mittels \mintinline{cpp}|consume()| verarbeitet wurden,
-blockiert sich die Task selbst und gibt wieder die Kontrolle über
-\mintinline{cpp}|ulTaskNotifyTake()| an den Scheduler zurück, um sich mit den
-tatsächlichen IO-Operationen zu synchronisieren. Diese Vorgehensweise ist
-besonders effizient, wenn \mintinline{cpp}|consume()| intern DMA nutzt: Die
-DMA-Instruktion zur Datenübertragung signalisiert dabei lediglich der Hardware
-den Transfervorgang und kehrt sofort zurück \cite{HAL_UART_Transmit_DMA}.
-Konkret werden die Daten einfach zur Verarbeitung für den DMA eingereiht,
-während der Programmfluss unmittelbar fortgesetzt wird.
+Als Verbrauchsfunktion \mintinline{cpp}|consume()| kann beispielsweise die
+STM32-HAL-API zur Übertragung mittels DMA genutzt werden, welche einen Zeiger
+zu einem Array und eine Variable als die Größe der lesbaren Daten als Parameter
+einnimmt.
 
-Erst nachdem das Signal durch den Aufruf von
-\mintinline{cpp}|tsink_consume_complete()| empfangen wurde, beispielsweise von
-einer \ac{ISR}, die durch den DMA nach Abschluss der Übertragung ausgelöst wird,
-wird die Task wieder entblockt und das Zustandsarray für die Positionen, von
-denen Daten gelesen wurden, aktualisiert, so dass diese sicher mit neuen Daten
-überschrieben werden können.
+Hierbei wird zuerst die Größe von möglichen verfügbaren Daten vom Anfang des
+Ringpuffers bis zur dem Schreibindex mathematisch kalkuliert und damit auch die
+Größe vom Leseindex bis zum Ende des Puffers. Mit jedem Aufruf von
+\mintinline{cpp}|consume()| wird mit \mintinline{cpp}|ulTaskNotifyTake()| darauf
+gewartet, dass die aktuelle IO-Operation fertig wird und somit neue Operation
+durchführen kann. Diese Vorgehensweise ist notwendig wenn
+\mintinline{cpp}|consume()| beispielsweise DMA nutzt: Die DMA-API von der
+STM32-HAL zur Übertragung ist möglicherweise nicht wiedereintrittsfähig und
+signalisiert dabei lediglich der Hardware den gewünschten Transfervorgang und
+kehrt sofort zurück \cite{HAL_UART_Transmit_DMA}. Das heißt, die Daten werden
+einfach zur Verarbeitung für den DMA eingereiht, während der Programmfluss
+unmittelbar fortgesetzt wird. Daher werden subsequente Aufrufe hierbei
+synchronisiert.
 
 \begin{code}
 \begin{minted}{cpp}
-enum struct TSINK_CALL_FROM { ISR, NON_ISR };
+enum struct CALL_FROM { ISR, NON_ISR };
 
-template <TSINK_CALL_FROM callsite>
-void tsink_consume_complete() {
-  if constexpr (callsite == TSINK_CALL_FROM::ISR) {
+template <CALL_FROM callsite>
+void consume_complete() {
+  using namespace detail;
+  if constexpr (callsite == CALL_FROM::ISR) {
     static BaseType_t xHigherPriorityTaskWoken;
     vTaskNotifyGiveFromISR(task_hdl, &xHigherPriorityTaskWoken);
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -168,31 +273,30 @@ void tsink_consume_complete() {
   }
 }
 \end{minted}
-    \captionof{listing}{Callback zur Task-Notification}
+    \captionof{listing}{Callback-Funktion für die Task-Notification}
 \end{code}
 
-Auf der ARM-Architektur sind alle ausgerichteten Byte-, Halbwort- und
-Wortzugriffe standardmäßig atomar~\cite[S. A3-79]{ARM_DDI0403_EE}. Daher ist der
-direkte Zugriff auf Variablen wie \mintinline{cpp}|size_t write_idx| oder
-Elemente des Arrays \mintinline{cpp}|bool consumable[]| standardmäßig atomar und
-threadsicher, ohne dass es zu Schreib-Lese-Konflikten kommt.
+Erst nachdem die Task-Notifikation durch den Aufruf von
+\mintinline{cpp}|consume_complete()| empfangen wird, beispielsweise von einer
+\ac{ISR}, die durch die DMA-Hardware nach Abschluss der Übertragung ausgelöst
+wird, wird die Task wieder entblockt um weitere IO-Operationen zu beauftragen.
 
-\subsubsection{Nutzung der Senke mit DMA}
+\subsection{Nutzung der Senke mit DMA}
 
 Um diese Senke mit DMA und aktiviertem Daten-Cache zu verwenden, muss zunächst
-eine benutzerdefinierte Interrupt-Callback
-\mintinline{cpp}|HAL_UART_TxCpltCallback()| definiert werden, die bei Abschluss
-jedes DMA-Transfers ausgelöst wird. Anschließend ist die
-Initialisierungsfunktion der Senke aufzurufen, die einen Funktionszeiger vom Typ
-\mintinline{cpp}|tsink_consume_f| zur cache-kohärenten Verarbeitung von
-Daten~(\ref{code:cache_clean}) sowie eine Priorität für die FreeRTOS-Task als
-Argumente entgegennehmen.
+die Interrupt-Callback \mintinline{cpp}|HAL_UART_TxCpltCallback()| definiert
+werden, die bei Abschluss jedes DMA-Transfers ausgelöst wird.
+
+Die Initialisierungsfunktion der Senke ist dann aufzurufen, welche einen
+Funktionszeiger vom Typ \mintinline{cpp}|consume_fn| zur Verarbeitung von
+Daten~(\ref{code:cache_clean}) von Daten sowie eine Priorität für die interne
+Verbraucher-Task als Argumente entgegennehmen.
 
 \begin{code}
 \begin{minted}{cpp}
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
-  if (huart->Instance != huart3.Instance) return;
-  tsink_consume_complete<TSINK_CALL_FROM::ISR>();
+  if (huart->Instance == huart3.Instance)
+    tsink::consume_complete<tsink::CALL_FROM::ISR>();
 }
 
 void main() {
@@ -210,41 +314,40 @@ void main() {
     flush_cache_aligned(reinterpret_cast<uintptr_t>(buf), size);
     HAL_UART_Transmit_DMA(&huart3, buf, size);
   };
-
-  tsink_init(tsink_consume_dma, osPriorityAboveNormal);
+  tsink::init(tsink_consume_dma, osPriorityAboveNormal);
 }
 \end{minted}
     \captionof{listing}{Initialisierung der Senke mit DMA}
 \end{code}
 
-\subsubsection{Nutzung der Senke mit blockierender IO}
+\subsection{Nutzung der Senke mit blockierender IO}
 
 Ähnlich wie bei der Initialisierung über DMA, entfällt hier aber der
 Interrupt-Callback, und die Funktion zur Datenverarbeitung wird durch die
-Verwendung der blockierenden API vereinfacht, da ohne DMA keine manuelle
-Sicherstellung der Cache-Kohärenz notwendig ist.
+Verwendung der blockierenden API ohne Leerung von Cache vereinfacht, da ohne DMA
+keine manuelle Sicherstellung der Cache-Kohärenz notwendig ist.
 
 \begin{code}
 \begin{minted}{cpp}
 int main() {
   auto tsink_consume = [](const uint8_t* buf, size_t size) static {
     HAL_UART_Transmit(&huart3, buf, size, HAL_MAX_DELAY);
-    tsink_consume_complete<TSINK_CALL_FROM::NON_ISR>();
+    tsink::consume_complete<tsink::CALL_FROM::NON_ISR>();
   };
 
-  tsink_init(tsink_consume_dma, osPriorityAboveNormal);
+  tsink::init(tsink_consume, osPriorityAboveNormal);
 }
 \end{minted}
     \captionof{listing}{Initialisierung der Senke mit blockierender IO}
 \end{code}
 
-\subsubsection{Benchmark}
+\subsection{Benchmark}
 
 Ein Benchmark für die Senke wurde entwickelt, um deren Leistung unter paralleler
 Last zu testen. Der Benchmark lässt eine Anzahl von
-\mintinline{text}|BENCHMARK_N = 4| Threads gleichzeitig laufen, die jeweils eine
-Anzahl von \mintinline{cpp}|iteration = 5000| Nachrichten mit ca. 60 Charaktern
-hintereinander über die Senke ausgeben.
+\mintinline{text}|BENCHMARK_N = 5| Threads gleichzeitig laufen, die jeweils eine
+Anzahl von \mintinline{cpp}|iteration = 5000| Nachrichten mit ca. 80 Charaktern
+nach Formatierung hintereinander über die Senke ausgeben.
 
 Nach Abschluss des Benchmarks werden die gemessenen Zeiten und die
 Laufzeitstatistiken der jeweiligen Task ausgegeben.
@@ -252,21 +355,22 @@ Laufzeitstatistiken der jeweiligen Task ausgegeben.
 \begin{minipage}[t]{0.5\textwidth}
     \begin{code}
         \begin{minted}[linenos=false]{cpp}
-time in ms: 4174
-time in ms: 5995
-time in ms: 6017
-time in ms: 6102
-time elapsed: 6102
+time in ms: 8543
+time in ms: 8728
+time in ms: 9196
+time in ms: 9342
+time in ms: 9571
 ===================================
-Task            Time            %
-IDLE            43211           71%
-benchmark       4165            6%
-benchmark       4172            6%
-benchmark       4173            6%
-benchmark       4090            6%
-tsink           632             1%
+Task            Time            %%
 print_bench     1               <1%
 Tmr Svc         0               <1%
+IDLE            72753           76%
+benchmark       4363            4%
+benchmark       4377            4%
+benchmark       4257            4%
+benchmark       4443            4%
+benchmark       4238            4%
+tsink           351             <1%
     \end{minted}
         \captionof{listing}{Benchmark DMA}
     \end{code}
@@ -275,51 +379,49 @@ Tmr Svc         0               <1%
 \begin{minipage}[t]{0.5\textwidth}
     \begin{code}
         \begin{minted}[linenos=false]{cpp}
-time in ms: 7524
-time in ms: 7530
-time in ms: 7692
-time in ms: 7806
-time elapsed: 7805
+time in ms: 10964
+time in ms: 11016
+time in ms: 11285
+time in ms: 11379
+time in ms: 11405
 ===================================
-Task            Time            %
-IDLE            0               <1%
-benchmark       4133            5%
-benchmark       4153            5%
-benchmark       4150            5%
-benchmark       4155            5%
-tsink           60752           78%
+Task            Time            %%
 print_bench     0               <1%
 Tmr Svc         0               <1%
+IDLE            0               <1%
+benchmark       3624            3%
+benchmark       3637            3%
+benchmark       3623            3%
+benchmark       3644            3%
+benchmark       3631            3%
+tsink           94876           83%
     \end{minted}
         \captionof{listing}{Benchmark mit blockierender IO}
     \end{code}
 \end{minipage}
 
 Die Ausgabe enthält zwei verschiedene Zeitmessungen für den Benchmark. Die erste
-ist die Zeit, die vom Start des jeweiligen Threads bis zum Ende vergangen ist
-sowie die Gesamtdauer vom Beginn des gesamten Benchmark-Prozesses bis zu dessen
-Abschluss, was praktisch auch der Zeit der letzten Benchmarktask entspricht.
-
-Die zweite Messung bezieht sich auf die FreeRTOS-Laufzeitstatistiken, die durch
-\linebreak \mintinline{cpp}|vTaskGetRunTimeStats()| formattiert ausgegeben
-werden. Diese liefern die absolute akkumulierte Zeit für jede Task, die im
-Zustand „Running” verbracht hat, sowie deren prozentualen Anteil an der
-Gesamtlaufzeit \cite{freertos_runtime_stats}.
+Messung erfasst die Zeitspanne vom Start des jeweiligen Threads bis zu dessen
+Beendigung. Die zweite Messung bezieht sich auf die
+FreeRTOS-Laufzeitstatistiken, die durch \mintinline{cpp}|vTaskGetRunTimeStats()|
+formattiert ausgegeben werden. Diese liefern die absolute akkumulierte Zeit für
+jede Task, die im Zustand „Running” verbracht hat, sowie deren prozentualen
+Anteil an der Gesamtlaufzeit \cite{freertos_runtime_stats}.
 
 Der Benchmark zeigt, dass asynchrone Übertragung per DMA die Gesamtlaufzeit des
-Benchmark-Prozesses im Vergleich zur IO-gebundenen Variante um etwa $20\,\%$
+Benchmark-Prozesses im Vergleich zur IO-gebundenen Variante um etwa $16\,\%$
 verringerte, während gleichzeitig die IO-gebundene Zeit freigegeben wurde,
 sodass sie von anderen Aufgaben genutzt werden kann.
 
 Ebenso kann abgeleitet werden, dass durch die Verwendung von DMA die
 Datenübertragungsrate nahezu das vorkonfigurierte Maximum der Baudrate von
-$2.000.000\text{ bps}$ erreicht wurde. Insgesamt wurden $1.208.894$ Bytes
-übertragen, wobei ein UART-Byte-Frame hierbei eine standardmäßige Wortlänge von
-8 Bit hat, inklusive je 1 Start- und 1 Stopp-Bit, ohne Paritätsbit.
+$2.000.000\text{ bps}$ erreicht wurde. Insgesamt wurden $1.908.759$ Bytes
+übertragen, dabei hat ein UART-Byte-Frame eine standardmäßige Wortlänge von 8
+Bit hat, inklusive je 1 Start- und 1 Stopp-Bit, ohne Paritätsbit.
 
 \begin{align*}
-    1.208.894\text{\,B} \times 10\text{\,b per Frame} =
-    12.088.940 \text{\,b} = \text{Gesamte Bits}
+    1.908.355\text{\,B} \times 10\text{\,b per Frame} =
+    19.083.550 \text{\,b} = \text{Gesamte Bits}
 \end{align*}
 
 Teilt man dies durch die gesamte Übertragungszeit, ergibt sich die effektive
@@ -327,18 +429,18 @@ Bitrate sowie der prozentuale Anteil im Vergleich zur maximalen Baudrate:
 
 \begin{align*}
     \text{Bitrate bei DMA} =
-    \frac{12.088.940\text{\,b}}{6,102\text{\,s}} \approx
-    1.981.143,89 \text{\,bps} \\
-    \quad \Rightarrow 99,06\,\%\text{ des Maximums} \\
+    \frac{19.083.550\text{\,b}}{9,571\text{\,s}} \approx
+    1.993.893,01 \text{\,bps} \\
+    \quad \Rightarrow 99,70\,\%\text{ des Maximums} \\
     \\
     \text{Bitrate bei blockierender IO} =
-    \frac{12.088.940\text{\,b}}{7,805\text{\,s}} \approx
-    1.548.871,24 \text{\,bps} \\
-    \quad \Rightarrow 77,44\,\% \text{ des Maximums}
+    \frac{19.083.550\text{\,b}}{11,405\text{\,s}} \approx
+    1.673.261,73 \text{\,bps} \\
+    \quad \Rightarrow 83,66\,\% \text{ des Maximums}
 \end{align*}
 
-Der Code zur Implementierung der Senke befindet sich in dem
-Repository~\cite{freertos_threadsafe_sink}.
+Der Code für die Senke sowie den Benchmark befinden sich in den
+Repositorys~\cite{freertos_threadsafe_sink, freertos_tsink_benchmark}.
 
 \subsection{Implementierung des Messverfahrens}
 
@@ -379,19 +481,18 @@ Ende einer Dauer markiert. Diese Daten werden in einem Strukturtyp gespeichert.
 \begin{minted}{cpp}
 struct cycle_stamp {
   const char* name;
-  uint32_t cycle;
+  size_t cycle;
   bool is_begin;
-} __attribute__((packed));
+};
 \end{minted}
     \captionof{listing}{Definition des Zyklenstempels}
 \end{code}
 
-% TODO packed for smaller memory foot print in exchange for lesser performance
+% TODO: continue
 
 Da das Schreiben in die Senke per se nicht „lock-free“ ist, kann es nicht direkt
-in einer ISR bei der Erstellung eines Zyklenstempels aufgerufen werden.
-Stattdessen müssen die Daten erst in einen temporären Puffer reingeschrieben
-werden.
+in einer ISR zur Erstellung eines Zyklenstempels aufgerufen werden. Stattdessen
+müssen die Daten erst in einen temporären Puffer reingeschrieben werden.
 
 \begin{code}
 \begin{minted}{cpp}

@@ -257,7 +257,7 @@
  ; SourceVu (Veranst.):
 \newblock \emph{HAL\_UART\_Transmit\_DMA Documentation}.
 \newblock
-  \url{https://sourcevu.sysprogs.com/stm32/HAL/symbols/HAL_UART_Transmit_DMA}.
+  \url{https://sourcevu.sysprogs.com/stm32/HAL/files/Src/stm32f4xx_hal_uart.c#tok5956}.
   --
 \newblock Zugriff: 28. März 2025
 
@@ -413,9 +413,18 @@
 \textsc{Xu}, Zijian:
 \newblock \emph{freertos-threadsafe-sink}.
 \newblock \url{https://github.com/znxuz/freertos-threadsafe-sink}.
-\newblock \,Version:\,2025
+\newblock \,Version:\,2025. --
+\newblock Zugriff: 21. März 2025
 
-\bibitem[Xu25b]{mecarover_freertos_profiling}
+\bibitem[Xu25b]{freertos_tsink_benchmark}
+\textsc{Xu}, Zijian:
+\newblock \emph{freertos-threadsafe-sink}.
+\newblock
+  \url{https://github.com/znxuz/nucleo-f767zi/blob/tsink-benchmark/application/benchmark_tsink.cpp}.
+\newblock \,Version:\,2025. --
+\newblock Zugriff: 21. März 2025
+
+\bibitem[Xu25c]{mecarover_freertos_profiling}
 \textsc{Xu}, Zijian:
 \newblock \emph{Mecarover - FreeRTOS Profiling Branch}.
 \newblock \url{https://github.com/zijian-x/mecarover/tree/freertos-profiling}.
