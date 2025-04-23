@@ -15,7 +15,15 @@
   --
 \newblock Zugriff: 21. März 2025
 
-\bibitem[{ARM}a]{ARMv7_ref_man_dwt_profiling}
+\bibitem[arma]{arm_den0042}
+ ; Arm Limited (Veranst.):
+\newblock \emph{Tightly Coupled Memory}.
+\newblock
+  \url{https://developer.arm.com/documentation/den0042/a/Tightly-Coupled-Memory}.
+  --
+\newblock Document ID: DEN0042A
+
+\bibitem[{ARM}b]{ARMv7_ref_man_dwt_profiling}
 \textsc{{ARM Limited}}:
 \newblock \emph{{ARMv7-M Architecture Reference Manual}}.
 \newblock
@@ -23,7 +31,7 @@
   --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{ARM}b]{ARMv7_ref_man_dwt_cycle}
+\bibitem[{ARM}c]{ARMv7_ref_man_dwt_cycle}
 \textsc{{ARM Limited}}:
 \newblock \emph{{ARMv7-M Architecture Reference Manual}}.
 \newblock
@@ -31,7 +39,7 @@
   --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{ARM}c]{ARMv7_ref_man_dwt}
+\bibitem[{ARM}d]{ARMv7_ref_man_dwt}
 \textsc{{ARM Limited}}:
 \newblock \emph{{ARMv7-M Architecture Reference Manual}}.
 \newblock
@@ -39,14 +47,15 @@
   --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{ARM}d]{ARMv7_ref_man_dwt_about}
+\bibitem[{ARM}e]{ARMv7_ref_man_dwt_about}
 \textsc{{ARM Limited}}:
-\newblock \emph{Data Watchpoint and Trace Unit (DWT)},
+\newblock \emph{Data Watchpoint and Trace Unit (DWT)}.
+\newblock
   \url{https://developer.arm.com/documentation/ddi0439/b/Data-Watchpoint-and-Trace-Unit/About-the-DWT}.
   --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{Arm}e]{Arm_DWT_Programmers_Model}
+\bibitem[{Arm}f]{Arm_DWT_Programmers_Model}
 \textsc{{Arm Limited}}:
 \newblock \emph{{Data Watchpoint and Trace Unit (DWT) Programmer's Model}}.
 \newblock
@@ -54,27 +63,18 @@
   --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{ARM}f]{ARM_KA001499}
+\bibitem[{ARM}g]{ARM_KA001499}
 \textsc{{ARM Limited}}:
 \newblock \emph{{Summary: How many instructions have been executed on a
   Cortex-M processor?}}
 \newblock \url{https://developer.arm.com/documentation/ka001499/latest/}. --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[Armg]{arm_den0042}
-\textsc{Arm Limited} (Hrsg.):
-\newblock \emph{Tightly Coupled Memory}.
-\newblock Arm Limited,
-  \url{https://developer.arm.com/documentation/den0042/a/Tightly-Coupled-Memory}.
-  --
-\newblock Document ID: DEN0042A
-
 \bibitem[ARM21]{ARM_DDI0403_EE}
 \textsc{ARM Limited} (Hrsg.):
 \newblock \emph{ARM Architecture Reference Manual: ARMv7-A and ARMv7-R
   edition}.
-\newblock ARM Limited, 2021. --
-\newblock Zugriff: 28. März 2025
+\newblock ARM Limited, 2021
 
 \bibitem[Bah22]{CRCpp}
 \textsc{Bahr}, Daniel:
@@ -99,18 +99,19 @@
 \newblock \,Version:\,2023. --
 \newblock Zugriff: 21. März 2025
 
-\bibitem[cpp]{cppreference_eval_order}
+\bibitem[cppa]{cppreference_eval_order}
 \textsc{cppreference.com}:
 \newblock \emph{Order of evaluation}.
 \newblock \url{https://en.cppreference.com/w/c/language/eval_order}. --
 \newblock Zugriff: 29. März 2025
 
-\bibitem[cpp23]{cppreference_constexpr_if}
+\bibitem[cppb]{cppreference_memory_order}
 \textsc{cppreference.com}:
-\newblock \emph{if statement - constexpr if}.
-\newblock \url{https://en.cppreference.com/w/cpp/language/if#Constexpr_if}.
-\newblock \,Version:\,2023. --
-\newblock Zugriff: 29. März 2025
+\newblock \emph{std::memory\_order}.
+\newblock
+  \url{https://en.cppreference.com/w/cpp/atomic/memory_order#Sequentially-consistent_ordering}.
+  --
+\newblock Zugriff: 21. April 2025
 
 \bibitem[Emb]{embeddedexpert_cache}
 \textsc{EmbeddedExpert.io}:
@@ -322,8 +323,9 @@
 
 \bibitem[SEGa]{Segger_SystemView_manual}
 \textsc{SEGGER}:
-\newblock \emph{SEGGER SystemView User Manual},
-  \url{https://www.segger.com/downloads/jlink/UM08027_SystemView.pdf}. --
+\newblock \emph{SEGGER SystemView User Manual}.
+\newblock \url{https://www.segger.com/downloads/jlink/UM08027_SystemView.pdf}.
+  --
 \newblock Zugriff: 14. März 2025
 
 \bibitem[{SEG}b]{SEGGER_SystemView}
@@ -359,7 +361,23 @@
   --
 \newblock Zugriff: 19. März 2025
 
-\bibitem[STMd]{an4667}
+\bibitem[STMd]{stm32_nucleo144_user_manual}
+\textsc{STMicroelectronics}:
+\newblock \emph{STM32 MB1137 - User Manual}.
+\newblock
+  \url{https://www.st.com/resource/en/user_manual/um1974-stm32-nucleo144-boards-mb1137-stmicroelectronics.pdf}.
+  --
+\newblock Zugriff: 21. April 2025
+
+\bibitem[STMe]{stm32f7_ref_manual}
+\textsc{STMicroelectronics}:
+\newblock \emph{STM32 RM0410 - Reference Manual}.
+\newblock
+  \url{https://www.st.com/resource/en/reference_manual/rm0410-stm32f76xxx-and-stm32f77xxx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf}.
+  --
+\newblock Zugriff: 21. April 2025
+
+\bibitem[STMf]{an4667}
 \textsc{STMicroelectronics}:
 \newblock \emph{STM32F7 Series System Architecture and Performance}.
 \newblock Application Note.
@@ -368,13 +386,13 @@
   --
 \newblock Zugriff: 19. März 2025
 
-\bibitem[STMe]{stm32_datasheet}
+\bibitem[STMg]{stm32_datasheet}
 \textsc{STMicroelectronics}:
 \newblock \emph{STM32F767ZI Datasheet}.
 \newblock \url{https://www.st.com/resource/en/datasheet/stm32f767zi.pdf}. --
 \newblock Zugriff: 20. März 2025
 
-\bibitem[STMf]{AN4187}
+\bibitem[STMh]{AN4187}
 \textsc{STMicroelectronics}:
 \newblock \emph{Using the CRC Peripheral on STM32 Microcontrollers},
   \url{https://www.st.com/resource/en/application_note/an4187-using-the-crc-peripheral-on-stm32-microcontrollers-stmicroelectronics.pdf}.
