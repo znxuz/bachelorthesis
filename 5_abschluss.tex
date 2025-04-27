@@ -1,20 +1,23 @@
 \section{Abschluss}
 
-\subsection{Fazit}
-
 Am Anfang wurde die Robotersteuerungssoftware von Micro-ROS auf FreeRTOS
 umgestellt. Anschließend wurden eine Multi-Producer-Senke sowie ein Verfahren
 entwickelt, das Echtzeitinformationen über die Steuerungssoftware ausgeben kann.
 Abschließend wurde die Echtzeitfähigkeit basierend auf die Echtzeitinformationen
 analysiert.
 
-Daraus lässt sich schlussfolgern, dass die Steuerungssoftware zwar durch
-Integration von Micro-ROS funktionsreicher und folglich mit einer Vielzahl von
-ROS-Software-Komponenten kompatibel wird, dies allerdings mit erheblichem
-Overhead erkauft wird. Bei begrenztem Speicher oder Rechenleistung bleibt
-FreeRTOS mit seinem schlanken Kernel und den threadsicheren
-Queue-Implementierungen weiterhin eine geeignete Wahl gegenüber komplexeren
-RTOS-Lösungen -- besonders wenn harte Echtzeitfähigkeit im Vordergrund steht.
+\subsection{Fazit}
+
+Es lässt sich schlussfolgern, dass die Steuerungssoftware zwar durch Integration
+von Micro-ROS funktionsreicher und folglich mit einer Vielzahl von
+ROS-Komponenten kompatibel wird, dies allerdings mit erheblichem Overhead
+erkauft wird. Bei begrenztem Speicher oder Rechenleistung bleibt FreeRTOS mit
+seinem schlanken Kernel und den threadsicheren Queue-Implementierungen weiterhin
+eine geeignete Wahl gegenüber komplexeren RTOS-Lösungen -- besonders wenn harte
+Echtzeitfähigkeit im Vordergrund steht.
+
+Darüber hinaus wurde gezeigt, dass sich die Softwareleistung durch L1-Caches
+deutlich verbessern lässt, was für leistungskritische Software entscheidend ist.
 
 \subsection{Ausblick}
 

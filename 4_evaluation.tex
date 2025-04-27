@@ -344,19 +344,19 @@ Drehzahlregelung & 191.027 (Ø:~103,59) & 19.559 (Ø:~10,69) & 171.468 (Ø:~92,9
 \end{table}
 
 Die Implementierung bleibt auf beiden Plattformen größtenteils gleich, abgesehen
-vom Datenaustausch. Bei Micro-ROS werden die Daten in einer dedizierten Struktur
-mit Metadaten -- unter anderem einem Header mit Zeitstempel in Sekunden und
-Nanosekunden -- übertragen, was einen wesentlichen Overhead im Vergleich zu
-FreeRTOS verursacht. Dort werden die Daten direkt als einfache, array-ähnliche
-Struktur in die Warteschlange kopiert und extrahiert.
+vom Datenaustausch. Bei Micro-ROS müssen die Daten zusätzlich in einer
+dedizierten Struktur mit Metadaten -- unter anderem einem Header mit Zeitstempel
+in Sekunden und Nanosekunden -- umgewandelt werden, was einen wesentlichen
+Overhead im Vergleich zu FreeRTOS verursacht. Dort können die Daten als
+einfache, array-ähnliche Struktur direkt in die Warteschlange kopiert und
+extrahiert werden.
 
 Zusätzlich unterscheidet sich die FreeRTOS-Implementierung von Micro-ROS
 dadurch, dass die Drehzahldaten nicht direkt vom Drehzahlregler abgefragt und an
 die Odometrie übergeben werden. Stattdessen übernimmt eine dedizierte
 FreeRTOS-Task \mintinline{cpp}|hal_fetch| die Übertragung dieser Daten sowohl an
 den Drehzahlregler als auch an die Odometrie. Dadurch wird ein Teil des
-Overheads vom Drehzahlregler entkoppelt -- im Gegensatz zur straff gekoppelten
-Micro-ROS-Implementierung.
+Overheads vom Drehzahlregler entkoppelt.
 
 Zusammenfassend lässt sich feststellen, dass die Robotersteuerungslogik sowohl
 unter Micro-ROS als auch unter FreeRTOS vergleichsweise wenig Rechenzeit
