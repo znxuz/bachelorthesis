@@ -748,43 +748,33 @@ FreeRTOS-Tasks und zeitkritische Codeabschnitte realisieren lässt.
 
 % FIXME: alignment
 Die Profiling-Daten werden im menschenlesbaren Format
-\mintinline{text}|<Identifikator> <normalisierte Zeit> <Start-/End-Marker>|
-umgerechnet in Mikrosekunden ausgegeben. Ein Python-Skript visualisiert diese
-Daten als Gantt-Diagramm, indem es die Start- und Endzeiten aggregiert, sortiert
-und aufsteigend darstellt.
+\mintinline{text}|<Identifikator> <konvertierte Zeit> <Start-/End-Marker>|
+umgerechnet in Mikrosekunden ausgegeben.
 
 \begin{code}
 \begin{minted}{cpp}
-IDLE 1 0
-profile 2 1
-w_ctrl 7413 1
-w_ctrl 7504 0
-odom 7951 1
-odom 7969 0
-profile 28 0
-IDLE 29 1
-IDLE 332 0
-tsink 333 1
-tsink 336 0
-uros 337 1
-uros 401 0
-IDLE 402 1
-IDLE 443 0
-tsink 444 1
-tsink 447 0
-IDLE 449 1
-IDLE 1332 0
+IDLE 1 0        << mittels FreeRTOS-Task periodisch ausgegeben
+profile 2 1     << mittels FreeRTOS-Task periodisch ausgegeben
+w_ctrl 7413 1   << in Echtzeit ausgegeben
+w_ctrl 7504 0   << in Echtzeit ausgegeben
+odom 7951 1     << in Echtzeit ausgegeben
+odom 7969 0     << in Echtzeit ausgegeben
+profile 28 0    << mittels FreeRTOS-Task periodisch ausgegeben
+IDLE 29 1       << mittels FreeRTOS-Task periodisch ausgegeben
+IDLE 332 0      << mittels FreeRTOS-Task periodisch ausgegeben
+tsink 333 1     << mittels FreeRTOS-Task periodisch ausgegeben
+tsink 336 0     << mittels FreeRTOS-Task periodisch ausgegeben
 ...
 \end{minted}
     \captionof{listing}{Ausschnitt der Profiling-Daten}
 \end{code}
 
-Die Profiling-Daten folgen nicht einer strikt aufsteigenden Reihenfolge nach den
+Sie folgen nicht einer strikt aufsteigenden Reihenfolge nach den konvertierten
 Zeiten, da die von den ISR generierten Zyklenstempel zunächst
 zwischengespeichert und erst später durch eine FreeRTOS-Task in einer frei
 wählbaren Frequenz ausgegeben werden müssen. Da jedoch jeder Zyklenstempel in
 Echtzeit ohne Verzögerung oder Overhead erzeugt wird, spiegelt die entsprechende
-Zyklenzahl und somit die normalisierten Zeitpunkten in Mikrosekunden die
+Zyklenzahl und somit die konvertierten Zeitpunkten in Mikrosekunden die
 tatsächlichen Echtzeitaspekte des Systems korrekt wider. Daher ist eine strikt
 geordnete Ausgabe nicht zwingend erforderlich.
 
@@ -798,3 +788,15 @@ aufgrund des nicht-deterministischen Schedulings um die Hälfte sank.
 Anschließend wurde versucht, alle Zyklenstempel zunächst in dem statischen
 Puffer zwischenzuspeichern, um das Erzeugen und Ausgabe komplett voneinander zu
 trennen. Mit diesem Ansatz konnte die Reihenfolge konsistent gehalten werden.
+
+\begin{code}
+\begin{minted}{cpp}
+uros 2 0
+profile 2 1
+profile 28 0
+...
+w_ctrl 14031 1
+w_ctrl 14133 0
+\end{minted}
+    \captionof{listing}{Profiling-Daten in aufsteigender Reihenfolge}
+\end{code}
