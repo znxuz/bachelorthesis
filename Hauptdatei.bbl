@@ -135,29 +135,7 @@
   --
 \newblock Zugriff: 29. März 2025
 
-\bibitem[Freb]{FreertosForumSemphMtx}
-\textsc{FreeRTOS}:
-\newblock \emph{Mutex or Semaphore}.
-\newblock \url{https://forums.freertos.org/t/mutex-or-semaphore/14644/3}. --
-\newblock Zugriff: 15. März 2025
-
-\bibitem[{Fre}c]{freertos_mutexes}
-\textsc{{FreeRTOS}}:
-\newblock \emph{Mutexes}.
-\newblock
-  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/02-Queues-mutexes-and-semaphores/04-Mutexes}.
-  --
-\newblock Zugriff: 15. März 2025
-
-\bibitem[{Fre}d]{freertos_queues}
-\textsc{{FreeRTOS}}:
-\newblock \emph{Queues}.
-\newblock
-  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/02-Queues-mutexes-and-semaphores/01-Queues}.
-  --
-\newblock Zugriff: 15. März 2025
-
-\bibitem[{Fre}e]{freertos_rtos_tick}
+\bibitem[{Fre}b]{freertos_rtos_tick}
 \textsc{{FreeRTOS}}:
 \newblock \emph{The RTOS Tick}.
 \newblock
@@ -165,7 +143,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}f]{freertos_rtos_trace_hooks}
+\bibitem[{Fre}c]{freertos_rtos_trace_hooks}
 \textsc{{FreeRTOS}}:
 \newblock \emph{RTOS Trace Feature}.
 \newblock
@@ -173,7 +151,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}g]{freertos_semphr_incl}
+\bibitem[{Fre}d]{freertos_semphr_incl}
 \textsc{{FreeRTOS}}:
 \newblock \emph{semphr.h}.
 \newblock
@@ -181,7 +159,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}h]{freertos_memory_management}
+\bibitem[{Fre}e]{freertos_memory_management}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Static vs Dynamic Memory Allocation}.
 \newblock
@@ -189,7 +167,7 @@
   --
 \newblock Zugriff: 19. März 2025
 
-\bibitem[{Fre}i]{freertos_task_notifications_desc}
+\bibitem[{Fre}f]{freertos_task_notifications_desc}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Task Notifications}.
 \newblock
@@ -197,7 +175,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}j]{freertos_task_notifications_usage}
+\bibitem[{Fre}g]{freertos_task_notifications_usage}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Task Notifications - Performance Benefits and Usage
   Restrictions}.
@@ -206,7 +184,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}k]{freertos_tasks_c_308}
+\bibitem[{Fre}h]{freertos_tasks_c_308}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
@@ -214,7 +192,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}l]{freertos_tasks_c_4990}
+\bibitem[{Fre}i]{freertos_tasks_c_4990}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
@@ -222,7 +200,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}m]{freertos_tasks_c_4614}
+\bibitem[{Fre}j]{freertos_tasks_c_4614}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
@@ -230,7 +208,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}n]{freertos_tick_resolution}
+\bibitem[{Fre}k]{freertos_tick_resolution}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Tick Resolution}.
 \newblock

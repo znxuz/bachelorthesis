@@ -1,102 +1,90 @@
 \section{Hintergrund}
 
 Die vorliegende Bachelorarbeit hat zum Ziel, die Robotersteuerungssoftware, die
-derzeit auf Micro-ROS basiert, auf FreeRTOS zu portieren, um einen
+derzeit auf Micro-ROS basiert, auf FreeRTOS zu portieren, um unter anderem einen
 vergleichenden Leistungsanalyse zwischen beiden Plattformen durchzuführen. Beide
 Systeme sind für die Steuerung eines mobilen Roboters auf einem Cortex-M7
-Mikrocontroller von Arm konzipiert, unterscheiden sich jedoch in ihrer
+Mikrocontroller von Arm entwickelt, unterscheiden sich jedoch in ihrer
 grundlegenden Architektur, was sich auch in ihrer Echtzeitfähigkeit und
-Ressourcennutzung widerspiegelt. Während Micro-ROS auf der \ac{ROS 2} aufbaut
-und eine höhere Abstraktionsebene sowie standardisierte
-Kommunikationsschnittstellen mittels der \ac{DDS}-Middleware bietet, basiert
-Micro-ROS selbst auf FreeRTOS. Die Portierung der Robotersteuerungssoftware von
-Micro-ROS auf FreeRTOS kann daher als eine Reduzierung der Abhängigkeitsebene
-betrachtet werden. Dies ermöglicht eine direktere und effizientere Nutzung der
-zugrunde liegenden Echtzeit-, sowie Speicherressourcen.
+Ressourcennutzung widerspiegelt. Während Micro-ROS auf dem \ac{ROS 2} Framework
+aufbaut und eine höhere Abstraktionsebene sowie standardisierte
+Kommunikationsschnittstellen mittels einer \ac{DDS}-Middleware bietet, basiert
+dies selbst auf FreeRTOS. Die Portierung auf FreeRTOS kann daher als eine
+Reduzierung der Abhängigkeitsebene betrachtet werden. Dies ermöglicht eine
+direktere und effizientere Nutzung der zugrunde liegenden Echtzeit-, sowie
+Speicherressourcen.
 
 \begin{figure}[htb] \centering
     \includegraphics[width=0.8\textwidth]{assets/Micro-ROS_architecture}
     \caption{Micro-ROS Architektur\cite[S. 6]{koubaa2023}}
-    % \label{fig:uros_architecture}
 \end{figure}
 
-Nach dem Wechsel zu FreeRTOS wird die Echtzeitleistung der Steuerungssoftware
-analysiert mit einem besonderen Fokus auf den Overhead, der durch die
-Micro-ROS-Schicht verursacht wird. Der Vergleich soll aufzeigen, inwiefern
-FreeRTOS durch die Eliminierung dieser zusätzlichen Abhängigkeit eine
-effizientere und leichtgewichtige Lösung für kritische Roboteranwendungen
-darstellt. Dabei soll der Einsatz einer zyklengenaue Messung des Programmablaufs
-ermöglichen, fundierte Aussagen über die Echtzeitfähigkeit beider Plattformen zu
-treffen, und den Leistungsgewinn anhand von diesem Beispiel für eine
-Steuerungssoftware quantitativ zu belegen.
+% Nach der Portierung zu FreeRTOS wird die Echtzeitleistung der Steuerungssoftware
+% analysiert mit einem besonderen Fokus auf den Overhead, der durch die
+% Micro-ROS-Schicht verursacht wird. Der Vergleich soll aufzeigen, inwiefern
+% FreeRTOS durch die Eliminierung dieser zusätzlichen Abhängigkeit eine
+% effizientere und leichtgewichtige Lösung für kritische Roboteranwendungen
+% darstellt. Dabei soll der Einsatz einer zyklengenaue Messung des Programmablaufs
+% ermöglichen, fundierte Aussagen über die Echtzeitfähigkeit beider Plattformen zu
+% treffen, und den Leistungsgewinn anhand von diesem Beispiel für eine
+% Steuerungssoftware quantitativ zu belegen.
 
 \subsection{FreeRTOS}
 
-FreeRTOS ist ein Open-Source, leichtgewichtiges \ac{RTOS}, das speziell für
-eingebettete Systeme entwickelt wurde. Es zeichnet sich unter anderem durch
-deterministisches Verhalten mit Echtzeitgarantie sowie Konfigurierbarkeit der
-Heap-Allokation aus. Diese Eigenschaften machen es zu einer geeigneten Wahl für
-Robotersteuerungssoftware, insbesondere wenn Echtzeitanforderungen und
-effiziente Ressourcennutzung im Vordergrund stehen.
+FreeRTOS ist ein Open-Source, leichtgewichtiges \ac{RTOS}, das besonders für
+eingebettete Systeme geeignet ist. Es zeichnet sich unter anderem durch
+deterministisches Verhalten mit Echtzeitgarantie sowie Konfigurierbarkeit von
+Heap-Allokationen aus. Diese Eigenschaften machen es zu einer geeigneten Wahl
+für mehrfädige Software, insbesondere wenn Echtzeitanforderungen oder fein
+abgestimmte Kontrolle über Ressourcennutzung im Vordergrund stehen.
 
-\subsubsection{Konzepte}
+\subsubsection{Features}
 
 FreeRTOS unterscheidet sich von der Bare-Metal-Programmierung dadurch, dass es
-eine nützliche Abstraktionsebene für den Nutzer bereitstellt. Diese
-Abstraktionen ermöglichen es, komplexere Echtzeitanforderungen zu bewältigen,
-ohne dass der Nutzer diese Funktionalitäten selbst implementieren muss.
-Beispiele hierfür sind Timer mit konfigurierbarer Genauigkeit (basierend auf den
-sogenannten Tick \cite{freertos_rtos_tick, freertos_tick_resolution}),
-threadsichere Queues sowie Semaphore und Mutexe \cite{freertos_queues}. Diese
-Komponenten bieten fertige Lösungen für häufige Herausforderungen in der
-Entwicklung eingebetteter Systeme, sodass der Nutzer solche Werkzeuge nicht mehr
-selbst anfertigen muss.
+einen umfangreichen Abstraktionslayer für den Nutzer bereitstellt. Diese
+Abstraktionen ermöglichen es, Echtzeitanforderungen zu bewältigen, ohne dass der
+Nutzer diese Funktionalitäten selbst implementieren muss. Beispiele hierfür sind
+unter anderem Timer mit konfigurierbarer Genauigkeit (basierend auf den
+sogenannten Tick \cite{freertos_rtos_tick, freertos_tick_resolution}), Queues,
+Semaphore sowie Mutexe.
 
-Im Fokus dieser Arbeit stehen Queues und „Direct Task Notifications“, die in der
-Robotersteuerungssoftware zum Einsatz kommen, sowie Semaphore und die
-sogenannten „Trace Hooks” für die darauffolgende Echtzeitanalyse. Diese
+Im Fokus dieser Arbeit stehen Queues und auch die sogenannte „Direct Task
+Notifications“, die für den Datenaustausch verwendet werden. Ebenfalls relevant
+sind Mutexe und „Trace Hooks“ für die anschließende Echtzeitanalyse. Diese
 Komponenten werden im Folgenden detailliert erläutert.
 
 \paragraph{Queues}
 
-Queues sind eine der Kernkomponenten von FreeRTOS und dienen der
-Interprozesskommunikation zwischen Tasks. Sie ermöglichen den threadsicheren
-Austausch von Daten, und können sowohl zur Datenübertragung als auch zur
-Synchronisation von Tasks verwendet werden, da dedizierte
-(Ressourcen-)\\Synchronisationsmechanismen wie Semaphore und Mutexe sind auf
-Queues aufgebaut \cite{freertos_semphr_incl}.
+Queues sind eine Kernkomponente von FreeRTOS. Sie ermöglichen nicht nur
+threadsichere Interprozesskommunikation zwischen Tasks, sondern dienen auch
+deren Synchronisation. Die bereits vorhandenen
+(Ressourcen-)Synchronisationsmechanismen wie Semaphore und Mutexe sind schlicht
+auf Queues aufgebaut \cite{freertos_semphr_incl}.
 
-\paragraph{Semaphore}
+\paragraph{Semaphore und Mutexe} \label{sec:mutex}
 
-Wie bereits kurz erwähnt, sind Semaphore und Mutexe Tools, die den Zugriff auf
-gemeinsame Ressourcen koordinieren, wobei Semaphore auch zur Synchronisation von
-Tasks genutzt werden können. Semaphoren sind einfache Mechanismen ohne
-Unterstützung von Prioritätsvererbung, bei der eine Task mit Besitz von einem
-\textit{Mutex} mit einer niedrigeren Priorität künstlich auf die gleiche
-Priorität der auf den Mutex wartenden Task angehoben
-wird~\cite{wikipedia_priority_inheritance}. Wenn eine Ressource dann nur mit
-einem Semaphor geschützt ist, kann dies zu Prioritätsinversion führen, bei der
-eine höher priorisierte Task aufgrund einer blockierten gemeinsam genutzten
-Ressource nicht ausgeführt werden kann, sodass der Scheduler stattdessen eine
-niedriger priorisierte Task auswählen muss, bis die Ressource freigegeben ist.
-\cite{wikipedia_priority_inversion}.
+Wie bereits erwähnt, sind Semaphore und Mutexe Mechanismen zur Koordinierung des
+Zugriffs auf gemeinsame Ressourcen. Aufgrund ihrer Einfachheit eignen sich
+Semaphore zusätzlich für die Task-Synchronisation. Semaphoren sind somit
+Synchronisationsmechanismen ohne Prioritätsvererbung -- ein Konzept, bei dem
+eine niedriger priorisierte Task, die einen \textit{Mutex} hält, temporär auf
+die Priorität der wartenden Task angehoben
+wird~\cite{wikipedia_priority_inheritance}. Diese Funktionalität fehlt bei
+Semaphoren, wodurch es zur Prioritätsinversion kommen kann: Eine höher
+priorisierte Task wird blockiert, während der Scheduler stattdessen eine
+niedriger priorisierte Task ausführt, bis die benötigte Ressource freigegeben
+ist. \cite{wikipedia_priority_inversion}.
 
-\begin{figure}[htb]
+Die folgenden Grafiken veranschaulichen ein Beispiel jeweils für
+Prioritätsinversion und Prioritätsvererbung:
+
+\begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/prio_inversion}
     \caption{Prioritätsinversion}
 \end{figure}
 
-\paragraph{Mutexe} \label{sec:mutex}
-
-Im Gegensatz dazu sind Mutexe (Mutual Exclusion) Synchronisationsmechanismen,
-die Prioritätsvererbung implementieren \cite{freertos_mutexes}. Wenn eine Task
-auf einen Mutex wartet, der von einer niedriger priorisierten Task gehalten
-wird, wird diese Task temporär auf die Priorität der wartenden Task
-erhöht~\cite{FreertosForumSemphMtx}, so dass er den Mutex und damit die von der
-watenden Task benötigte Ressource so schnell wie möglich wieder freigeben kann.
-
-\begin{figure}[htb]
+\begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/prio_inheritance}
     \caption{Prioritätsvererbung}
@@ -105,24 +93,24 @@ watenden Task benötigte Ressource so schnell wie möglich wieder freigeben kann
 \paragraph{Direct Task Notifications} \label{sec:direct_task_notification}
 
 Direct Task Notifications sind ein effizienterer und ressourcenschonenderer
-Mechanismus zur Task-Synchronisation \cite{freertos_task_notifications_desc}. Im
-Gegensatz zu Semaphoren senden sie direkte Signale an eine Task, ohne die
-zugrunde liegenden Queues zu benötigen, indem sie einfach einen internen Zähler
-einer Task verändern \cite{freertos_tasks_c_308}. Analog zu Semaphoren wird
-mittels Funktionen wie zum Beispiel \mintinline{c}|xTaskNotifyGive()| dieser
-Zähler inkrementiert~\cite{freertos_tasks_c_4990}, während Funktionen wie
+Mechanismus zur Task-Synchronisation \cite{freertos_task_notifications_desc}.
+Insbesondere soll das Entblocken einer Task mittels Direct Task Notifications
+bis zu 45\% schneller sein und weniger RAM benötigen
+\cite{freertos_task_notifications_usage}. Im Gegensatz zu Semaphoren, die als
+separate Objekte fungieren, kommunizieren sie direkt mit Tasks durch
+Modifikation eines internen Task-Zählers \cite{freertos_tasks_c_308}. Analog zur
+Handhabung von Semaphoren wird mittels Funktionen wie
+\mintinline{c}|xTaskNotifyGive()| dieser Zähler
+inkrementiert~\cite{freertos_tasks_c_4990}, während
 \mintinline{c}|ulTaskNotifyTake()| ihn wieder
-dekrementieren~\cite{freertos_tasks_c_4614}. Das Entblocken einer Task mittels
-Direct Task Notifications soll bis zu 45\% schneller sein und benötigt weniger
-%FIXME
-RAM \cite{freertos_task_notifications_usage}.
+dekrementiert~\cite{freertos_tasks_c_4614}. 
 
 \paragraph{Trace Hooks} \label{sec:trace_hooks}
 
-„Trace Hooks“ sind spezielle Makros bereitgestellt von FreeRTOS, deren Nutzung
-es beispielsweise ermöglicht, Ereignisse im System zu verfolgen und zu
-protokollieren. Diese Makros werden innerhalb von Interrupts beim Scheduling
-aufgerufen und sollten immer vor der Einbindung von
+„Trace Hooks“ sind spezielle, von FreeRTOS bereitgestellte Makros. Sie
+ermöglichen beispielsweise die Verfolgung oder Protokollierung von
+Systemereignissen. Diese Makros werden innerhalb von Interrupts beim Scheduling
+aufgerufen und sollten stets vor der Einbindung von
 \mintinline{text}|FreeRTOS.h| definiert werden \cite{freertos_rtos_trace_hooks}.
 
 \subsection{Nutzung von Caches}
@@ -131,13 +119,14 @@ Caches sind schnelle Speicherkomponenten, die dazu dienen, Zugriffe auf häufig
 verwendete Daten und Befehle zu beschleunigen und den Energieverbrauch zu
 reduzieren \cite{ka001150}. In vielen modernen Mikrocontrollern, wie dem
 Cortex-M7, ist der L1-Cache (Level 1 Cache) jeweils in einen Datencache
-(D-Cache) und einen Instruktionscache (I-Cache) unterteilt \cite[S. 6]{an4667}.
-Da der Zugriff auf den Hauptspeicher sowie auf den Flash generell viel langsamer
-ist und mehrere Taktzyklen dauert~\cite{stm32_memory_sections}, kann mit
-L1-Caches Null-Waitstate ermöglicht werden~\cite[S. 6]{an4667}, wodurch der
-Prozessor ohne zusätzliche Wartezyklen auf die Daten zugreift
-\cite{waitstate_wiki}.
+(D-Cache) sowie einen Instruktionscache (I-Cache) unterteilt \cite[S.
+6]{an4667}. Da Zugriffe auf den Hauptspeicher und Flash-Speicher generell
+deutlich langsamer sind und mehrere Taktzyklen
+benötigen~\cite{stm32_memory_sections}, ermöglichen L1-Caches
+Zero-Wait-State-Zugriffe~\cite[S. 6]{an4667}. Dadurch kann der Prozessor ohne
+zusätzliche Wartezyklen auf Daten zugreifen \cite{waitstate_wiki}.
 
+% TODO: everything AHB connect to AXI
 Der L1-Cache kann nur mit Speicherschnittstellen auf der \ac{AXI}-Busarchitektur
 genutzt werden~\cite[S. 4]{an4839}. Hierzu zählen unter anderem der Flash, der
 \ac{SRAM} sowie die beiden \ac{AHB}-Busse, die alle an den AXI-Bus angebunden

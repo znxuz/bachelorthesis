@@ -23,12 +23,16 @@ deutlich verbessern lässt, was für leistungskritische Software entscheidend is
 
 Für zukünftige Arbeiten könnte die Multi-Producer-Senke so weiterentwickelt
 werden, dass sie atomare Schreiboperationen auf 4-Byte-/32-Bit-Ebene
-unterstützt. Dadurch könnten die Echtzeit-Daten nicht mehr im menschenlesbaren
-Format, sondern maschinenlesbar und komprimiert als 4-Byte-Dateneinheit
+unterstützt. Dadurch könnten die Echtzeitdaten nicht mehr im menschenlesbaren
+Format, sondern maschinenlesbar und komprimiert jeweils als 4-Byte-Dateneinheit
 ausgegeben werden.
 
-Dies würde den Zwischenpuffer für die Echtzeitanalyse überflüssig machen, da die
-durch Kontextwelchsel/Interrupt generierten Daten direkt atomar in die Senke
-geschrieben werden könnten. Dazu müsste ein Parser auf dem Host-System
-entwickelt werden, der idealerweise auch die Visualisierung sowie Analyse der
-Daten parallel in Echtzeit ermöglicht.
+Dies würde erstens den Zwischenpuffer zum Speichern von durch
+Kontextwelchsel/Interrupt generierten Zyklenstempeln überflüssig machen, da sie
+als 32-bit Daten atomar direkt in die Senke geschrieben werden könnten. Zweitens
+könnte ein Parser auf dem Host-System entwickelt werden, der idealerweise auch
+die Visualisierung sowie Analyse der Daten parallel in Echtzeit ermöglicht.
+Diese Vorgehensweise ähnelt der Rust-Bibliothek \mintinline{text}|defmt|, bei
+der die rechenintensive Formatierung von Logging-Informationen nicht auf dem
+ressourcenbeschränkten System erfolgt, sondern auf eine sekundäre Maschine
+ausgelagert wird.
