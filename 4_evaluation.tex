@@ -3,7 +3,7 @@
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth]{assets/micro_ros_profiling}
-    \caption{Visualisierung der Echtzeitanalyse unter Micro-ROS}
+    \caption{Visualisierung der Echtzeit-Statistik unter Micro-ROS}
     % \label{fig:micro_ros_profiling}
 \end{figure}
 
@@ -40,7 +40,7 @@ profiled for 18881864 us
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth]{assets/freertos_profiling}
-    \caption{Visualisierung der Echtzeitanalyse unter FreeRTOS}
+    \caption{Visualisierung der Echtzeit-Statistik unter FreeRTOS}
     % \label{fig:freertos_profiling}
 \end{figure}
 
@@ -79,7 +79,7 @@ profiled for 18779120 us
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth]{assets/micro_ros_profiling_ausschnitt_cache_enabled}
-    \caption{Echtzeitanalyse (Ausschnitt) unter Micro-ROS}
+    \caption{Visualisierung der Echtzeit-Statistik (Ausschnitt) unter Micro-ROS}
     % \label{fig:freertos_profiling}
 \end{figure}
 
@@ -323,10 +323,48 @@ $\textbf{70,43\,\%}$ und für die Drehzahlregelung um $\textbf{72,17\,\%}$.
 
 \subsection{Vergleich zwischen Micro-ROS und FreeRTOS}
 
-% | name | unter Micro-ROS (µs) | unter FreeRTOS (µs) | Differenz (µs) |
-% | Odometrie | 6.780 (Ø: 3,74) | 6.256 (Ø: 6,84) | -524 |
-% | Posenregelung | 69.301 (Ø: 75,16) | 9043 (Ø: 9,88) | 60258 (Ø: 65,28) |
-% | Drehzahlregelung |191.027 (Ø: 103,59) | 19.559 (Ø: 10,69) | 171468 (Ø: 92,90) |
+\subsubsection{Experimentelle Bestimmung der maximalen Regelungsfrequenz}
+
+Bei FreeRTOS gibt es keine theoretische Obergrenze für die Taktrate geplanter
+Tasks. Die praktische maximale Frequenz liegt standardmäßig bei
+$1000\,\text{Hz}$, da der Tick-Interrupt für den Kontextwechsel standardmäßig
+auf $1\,\text{ms}$ (entsprechend $1000$ Interrupts pro Sekunde) festgelegt ist
+\cite{FreertosTasks}.
+
+Um Frequenzen über $1000\,\text{Hz}$ zu erreichen, muss die
+Tick-Interrupt-Frequenz neu konfiguriert werden, um die Dauer der Zeitscheibe
+(„Time Slice”) zwischen den Interrupts zu verkürzen. Es wird jedoch davon
+abgeraten, deutlich über 1000 Hz zu gehen, da die kumulativen
+Kontextwechselkosten oberhalb eines bestimmten Schwellenwerts erheblichen
+Overhead verursachen. (\cite{FreertosForumHF2019, FreertosTickRate2010})
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/freertos_profiling_1000hz}
+    \caption{Visualisierung der Echtzeit-Statistik mit 1000 Hz unter FreeRTOS}
+\end{figure}
+
+\paragraph{FreeRTOS} Wie in der Grafik dargestellt, kann dieses Regelungssystem,
+dessen Tasks und zugrundeliegende Kommunikation mittels FreeRTOS-APIs besonders
+schlank sind und auf minimalen Overhead optimiert wurden, problemlos mit
+$1000\,\text{Hz}$ betrieben werden.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/micro_ros_profiling_1000hz.png}
+    \caption{Visualisierung der Echtzeit-Statistik mit 1000 Hz unter FreeRTOS}
+\end{figure}
+
+\paragraph{Micro-ROS} Bei Micro-ROS erreicht das System die Sollfrequenz von
+$1000\,\text{Hz}$ nicht und schwankt zwischen $910\,\text{Hz}$ und
+$980\,\text{Hz}$. Dies könnte vermutlich daran liegen, dass die maximal
+erreichbare Frequenz durch die Integration einer zusätzlichen Middleware
+beeinflusst wird und von deren Performance (bzw. Konfiguration) abhängt
+\cite{ROS_Performance2019}. Zudem stellt der Overhead des ROS/Micro-ROS-Stacks
+selbst einen signifikanten Faktor dar, da der gesamte Datenaustausch über das
+ROS-Framework erfolgt, um Unterstützung mit ROS-Tools zu gewährleisten.
+
+\subsubsection{Dauer von Regelungsfunktionen}
 
 Aus den Profiling-Daten lässt sich folgender Vergleich zwischen der Micro-ROS-
 und FreeRTOS-Implementierung für die Robotersteuerung ableiten:
