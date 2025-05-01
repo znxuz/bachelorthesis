@@ -175,7 +175,7 @@ Inkrement unter der Voraussetzung von Äquivalenz alle zusammen als eine atomare
 Operation durchführen zu können, ermöglicht, dass nur ein Thread am Ende den
 Schreibindex erfolgreich inkrementieren und folglich Daten über den
 zwischengespeicherten Index schreiben kann. Dabei wird die Synchonisation also
-in einer nicht-blockierenden Weise („lock-free”) garantiert.
+in einer nicht-blockierenden Weise (lock-free) garantiert.
 
 Um das Schreiben von mehreren Bytes auch threadsicher durchzuführen, muss dabei
 ein Mutex eingesetzt werden~\cite{FreeRTOSForumPrintf}. Dies stellt sicher im

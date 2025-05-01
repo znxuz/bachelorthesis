@@ -126,11 +126,10 @@ benötigen~\cite{stm32_memory_sections}, ermöglichen L1-Caches
 Zero-Wait-State-Zugriffe~\cite[S. 6]{an4667}. Dadurch kann der Prozessor ohne
 zusätzliche Wartezyklen auf Daten zugreifen \cite{waitstate_wiki}.
 
-% TODO: everything AHB connect to AXI
-Der L1-Cache kann nur mit Speicherschnittstellen auf der \ac{AXI}-Busarchitektur
-genutzt werden~\cite[S. 4]{an4839}. Hierzu zählen unter anderem der Flash, der
-\ac{SRAM} sowie die beiden \ac{AHB}-Busse, die alle an den AXI-Bus angebunden
-sind (\ref{fig:m7_sys_arch}).
+Der L1-Cache kann nur mit der \ac{AXI}-Busschnittstelle genutzt werden~\cite[S.
+4]{an4839}. Hierzu zählen unter anderem der Flash, der \ac{SRAM} sowie die
+Peripheriebusse, die alle über den \ac{AHB}-Bus an den AXI angebunden sind
+(\ref{fig:m7_sys_arch}).
 
 \begin{figure}[htb]
     \centering
@@ -139,26 +138,20 @@ sind (\ref{fig:m7_sys_arch}).
     \label{fig:m7_sys_arch}
 \end{figure}
 
-Aus der Matrix wird deutlich, dass für den Speicher zwischen SRAM und TCM-RAM
-unterschieden wird. Der \ac{TCM} verfügt jeweils für Instruktionen und Daten
-über einen dedizierten Kanal zum Prozessor und ist nicht cachefähig, bietet aber
-als Besonderheit niedrigere Zugriffszeiten als SRAM. Während bei SRAM die
-Zugriffszeit variieren kann (schnell aus dem Cache oder langsam aus dem
-Speicher), ist die Zugriffszeit bei TCM konsistent und deterministisch.
-Dies macht sie besonders geeignet für zeitkritische Routinen wie Interrupt-Handler
-oder Echtzeitaufgaben. (\cite{arm_den0042}) % TODO TCM wird nicht in der arbeit betrachtet
+Aus der Matrix wird außerdem deutlich, dass für den Speicher zwischen SRAM und
+TCM-RAM unterschieden wird. Der \ac{TCM} verfügt jeweils für Instruktionen und
+Daten über einen dedizierten Kanal zum Prozessor und ist \textit{nicht}
+cachefähig, bietet aber als Besonderheit niedrigere Zugriffszeiten als SRAM.
+Während bei SRAM die Zugriffszeit variieren kann -- schnell aus dem Cache oder
+langsam aus dem Speicher) -- ist die Zugriffszeit bei TCM daher konsistent und
+deterministisch. Dies macht sie besonders geeignet für zeitkritische Routinen
+wie Interrupt-Handler oder Echtzeitaufgaben. (\cite{arm_den0042})
+
+Im Rahmen dieser Bachelorarbeit wird der TCM nicht betrachtet.
 
 Zusammenfassend lässt sich sagen, dass jeder normale, nicht gemeinsam genutzte
 (non-shared) Speicherbereich gecacht werden kann, sofern er über das AXI-Bus
 zugänglich ist \cite[S. 4]{an4839}~\cite[S. 7]{an4667}.
-
-Aus der Tabelle für den internen Speicher wird deutlich, dass der Flash ab der
-Adresse $0x0800 0000$ über das AXI-Bus angesprochen wird
-(\ref{fig:internal_mem_table}). Diese Adresse ist auch im Linker-Skript
-standardmäßig für den Flash festgelegt. Daher kann der I-Cache über den AXI-Bus
-für den Flash genutzt werden, sofern der Boot-Pin sowie die assoziierten
-\mintinline{text}|BOOT_ADDx| Option unverändert bleiben und die Firmware an die
-Standardadresse geflasht wird \cite[S. 28]{stm32_datasheet}.
 
 \begin{figure}[htb]
     \centering
@@ -166,6 +159,14 @@ Standardadresse geflasht wird \cite[S. 28]{stm32_datasheet}.
     \caption{STM32F7 Speicheradressen \cite[S. 14]{an4667}}
     \label{fig:internal_mem_table}
 \end{figure}
+
+Aus der Tabelle für den internen Speicher wird deutlich, dass der Flash ab der
+Adresse $0x0800 0000$ über das AXI-Bus angesprochen wird
+(\ref{fig:internal_mem_table}). Diese Adresse ist auch im Linker-Skript
+standardmäßig für den Flash festgelegt. Daher kann der I-Cache über den AXI-Bus
+für den Flash genutzt werden, sofern der Boot-Pin sowie die assoziierten
+\mintinline{text}|BOOT_ADDx| Registerkonfigurationen unverändert bleiben und die
+Firmware an die Standardadresse geflasht wird \cite[S. 28]{stm32_datasheet}.
 
 \begin{code}
 \begin{minted}{c}
@@ -178,8 +179,8 @@ FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 2048K
     \captionof{listing}{Definition Speicherbereich im Linker-Script für STM32F7}
 \end{code}
 
-Um Caches zu nutzen, bietet die STM-\ac{HAL} dedizierte Funktionsaufrufe in der
-API an \cite[S. 4]{an4839}:
+Um Caches zu nutzen, bietet die STM-\ac{HAL} dedizierte Funktionen als API an
+\cite[S. 4]{an4839}:
 
 \begin{code}
 \begin{minted}{c}
@@ -195,56 +196,67 @@ void SCB_CleanInvalidateDCache(void)
     \captionof{listing}{Cache-Funktionen}
 \end{code}
 
-Bei einer Cache-Clean werden modifizierte Cache-Zeilen (Dirty Cache Lines), die
-durch das Programm aktualisiert wurden, zurück in den Hauptspeicher geschrieben
-\cite[S. 4]{an4839}. Dieser Vorgang wird gelegentlich auch als „flush”
-bezeichnet. Eine Cache-Invalidierung markiert den Inhalt des Caches als
-ungültig, sodass bei einem erneuten Zugriff auf dieselben Daten der Speicher neu
-ausgelesen und der Cache aktualisiert werden muss.
+\subsubsection{Cache-Leerung}
 
-Allerdings kann beim Aktivieren von Caches für Speicherbereiche, die vom
-DMA-Controller genutzt werden, ein Problem der Cache-Kohärenz (Cache Coherency)
-entstehen, da der Prozessor in diesem Fall nicht mehr der einzige Master ist,
+Bei einer Cache-Leerung (cache clean) werden modifizierte Cache-Zeilen (Dirty
+Cache Lines), die während der Programmausführung aktualisiert wurden, zurück in
+den Hauptspeicher geschrieben \cite[S. 4]{an4839}. Dieser Vorgang wird
+gelegentlich auch als „flush” bezeichnet.
+
+\subsubsection{Cache-Invalidierung}
+
+Eine Cache-Invalidierung markiert hingegen den Cache als ungültig, sodass bei
+dem nachfolgenden Zugriff auf die assoziierten Daten diese zwingend aus dem
+Hauptspeicher geladen und der Cache entsprechend aktualisiert werden.
+
+Allerdings kann bei der Nutzung von Caches für Speicherbereiche, die mit dem
+DMA-Controller geteilt werden, ein Cache-Kohärenzproblem (Cache Coherency)
+auftreten, da der Prozessor in diesem Fall nicht mehr der einzige Master ist,
 der auf diese Speicherbereiche zugreift.
 
-\subsubsection{Cache-Clean bei DMA} \label{sec:cache_clean}
+\subsubsection{Cache-Leerung bei DMA} \label{sec:cache_clean}
 
 Damit der DMA-Controller stets auf korrekte Daten zugreifen kann, ist eine
-Cache-Clean nach jeder Modifikation der Daten erforderlich \cite[S. 6]{an4839}.
-Ohne diesen Schritt würden die Änderungen nicht im SRAM widergespiegelt, und der
-DMA-Controller würde weiterhin veraltete Daten verwenden.
+manuelle Cache-Leerung \textit{nach} jedem Schreibvorgang von Seiten der CPU
+erforderlich \cite[S. 6]{an4839}. Ohne diesen Schritt würden die Änderungen
+nicht im SRAM widergespiegelt, und der DMA-Controller würde weiterhin
+veraltete/ungültige Daten verwenden.
 
 \subsubsection{Cache-Invalidierung bei DMA}
 
-Bei Daten, die aus dem Speicher gelesen werden, auf die auch der DMA-Controller
-zugreift und modifiziert, muss vor jedem Lesevorgang eine Cache-Invalidierung
-erfolgen \cite{embeddedexpert_cache}. Da der DMA-Controller die Daten jederzeit
-ändern kann, sind die gecachten Daten per se ungültig und müssen immer durch
-Aktualisierung ersetzt werden.
+Bei Daten, die aus einem Speicherbereich gelesen werden, der auch vom
+DMA-Controller modifiziert werden kann, ist \textit{vor} jedem Lesevorgang eine
+Cache-Invalidierung notwendig \cite{embeddedexpert_cache}. Da der DMA-Controller
+asynchron und unabhängig von der CPU schreiben kann, sind die gecachten Daten
+potenziell veraltet/ungültig, und müssen stets manuell aktualisiert werden.
 
 \subsection{Methode zur Echtzeitanalyse} \label{sec:dwt}
 
-Um die Echtzeitanalyse der Steuerungssoftware durchzuführen, ist eine Methode
-erforderlich, mit der beliebige Ausführungsabschnitte der Software flexibel,
-präzise und threadsicher gemessen werden können. Da die Software multithreaded
-ist, muss ebenfalls sichergestellt werden, dass die Messungen trotz preemptivem
-Scheduling sowie Interrupts korrekt und zyklengetreu durchgeführt werden können.
+Für die Echtzeitanalyse der Steuerungssoftware wird eine Methode benötigt, die
+beliebige Softwareabschnitte flexibel, präzise und threadsicher vermessen kann.
+Da es sich um eine multithreaded Anwendung handelt, muss gewährleistet sein,
+dass die Messungen trotz preemptivem Scheduling, parallel auftretenden
+Interrupts sowie Compiler-Optimierung zyklengenau durchgeführt werden. Die
+Lösung muss insbesondere garantieren, dass keine Race Conditions durch
+Kontextwechsel entstehen und die Zeitmessung selbst keinen nennenswerten
+Overhead verursacht.
 
-Basierend auf den oben genannten Herausforderungen bietet die \ac{DWT} als eine
-geeignete Lösung \cite{ARM_KA001499}. Die DWT ist ein Debug-Einheit in
-Prozessoren inklusive ARMv7-M \cite{ARMv7_ref_man_dwt_about}, die das Profiling
-mittels verschiedener Zähler unterstützen \cite{ARMv7_ref_man_dwt_profiling}.
-Ein für diese Arbeit zentraler Teil der DWT ist der Zyklenzähler
-\mintinline{c}|DWT_CYCCNT|, der bei jedem Takt inkrementiert wird, solange sich
-der Prozessor nicht im Debug-Zustand befindet \cite{ARMv7_ref_man_dwt_cycle}.
-Dadurch ermöglicht die DWT beispielsweise die Erfassung von Echtzeitaspekten mit
-zyklengenauer Präzision under normaler Operation \cite{ARMv7_ref_man_dwt}.
+Für die Zeitmessung bietet die \ac{DWT} eine geeignete
+Lösung~\cite{ARM_KA001499}. Die DWT ist ein Debug-Einheit in Prozessoren
+inklusive ARMv7-M~\cite{ARMv7_ref_man_dwt_about}, die unter anderem das
+Profiling mittels verschiedener Zähler unterstützen
+\cite{ARMv7_ref_man_dwt_profiling}. Ein für diese Arbeit zentraler Teil der DWT
+ist der Zyklenzähler \mintinline{c}|DWT_CYCCNT|, der bei jedem CPU-Takt
+inkrementiert wird, solange sich der Prozessor nicht im Debug-Zustand befindet
+\cite{ARMv7_ref_man_dwt_cycle}. Under normaler Operation ermöglicht die DWT die
+Erfassung von Echtzeitaspekten mit zyklengenauer Präzision
+\cite{ARMv7_ref_man_dwt}.
 
 \subsubsection{Beispiel: Segger SystemView}
 
-Ein Beispiel hierfür ist Segger SystemView, ein Echtzeit-Analysewerkzeug, das
-die DWT einsetzt, um Live-Code-Profiling auf eingebetteten Systemen
-durchzuführen \cite{SEGGER_SystemView}.
+Ein Beispiel hierfür ist Segger SystemView, ein Echtzeitanalyse-Tool, das die
+DWT nutzt, um Live-Code-Profiling auf eingebetteten Systemen durchzuführen
+\cite{SEGGER_SystemView}.
 
 Das Segger SystemView nutzt den DWT-Zyklenzähler, indem die Funktion \linebreak
 \mintinline{c}|SEGGER_SYSVIEW_GET_TIMESTAMP()| für Cortex-M3/4/7-Prozessoren
