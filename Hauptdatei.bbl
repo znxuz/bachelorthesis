@@ -113,7 +113,13 @@
 \newblock \url{https://en.cppreference.com/w/c/language/eval_order}. --
 \newblock Zugriff: 29. März 2025
 
-\bibitem[cppb]{cppreference_memory_order}
+\bibitem[cppb]{cppreference_fetch_add}
+\textsc{cppreference.com}:
+\newblock \emph{std::atomic<T>::fetch\_add}.
+\newblock \url{https://en.cppreference.com/w/cpp/atomic/atomic/fetch_add}. --
+\newblock Zugriff: 21. April 2025
+
+\bibitem[cppc]{cppreference_memory_order}
 \textsc{cppreference.com}:
 \newblock \emph{std::memory\_order}.
 \newblock
@@ -345,6 +351,14 @@
   --
 \newblock Zugriff: 14. März 2025
 
+\bibitem[{ST }23]{stm32_hal_reentrancy}
+\textsc{{ST Community}}:
+\newblock \emph{Is the HAL\_UART\_Transmit\_IT function thread safe?}
+\newblock
+  \url{https://community.st.com/t5/stm32cubeide-mcus/is-the-hal-uart-transmit-it-function-thread-safe/m-p/126830/highlight/true#M4692}.
+\newblock \,Version:\,2023. --
+\newblock Zugriff: 01. Mai 2025
+
 \bibitem[STMa]{HAL_UARTEx_ReceiveToIdle_IT}
 \textsc{STMicroelectronics}:
 \newblock \emph{HAL\_UARTEx\_ReceiveToIdle\_IT}.
@@ -429,6 +443,18 @@
 \newblock \url{https://en.wikipedia.org/wiki/Priority_inversion}. --
 \newblock Zugriff: 15. März 2025
 
+\bibitem[{Wik}c]{wiedereintrittsfaehigkeit}
+\textsc{{Wikipedia contributors}}:
+\newblock \emph{Eintrittsinvarianz}.
+\newblock \url{https://de.wikipedia.org/wiki/Eintrittsinvarianz}. --
+\newblock Zugriff: 01. Mai 2025
+
+\bibitem[{Wik}d]{memory_ordering}
+\textsc{{Wikipedia contributors}}:
+\newblock \emph{Memory ordering}.
+\newblock \url{https://en.wikipedia.org/wiki/Memory_ordering}. --
+\newblock Zugriff: 21. April 2025
+
 \bibitem[Wik24]{waitstate_wiki}
 \textsc{Wikipedia}:
 \newblock \emph{Waitstate}.
@@ -443,19 +469,19 @@
 \newblock \,Version:\,2025. --
 \newblock Zugriff: 21. März 2025
 
-\bibitem[Xu25b]{freertos_tsink_benchmark}
-\textsc{Xu}, Zijian:
-\newblock \emph{freertos-threadsafe-sink}.
-\newblock
-  \url{https://github.com/znxuz/nucleo-f767zi/blob/tsink-benchmark/application/benchmark_tsink.cpp}.
-\newblock \,Version:\,2025. --
-\newblock Zugriff: 21. März 2025
-
-\bibitem[Xu25c]{mecarover_freertos_profiling}
+\bibitem[Xu25b]{mecarover_freertos_profiling}
 \textsc{Xu}, Zijian:
 \newblock \emph{Mecarover - FreeRTOS Profiling Branch}.
 \newblock \url{https://github.com/zijian-x/mecarover/tree/freertos-profiling}.
 \newblock \,Version:\,2025. --
 \newblock Zugriff: 19. März 2025
+
+\bibitem[Xu25c]{freertos_tsink_benchmark}
+\textsc{Xu}, Zijian:
+\newblock \emph{threadsafe sink benchmark}.
+\newblock
+  \url{https://github.com/znxuz/nucleo-f767zi/blob/tsink-benchmark/application/benchmark_tsink.cpp}.
+\newblock \,Version:\,2025. --
+\newblock Zugriff: 21. März 2025
 
 \end{thebibliography}
