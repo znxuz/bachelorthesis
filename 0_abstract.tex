@@ -2,23 +2,25 @@
 
 Diese Arbeit analysiert die Echtzeitfähigkeit von Micro-ROS und FreeRTOS am
 Beispiel einer Robotersteuerungssoftware. Ziel ist es, beide Systeme
-hinsichtlich ihres Echtzeitverhaltens zu veranschaulichen und zu vergleichen.
+hinsichtlich ihres Echtzeitverhaltens mit Schwerpunkt auf den Ausführungszeiten
+zu analysieren und zu vergleichen.
 
-Zunächst wird die bestehende Robotersteuerung vollständig von Micro-ROS auf
-FreeRTOS portiert. Anschließend wird ein Verfahren zur zyklengenauen Erfassung
-des Programmlaufs entwickelt.
+Zunächst wird die bestehende Robotersteuerung
+von Micro-ROS auf FreeRTOS portiert. Anschließend wird ein Verfahren zur
+zyklengenauen Erfassung des Programmlaufs entwickelt.
 
 Abschließend werden die Ergebnisse ausgewertet, darunter Ausführungszeiten von
-Tasks und zeitkritischen Funktionen sowie das Verhältnis von Berechnungs- zu
-Leerlaufzeiten des Prozessors. Die Resultate zeigen, wie gut sich Micro-ROS und
-FreeRTOS für Echtzeitanwendungen in der Robotik eignen und welche Vor- und
-Nachteile sie bieten.
+Tasks und zeitkritischen Funktionen sowie das Verhältnis von Auslastungs- zu
+Leerlaufzeiten des Prozessors. Die Resultate sollen zeigen, wie gut sich
+Micro-ROS und FreeRTOS für Echtzeitanwendungen mit periodischen Aufgaben eignen
+und welche Vor- und Nachteile sie bieten.
 
 \section*{Abstract}
 
 This work analyzes the real-time capabilities of Micro-ROS and FreeRTOS using a
 robot control software as an example. The goal is to visualize and compare both
-systems regarding their real-time behavior.
+systems regarding their real-time behavior, with the emphasis on the execution
+times.
 
 First, the existing robot control software is fully ported from Micro-ROS to
 FreeRTOS. Subsequently, a method for cycle-accurate tracing of program execution

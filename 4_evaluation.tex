@@ -83,23 +83,24 @@ profiled for 18779120 us
     % \label{fig:freertos_profiling}
 \end{figure}
 
-Die generierten profiling-daten reflektieren die echtzeitsaspekte bei dem
-task-scheduling und den zeitkritischen funktionen. Ein Python-Skript
-visualisiert diese Daten als Gantt-Diagramm, indem es die Start- und Endzeiten
-mittels der \mintinline{text}|pandas| Bibliothek aggregiert, sortiert und dann
-mittels der \mintinline{text}|Plotly| Bibliothek visualisiert ausgibt.
+Die Profiling-Daten wurden mit einem Python-Skript analysiert und als
+Gantt-Diagramm dargestellt. Dafür aggregierte und sortierte das Skript die
+Start- und Endzeiten mittels der \mintinline{text}|pandas|-Bibliothek, bevor es
+die Ergebnisse mit \mintinline{text}|Plotly| visualisierte.
 
-Am ende eines Samplings wird eine Zusammenfassung durch von FreeRTOS
-bereitgestellte \mintinline{cpp}|vTaskGetRunTimeStats()| und
-\mintinline{cpp}|vTaskList()| ausgegeben.
+Am Ende eines Samplings gibt eine von FreeRTOS bereitgestellte Funktion wie
+\linebreak \mintinline{cpp}|vTaskGetRunTimeStats()| oder
+\mintinline{cpp}|vTaskList()| eine Zusammenfassung aus. Diese bestimmt die
+relativen Ausführungszeiten und Zustände aller Tasks innerhalb eines bestimmten
+Intervalls.
 
 \subsection{Laufzeit-Statistik -- Micro-ROS}
 
 \subsubsection{Regler mit 50 Hz und 30 Hz}
 
-Mit einer Sollfrequenz von $50\,\text{Hz}$ für die Drehzahlregelung und $30\,\text{Hz}$ für
-die Posenregelung sowie Odometrie ergeben sich nach etwa $18$ Sekunden Profiling
-folgende Messwerte:
+Bei einer Sollfrequenz von $50\,\text{Hz}$ für die Drehzahlregelung sowie
+$30\,\text{Hz}$ für die Posenregelung und Odometrie zeigen die Messwerte nach
+etwa $18$ Sekunden Profiling folgende Ergebnisse:
 
 \begin{table}[H]
 \centering
@@ -150,9 +151,9 @@ folgende Messwerte:
 
 \subsubsection{Regler mit 100 Hz und 50 Hz}
 
-Mit einer Sollfrequenz von $100\,\text{Hz}$ für die Drehzahlregelung und $50\,\text{Hz}$ für
-die Posenregelung sowie Odometrie ergeben sich nach etwa $18$ Sekunden Profiling
-folgende Messwerte:
+Bei einer Sollfrequenz von $100\,\text{Hz}$ für die Drehzahlregelung sowie
+$50\,\text{Hz}$ für die Posenregelung und Odometrie zeigen die Messwerte nach
+etwa $18$ Sekunden Profiling folgende Ergebnisse:
 
 \begin{table}[H]
 \centering
@@ -201,25 +202,25 @@ folgende Messwerte:
 }}
 \end{table}
 
-Ohne D- oder I-Cache benötigte die Micro-ROS-Task (\mintinline{text}|uros|) für
-die gesamte Steuerungslogik bei den Reglern mit jeweils $50$ und $30\,\text{Hz}$
-$\textbf{20,47\,\%}$ Rechenzeit, bzw. $\textbf{24,35\,\%}$ bei jeweils $100$ und
-$50\,\text{Hz}$, während sich das System zu $\textbf{48,17\,\%}$ bzw.
-$\textbf{38,75\,\%}$ im Leerlauf befindet.
+Ohne Daten- oder Instruktionscache benötigte die Micro-ROS-Task
+(\mintinline{text}|uros|) für die gesamte Steuerungslogik bei den Reglern mit
+$50\,\text{Hz}$ sowie $30\,\text{Hz}$ $\textbf{20,47\,\%}$ Rechenzeit. Bei
+$100\,\text{Hz}$ sowie $50\,\text{Hz}$ waren es $\textbf{24,35\,\%}$.
+Gleichzeitig befand sich das System zu $\textbf{48,17\,\%}$ bzw.
+$\textbf{38,75\,\%}$ im Leerlauf.
 
-Mit dem D- und I-Cache benötigt die Robotersteuerungslogik insgesamt nur
-$\textbf{8,52\,\%}$ Rechenzeit bei den Reglern mit jeweils $50$ und
-$30\,\text{Hz}$, oder $\textbf{10,50\,\%}$ bei jeweils $100$ und
-$50\,\text{Hz}$, mit einer Leerlaufzeit von $\textbf{81,81\,\%}$ oder
-$\textbf{78,00\,\%}.$
+Mit aktiviertem Daten- und Instruktionscache benötigte die Micro-ROS-Task bei
+den Reglern mit $50\,\text{Hz}$ sowie $30\,\text{Hz}$ nur $\textbf{8,52\,\%}$
+Rechenzeit. Bei höheren Frequenzen ($100\,\text{Hz}$ sowie $50\,\text{Hz}$) sind
+es $\textbf{10,50\,\%}$, während die Leerlaufzeit bei $\textbf{81,81\,\%}$ bzw.
+$\textbf{78,00\,\%}$ liegt.
 
-Durch das Aktivieren von Caches hat sich die akkumulierte Rechenzeit
-beispielsweise bei der $100\,\text{Hz}|50\,\text{Hz}$ Regler-Konfiguration für
-die Odometrie um $\textbf{62,64\,\%},$ für die Posenregelung um
-$\textbf{76,51\,\%}$ sowie für die Drehzahlregelung um $\textbf{66,06\,\%}$
-verringert, während die Leerlaufzeiten um $\textbf{98,35\,\%}$ erhöht wurden,
-wobei sich die gesamten Profiling-Dauer mit einer Differenz von
-$349,045\,\text{ms}$ unterscheiden.
+Durch die Aktivierung der Caches reduzierte sich die akkumulierte Rechenzeit
+beispielsweise in der $100\,\text{Hz}/50\,\text{Hz}$-Reglerkonfiguration
+deutlich: um $\textbf{62,64\,\%}$ für die Odometrie, $\textbf{76,51\,\%}$ für
+die Posenregelung und $\textbf{66,06\,\%}$ für die Drehzahlregelung.
+Gleichzeitig stiegen die Leerlaufzeiten um $\textbf{98,35\,\%}$ an, wobei die
+gesamte Profiling-Dauer dabei eine Differenz von $349,\!045\,\text{ms}$ aufwies.
 
 \subsection{Laufzeit-Statistik -- FreeRTOS}
 
@@ -309,15 +310,16 @@ $349,045\,\text{ms}$ unterscheiden.
 }}
 \end{table}
 
-Ohne die Micro-ROS-Abhängigkeit erreicht das System bereits ohne Nutzung von
-Caches eine Leerlaufzeit von circa $\textbf{80\,\%}$, und mit Nutzung von Caches
-von circa $\textbf{95\,\%}$.
+Ohne Micro-ROS-Abhängigkeit erreicht das System bereits ohne Caches eine
+Leerlaufzeit von etwa $\textbf{80\,\%}$. Mit aktivierten Caches steigt diese auf
+circa $\textbf{95\,\%}$ an.
 
-Die Performance-Steigerung durch das Aktivieren der Caches ist bei der
-FreeRTOS-Implementierung ebenfalls signifikant, wobei sich die gesamten
-Profiling-Dauer bei der $100\,\text{Hz}|50\,\text{Hz}$-Reglerkonfiguration um
-$213,584\,\text{ms}$ unterscheiden. Die Leerlaufzeit stieg dadurch zwar nur um
-$\textbf{14,88\,\%}$, jedoch verringerten sich die Rechenzeiten deutlich: für
+Die Performance-Steigerung bei der Steuerungslogik durch das Aktivieren der
+Caches ist bei der FreeRTOS-Implementierung ebenfalls signifikant, wobei sich
+die gesamten Profiling-Dauer bei der
+$100\,\text{Hz}|50\,\text{Hz}$-Reglerkonfiguration um $213,584\,\text{ms}$
+unterscheiden. Prozentual stieg die Leerlaufzeit dadurch zwar nur um
+$\textbf{14,88\,\%}$, verringerten sich die Rechenzeiten jedoch deutlich: für
 die Odometrie um $\textbf{72,04\,\%}$, für die Posenregelung um
 $\textbf{70,43\,\%}$ und für die Drehzahlregelung um $\textbf{72,17\,\%}$.
 
@@ -334,8 +336,8 @@ auf $1\,\text{ms}$ (entsprechend $1000$ Interrupts pro Sekunde) festgelegt ist
 Um Frequenzen über $1000\,\text{Hz}$ zu erreichen, muss die
 Tick-Interrupt-Frequenz neu konfiguriert werden, um die Dauer der Zeitscheibe
 (Time Slice) zwischen den Interrupts zu verkürzen. Es wird jedoch davon
-abgeraten, deutlich über 1000 Hz zu gehen, da die kumulativen
-Kontextwechselkosten oberhalb eines bestimmten Schwellenwerts erheblichen
+abgeraten, deutlich über 1000 Hz zu gehen, da die Kontextwechselkosten bei
+Überschreiten eines bestimmten Schwellenwerts kumulativ einen erheblichen
 Overhead verursachen. (\cite{FreertosForumHF2019, FreertosTickRate2010})
 
 \begin{figure}[H]
@@ -344,30 +346,49 @@ Overhead verursachen. (\cite{FreertosForumHF2019, FreertosTickRate2010})
     \caption{Visualisierung der Echtzeit-Statistik mit 1000 Hz unter FreeRTOS}
 \end{figure}
 
-\paragraph{FreeRTOS} Wie in der Grafik dargestellt, kann dieses Regelungssystem,
-dessen Tasks und zugrundeliegende Kommunikation mittels FreeRTOS-APIs besonders
-schlank sind und auf minimalen Overhead optimiert wurden, problemlos mit
-$1000\,\text{Hz}$ betrieben werden.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/freertos_profiling_1000hz_ausschnitt}
+    \caption{Visualisierung der Echtzeit-Statistik mit 1000 Hz (Ausschnitt)
+    unter FreeRTOS}
+\end{figure}
+
+Wie in der Grafik illustriert, kann das Regelungssystem, dessen Tasks und
+zugrundeliegende Kommunikation mittels FreeRTOS-APIs besonders schlank sind und
+auf minimalen Overhead optimiert wurden, problemlos mit $1000\,\text{Hz}$
+betrieben werden. Die Tasks werden rhythmisch und deterministisch jeweils mit
+den vorgegebenen Frequenzen ausgeführt -- stets zum gleichen relativen Zeitpunkt
+zueinander.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=1\textwidth]{assets/micro_ros_profiling_1000hz.png}
-    \caption{Visualisierung der Echtzeit-Statistik mit 1000 Hz unter FreeRTOS}
+    \includegraphics[width=1\textwidth]{assets/micro_ros_profiling_1000hz}
+    \caption{Visualisierung der Echtzeit-Statistik mit 1000 Hz unter Micro-ROS}
 \end{figure}
 
-\paragraph{Micro-ROS} Bei Micro-ROS erreicht das System die Sollfrequenz von
-$1000\,\text{Hz}$ nicht und schwankt zwischen $910\,\text{Hz}$ und
-$980\,\text{Hz}$. Dies könnte vermutlich daran liegen, dass die maximal
-erreichbare Frequenz durch die Integration einer zusätzlichen Middleware
-beeinflusst wird und von deren Performance (bzw. Konfiguration) abhängt
-\cite{ROS_Performance2019}. Zudem stellt der Overhead des ROS/Micro-ROS-Stacks
-selbst einen signifikanten Faktor dar, da der gesamte Datenaustausch über das
-ROS-Framework erfolgt, um Unterstützung mit ROS-Tools zu gewährleisten.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{assets/micro_ros_profiling_1000hz_ausschnitt}
+    \caption{Visualisierung der Echtzeit-Statistik mit 1000 Hz (Ausschnitt)
+    unter Micro-ROS}
+\end{figure}
+
+Micro-ROS erreichte die angestrebte Sollfrequenz von $1000\,\text{Hz}$ nicht und
+wies stattdessen Schwankungen zwischen $910\,\text{Hz}$ und $980\,\text{Hz}$
+auf. Dies lässt sich vermutlich auf zwei Hauptfaktoren zurückführen: Erstens
+wird die maximal erreichbare Frequenz durch die Integration der zusätzlichen
+Middleware beeinflusst -- konkret XRCE-DDS bei Micro-ROS und standardmäßig Fast
+DDS bei ROS2, deren Performance und Konfiguration eine entscheidende Rolle
+spielen \cite{ROS_Performance2019}. Zweitens verursacht der inhärente Overhead
+des ROS/Micro-ROS-Stacks selbst signifikante Latenzen, denn jedes Datenpaket
+durchläuft zwingend das ROS-Framework bzw. den Linux-Host (Mikrocontroller
+$\leftrightarrow$ Host), im Gegensatz zu FreeRTOS-Implementierung, bei der der
+komplette Datenaustausch intern erfolgt.
 
 \subsubsection{Dauer von Regelungsfunktionen}
 
-Aus den Profiling-Daten lässt sich folgender Vergleich zwischen der Micro-ROS-
-und FreeRTOS-Implementierung für die Robotersteuerung ableiten:
+Aus den Profiling-Daten lässt sich ebenfalls folgender Vergleich zwischen den
+beiden Implementierungen ableiten:
 
 \begin{table}[h]
 \centering
@@ -381,25 +402,23 @@ Drehzahlregelung & 191.027 (Ø:~103,59) & 19.559 (Ø:~10,69) & 171.468 (Ø:~92,9
 \caption{Vergleich der Rechenzeiten zwischen Micro-ROS und FreeRTOS}
 \end{table}
 
-Die Implementierung bleibt auf beiden Plattformen größtenteils gleich, abgesehen
-vom Datenaustausch. Bei Micro-ROS müssen die Daten zusätzlich in einer
+Die Implementierung ist auf beiden Plattformen größtenteils identisch, abgesehen
+vom erwähnten Datenaustausch. Bei Micro-ROS müssen die Daten zusätzlich in einer
 dedizierten Struktur mit Metadaten -- unter anderem einem Header mit Zeitstempel
-in Sekunden und Nanosekunden -- umgewandelt werden, was einen wesentlichen
-Overhead im Vergleich zu FreeRTOS verursacht. Dort können die Daten als
-einfache, array-ähnliche Struktur direkt in die Warteschlange kopiert und
-extrahiert werden.
+in Sekunden und Nanosekunden -- umgewandelt werden. Bei FreeRTOS werden die
+Daten direkt in die Warteschlange kopiert und beim Empfänger extrahiert.
 
-Zusätzlich unterscheidet sich die FreeRTOS-Implementierung von Micro-ROS
-dadurch, dass die Drehzahldaten nicht direkt vom Drehzahlregler abgefragt und an
-die Odometrie übergeben werden. Stattdessen übernimmt eine dedizierte
+Zusätzlich unterscheidet sich die FreeRTOS-Implementierung von Micro-ROS auch
+dadurch, dass die Drehzahldaten nicht vom Drehzahlregler abgefragt und dann erst
+an die Odometrie übergeben werden. Stattdessen übernimmt eine dedizierte
 FreeRTOS-Task \mintinline{cpp}|hal_fetch| die Übertragung dieser Daten sowohl an
-den Drehzahlregler als auch an die Odometrie. Dadurch wird ein Teil des
-Overheads vom Drehzahlregler entkoppelt.
+den Drehzahlregler als auch an die Odometrie (\ref{sec:freertos_tasks}). Dadurch
+wird ein Teil des Overheads vom Drehzahlregler entkoppelt.
 
-Zusammenfassend lässt sich feststellen, dass die Robotersteuerungslogik sowohl
-unter Micro-ROS als auch unter FreeRTOS vergleichsweise wenig Rechenzeit
-benötigt. Dies gilt selbst bei potenziell höheren Sollfrequenzen, sofern die
-Daten gecacht sind und nicht bei jedem Zugriff aus dem RAM geladen werden
-müssen, welcher wesentlich langsamer ist als der L1-Cache. Dank des
-leistungsstarken Mikrocontrollers in Kombination mit Cache-Nutzung und
-optimiertem Code befindet sich das System daher überwiegend im Leerlauf.
+Zusammenfassend lässt sich feststellen, dass die Steuerungslogik an sich sowohl
+unter Micro-ROS als auch unter FreeRTOS relativ wenig Rechenzeit benötigt. Dies
+gilt selbst bei potenziell höheren Sollfrequenzen, sofern die Daten ordentlich
+gecacht sind und nicht bei jedem Zugriff aus dem RAM geladen werden müssen. Dank
+des leistungsstarken Mikrocontrollers in Kombination mit Cache-Nutzung und
+optimiertem Code befindet sich das System auf beiden Plattformen daher
+überwiegend im Leerlauf.

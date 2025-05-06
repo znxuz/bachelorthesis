@@ -129,7 +129,6 @@ size_t normalize(size_t idx) { return idx % TSINK_CAPACITY; }
 
 \subsubsection{Schreibvorgang in die Senke}
 
-% TODO: check
 Auf ARM-Architekturen sind alle Zugriffe auf Bytes, Halbwörter (16-Bit) und
 Wörter (32-Bit) standardmäßig atomar sofern sie im Speicher ausgerichtet sind,
 und verursachen dabei keine Schreib-Lese-Konflikte, sowohl beim Lesen als auch
@@ -224,10 +223,11 @@ void task_impl(void*) {
 
   while (true) {
     if (size_t sz = size(); sz) {
-      auto wrap_around = ((normalize(read_idx) + sz) / TSINK_CAPACITY) *
-                         normalize(read_idx + sz);
+      auto idx = normalize(read_idx);
+      auto wrap_around = ((idx + sz) / TSINK_CAPACITY) *  // multiplier as bool
+                         ((idx + sz) % TSINK_CAPACITY);   // actual amount
       auto immediate = sz - wrap_around;
-      consume_and_wait(normalize(read_idx), immediate);
+      consume_and_wait(idx, immediate);
       consume_and_wait(0, wrap_around);
       read_idx += sz;
     } else {
@@ -373,22 +373,22 @@ Laufzeitstatistiken der jeweiligen Task ausgegeben.
 \begin{minipage}[t]{0.5\textwidth}
     \begin{code}
         \begin{minted}[linenos=false]{cpp}
-time in ms: 8543
-time in ms: 8728
-time in ms: 9196
-time in ms: 9342
+time in ms: 7576
+time in ms: 8071
+time in ms: 9064
+time in ms: 9386
 time in ms: 9571
 ===================================
 Task            Time            %%
-print_bench     1               <1%
+print_bench     0               <1%
+IDLE            72844           76%
+benchmark       4385            4%
+benchmark       4221            4%
+benchmark       4374            4%
+benchmark       4470            4%
+benchmark       4169            4%
+tsink           312             <1%
 Tmr Svc         0               <1%
-IDLE            72753           76%
-benchmark       4363            4%
-benchmark       4377            4%
-benchmark       4257            4%
-benchmark       4443            4%
-benchmark       4238            4%
-tsink           351             <1%
     \end{minted}
         \captionof{listing}{Benchmark mit DMA}
     \end{code}
@@ -405,7 +405,6 @@ time in ms: 11405
 ===================================
 Task            Time            %%
 print_bench     0               <1%
-Tmr Svc         0               <1%
 IDLE            0               <1%
 benchmark       3624            3%
 benchmark       3637            3%
@@ -413,6 +412,7 @@ benchmark       3623            3%
 benchmark       3644            3%
 benchmark       3631            3%
 tsink           94876           83%
+Tmr Svc         0               <1%
     \end{minted}
         \captionof{listing}{Benchmark mit blockierender IO}
     \end{code}
@@ -742,10 +742,18 @@ FreeRTOS-Tasks und zeitkritische Codeabschnitte realisieren lässt.
 
 \subsection{Visualisierung von Profiling-Daten}
 
-% FIXME: alignment TODO continue
-Die Profiling-Daten werden im menschenlesbaren Format
+Die Profiling-Daten werden im menschenlesbaren Format \linebreak
 \mintinline{text}|<Identifikator> <konvertierte Zeit> <Start-/End-Marker>|
 umgerechnet in Mikrosekunden ausgegeben.
+
+Sie folgen nicht einer strikt aufsteigenden Reihenfolge nach den konvertierten
+Zeiten, da die von den ISR generierten Zyklenstempel zunächst
+zwischengespeichert und erst später durch eine FreeRTOS-Task in einer frei
+wählbaren Frequenz ausgegeben werden müssen. Da jedoch jeder Zyklenstempel in
+Echtzeit ohne Verzögerung oder Overhead erzeugt wird, spiegelt die zugehörige
+Zyklenzahl und somit die konvertierten Zeitpunkten in Mikrosekunden die
+tatsächlichen Echtzeitaspekte des Systems korrekt wider. Daher ist eine strikt
+geordnete Ausgabe nicht zwingend erforderlich.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -765,34 +773,25 @@ tsink 336 0     << mittels FreeRTOS-Task periodisch ausgegeben
     \captionof{listing}{Ausschnitt der Profiling-Daten}
 \end{code}
 
-Sie folgen nicht einer strikt aufsteigenden Reihenfolge nach den konvertierten
-Zeiten, da die von den ISR generierten Zyklenstempel zunächst
-zwischengespeichert und erst später durch eine FreeRTOS-Task in einer frei
-wählbaren Frequenz ausgegeben werden müssen. Da jedoch jeder Zyklenstempel in
-Echtzeit ohne Verzögerung oder Overhead erzeugt wird, spiegelt die entsprechende
-Zyklenzahl und somit die konvertierten Zeitpunkten in Mikrosekunden die
-tatsächlichen Echtzeitaspekte des Systems korrekt wider. Daher ist eine strikt
-geordnete Ausgabe nicht zwingend erforderlich.
-
 Es wurde versucht, die parallele Ausgabe zu synchronisieren: Jeder Thread ruft
-die Schreibfunktion mit einem atomar inkrementierten Zähler auf. Dieser wird
-dann mit dem internen Zähler verglichen. Stimmen die Werte überein, wird die
-Schreiboperation ausgeführt, andernfalls wird der Thread blockiert. Dieser
-Versuch erwies sich als nicht erfolgreich, da die resultierende Performance
-aufgrund des nicht-deterministischen Schedulings um die Hälfte sank.
+die Schreibfunktion der Senke mit einem atomar inkrementierten Zähler auf.
+Dieser wird dann mit dem internen Zähler verglichen. Stimmen die Werte überein,
+wird die Schreiboperation ausgeführt, andernfalls wird der Thread blockiert.
+Dieser Versuch erwies sich als nicht erfolgreich, da die resultierende
+Performance aufgrund des nicht-deterministischen Schedulings um die Hälfte sank.
 
 Anschließend wurde versucht, alle Zyklenstempel zunächst in dem statischen
 Puffer zwischenzuspeichern, um das Erzeugen und Ausgabe komplett voneinander zu
 trennen. Mit diesem Ansatz konnte die Reihenfolge konsistent gehalten werden.
 
-\begin{code}
-\begin{minted}{cpp}
-uros 2 0
-profile 2 1
-profile 28 0
-...
-w_ctrl 14031 1
-w_ctrl 14133 0
-\end{minted}
-    \captionof{listing}{Profiling-Daten in aufsteigender Reihenfolge}
-\end{code}
+% \begin{code}
+% \begin{minted}{cpp}
+% uros 2 0
+% profile 2 1
+% profile 28 0
+% ...
+% w_ctrl 14031 1
+% w_ctrl 14133 0
+% \end{minted}
+%     \captionof{listing}{Profiling-Daten in aufsteigender Reihenfolge}
+% \end{code}
