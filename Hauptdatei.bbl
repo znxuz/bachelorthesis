@@ -39,23 +39,7 @@
   --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{ARM}d]{ARMv7_ref_man_dwt}
-\textsc{{ARM Limited}}:
-\newblock \emph{{ARMv7-M Architecture Reference Manual}}.
-\newblock
-  \url{https://developer.arm.com/documentation/ddi0403/d/Debug-Architecture/ARMv7-M-Debug/The-Data-Watchpoint-and-Trace-unit?lang=en}.
-  --
-\newblock Zugriff: 14. März 2025
-
-\bibitem[{ARM}e]{ARMv7_ref_man_dwt_about}
-\textsc{{ARM Limited}}:
-\newblock \emph{Data Watchpoint and Trace Unit (DWT)}.
-\newblock
-  \url{https://developer.arm.com/documentation/ddi0439/b/Data-Watchpoint-and-Trace-Unit/About-the-DWT}.
-  --
-\newblock Zugriff: 14. März 2025
-
-\bibitem[{Arm}f]{Arm_DWT_Programmers_Model}
+\bibitem[{Arm}d]{Arm_DWT_Programmers_Model}
 \textsc{{Arm Limited}}:
 \newblock \emph{{Data Watchpoint and Trace Unit (DWT) Programmer's Model}}.
 \newblock
@@ -63,7 +47,7 @@
   --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{ARM}g]{ARM_KA001499}
+\bibitem[{ARM}e]{ARM_KA001499}
 \textsc{{ARM Limited}}:
 \newblock \emph{{Summary: How many instructions have been executed on a
   Cortex-M processor?}}
@@ -262,14 +246,6 @@
 \newblock \,Version:\,2021. --
 \newblock Zugriff: 27. März 2025
 
-\bibitem[Fre25]{freertos_runtime_stats}
-\textsc{FreeRTOS}:
-\newblock \emph{Run-time Statistics}.
-\newblock
-  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/08-Run-time-statistics#description}.
-\newblock \,Version:\,2025. --
-\newblock Zugriff: 28. März 2025
-
 \bibitem[HAL]{HAL_UART_Transmit_DMA}
  ; SourceVu (Veranst.):
 \newblock \emph{HAL\_UART\_Transmit\_DMA Documentation}.
@@ -303,6 +279,11 @@
 \newblock \emph{Cortex-M7 Documentation – Arm Developer}.
 \newblock \url{https://developer.arm.com/documentation/ka001150/latest/}. --
 \newblock Zugriff: 19. März 2025
+
+\bibitem[lwi]{lwip_pitfalls}
+\emph{lwIP: Common Pitfalls}.
+\newblock \url{https://www.nongnu.org/lwip/2_1_x/pitfalls.html}. --
+\newblock Zugriff: 20. März 2025
 
 \bibitem[Mau24]{microROS_STM32CubeMX_Issue139}
 \textsc{Maubeuge}, Nicolas de:
@@ -470,26 +451,11 @@
 \newblock \,Version:\,2024. --
 \newblock Zugriff: 19. März 2025
 
-\bibitem[Xu25a]{freertos_threadsafe_sink}
-\textsc{Xu}, Zijian:
-\newblock \emph{freertos-threadsafe-sink}.
-\newblock \url{https://github.com/znxuz/freertos-threadsafe-sink}.
-\newblock \,Version:\,2025. --
-\newblock Zugriff: 21. März 2025
-
-\bibitem[Xu25b]{mecarover_freertos_profiling}
+\bibitem[Xu25]{mecarover_freertos_profiling}
 \textsc{Xu}, Zijian:
 \newblock \emph{Mecarover - FreeRTOS Profiling Branch}.
 \newblock \url{https://github.com/zijian-x/mecarover/tree/freertos-profiling}.
 \newblock \,Version:\,2025. --
 \newblock Zugriff: 19. März 2025
-
-\bibitem[Xu25c]{freertos_tsink_benchmark}
-\textsc{Xu}, Zijian:
-\newblock \emph{threadsafe sink benchmark}.
-\newblock
-  \url{https://github.com/znxuz/nucleo-f767zi/blob/tsink-benchmark/application/benchmark_tsink.cpp}.
-\newblock \,Version:\,2025. --
-\newblock Zugriff: 21. März 2025
 
 \end{thebibliography}

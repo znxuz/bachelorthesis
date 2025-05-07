@@ -1,93 +1,83 @@
 \section{Implementierung für die Echtzeitanalyse}
 
-Nachdem die Steuerungssoftware für FreeRTOS und Micro-ROS entwickelt wurde, kann
-nun die Methode zur Analyse der Echtzeitfähigkeit implementiert werden. Diese
-basiert zunächst auf FreeRTOS, um später die Portierung auf Micro-ROS zu
-ermöglichen.
-
-Ziel der Analyse ist es, die Ausführungszeit einer bestimmten Task oder
-zeitkritischen Funktion zu messen. Die erfassten Daten müssen präzise genug
-sein, um die Echtzeitanforderungen zuverlässig abzubilden.
+Nachdem die Steuerungssoftware sowohl für FreeRTOS als auch für Micro-ROS
+entwickelt wurde, wird nun die Methode zur Echtzeitanalyse implementiert. Sie
+basiert zunächst auf FreeRTOS, um später die Portierung auf Micro-ROS nahtlos zu
+ermöglichen. Ziel ist es, die Ausführungszeiten von Tasks und zeitkritischen
+Funktionen exakt zu messen.
 
 Aus Gründen der Einfachheit und aufgrund von Hardwarebeschränkungen wurde UART
-als Schnittstelle zur Übertragung der Echtzeitdaten vom Mikrocontroller zum Host
+als Schnittstelle zur Datenübertragung zwischen Mikrocontroller und Host
 gewählt. Mit einer theoretischen Übertragungsrate von bis zu 12,5 Mbit/s bietet
 UART genügend Bandbreite~\cite[S. 2]{stm32_datasheet}, um die Echtzeitdaten
-ohne Überlastung zu übertragen.
+zuverlässig zu übertragen.
 
-Der Ansatz basiert darauf, zu Beginn und am Ende der jeweiligen Task sowie der
-zeitkritischen Funktion die aktuelle Zyklenzahl zu erfassen. Daraus lassen sich
-die Echtzeitinformationen ableiten.
+Der Ansatz besteht darin, zu Beginn und am Ende jedes Messabschnitts die
+aktuelle Zyklenzahl zu erfassen.
 
-Daraus ergibt sich als Erstes die Notwendigkeit, eine threadsichere
-Multi-Producer-Senke, oder besser gesagt eine \ac{MPSC} Queue, zu
-implementieren, welche die Echtzeitdaten kontinuierlich konsumiert und sie über
-UART ausgibt. Die vorhandenen FreeRTOS-Stream- oder Messagebuffer eignen sich
-nicht für mehrere Producer~\cite{FreeRTOSStreamBuffer} und können in dem Fall
-nicht verwendet werden.
+Daraus ergibt sich als Erstes die Notwendigkeit, eine \ac{MPSC} Queue bzw. eine
+Multi-Producer-Senke zu implementieren, welche die Echtzeitdaten kontinuierlich
+verarbeitet und sie über UART ausgibt. Die vorhandenen Stream- oder
+Messagebuffer von FreeRTOS eignen sich nicht für mehrere
+Producer~\cite{FreeRTOSStreamBuffer} und können in dem Fall nicht verwendet
+werden.
 
 \subsection{Multi-Producer-Senke}
 
-Da FreeRTOS und folglich auch Micro-ROS von Natur aus mehrfädig sind und bei der
-Echtzeitanalyse Daten von beliebiger Stelle in einem beliebigen Thread während
-des Programmablaufs aufgezeichnet werden, muss die Threadsicherheit
-gewährleistet werden. Dadurch wird verhindert, dass die zu übertragenden Daten,
-die aus mehreren Bytes bestehen, durch Race Conditions teilweise überschrieben
-und somit unbrauchbar werden.
+% Da sowohl FreeRTOS als auch Micro-ROS von Natur aus mehrfädig sind und die
+% Echtzeitanalyse Daten aus beliebigen Threads während der Laufzeit erfasst, muss
+% die Threadsicherheit gewährleistet werden. Dies ist notwendig, um zu verhindern,
+% dass die Daten durch Race Conditions beschädigt werden.
 
-Die grundlegende Idee besteht darin, dass Daten von mehreren Threads direkt in
-die Senke geschrieben -- oder präziser formuliert in einen internen Ringpuffer
-gespeichert werden. Das Schreiben der Daten in einen statischen Speicherpuffer
-ist wesentlich schneller als beispielsweise das Einreihen in eine verkettete
-Liste, da letzteres eine dynamische Heap-Speicherallokation erfordert.
+Die grundlegende Idee sieht vor, dass Daten aus mehreren Threads direkt und zwar
+threadsicher in die Senke -- genauer gesagt in den internen Ringpuffer --
+geschrieben werden. Die Speicherung in einem statischen Puffer ist wesentlich
+schneller als beispielsweise die Verwendung einer verketteten Liste, da diese
+dynamische Heap-Allokationen erfordern würde.
 
-Da der vorallokierte Speicher begrenzt ist, muss die Senke im schlimmsten Fall
-erkennen können, wann sie das weitere Schreiben von Daten in den Puffer
-blockieren muss. Dadurch wird verhindert, dass noch nicht verarbeitete, aber
-bereits geschriebene Daten überschrieben werden.
+Da der vorab allokierte Speicher zwangsläufig begrenzt ist, muss die Senke im
+schlimmsten Fall erkennen können, wann sie weitere Schreibzugriffe blockieren
+muss. So wird verhindert, dass noch nicht verarbeitete Daten überschrieben
+werden.
 
-Aber durch die Verwendung von DMA kombiniert mit Interrupts ausgelöst bei jedem
-Abschluss einer DMA-Übertragung kann die IO-gebundene Wartezeit zum Verbrauchen
-von Bytes in der Senke eliminiert werden, da in diesem Fall die tatsächliche
-Ausgabe von Daten aus der Senke einfach zum Schreiben in einen anderen
-In-Memory-Puffer wird, während die eigentlichen IO-Operationen auf den
-DMA-Controller fern vom Prozessor ausgelagert werden. Wenn die tatsächliche IO
-die Daten schnell genug überträgt, um mit den eingehenden Daten Schritt zu
-halten, entsteht dabei keine Situation, in der eine Task blockiert werden muss,
-dass die Senke Speicherplatz freigibt, um den Schreibvorgang fortzusetzen.
+Aber durch die Kombination von DMA mit Interrupts, die bei Abschluss jeder
+DMA-Übertragung ausgelöst werden, lässt sich die I/O-gebundene Wartezeit
+eliminieren. In diesem Fall reduziert sich die Datenausgabe auf das Schreiben in
+den Ringpuffer, während die eigentlichen I/O-Operationen durch den
+DMA-Controller unabhängig vom Prozessor erfolgen. Vorausgesetzt die I/O
+überträgt die Daten schnell genug, um mit dem Eingangsdatenstrom Schritt zu
+halten, entstehen keine Blockiersituationen, in denen Tasks auf freien
+Speicherplatz warten müssen.
 
-Daher wurde als Ansatz eine Multi-Producer-Senke mit DMA-Implementierung
-gewählt, da in diesem Fall das Schreiben mehrerer Bytes in die Senke
-idealerweise nur wenige Zyklen benötigt und sich aus Sicht des Prozessors bzw.
-Threads nahezu als nicht-blockierende Operation verhält.
+Daher wurde der Ansatz mit DMA gewählt, da in diesem Fall die Datenausgabe
+idealerweise nur wenige Zyklen ohne Wartezeit benötigt und sich aus Sicht des
+Prozessors bzw. Threads nahezu als nicht-blockierende Operation verhält.
 
 \subsubsection{Aufbau}
 
-Wie kurz erwähnt, besteht die Senke einfacherweise hauptsächlich aus einem
-statisch vorallokierten Ringpuffer gepaart mit einem Schreib- und Lesezeiger.
-Mit den beiden Zeigern wird dann ermöglicht, die Größe der bereits geschriebenen
-Daten sowie der restliche verfügbare Speicherplatz zu ermitteln.
+Wie bereits kurz erwähnt, besteht die Senke im Wesentlichen aus einem statisch
+allokierten Ringpuffer mit einem Schreib- und Lesezeiger. Diese Zeiger
+ermöglichen es, die Größe der geschriebenen Daten sowie den verbleibenden
+Speicherplatz zu ermitteln.
 
 In der ersten Implementierungsversion wurde die verfügbare Datenmenge in der
-Senke so berechnet, dass sie der Differenz zwischen Schreib- und Lesezeiger
-entspricht, wenn sich der Schreibindex numerisch vor dem Leseindex befindet.
-Andernfalls umfassen die zu verarbeitenden Daten die Sequenz vom Lesezeiger bis
-zum Ende des Ringpuffers sowie vom Anfang des Puffers bis zum Schreibzeiger, da
-die Zeiger stets korrekt positioniert sind.
+Senke als Differenz zwischen Schreib- und Lesezeiger berechnet, falls der
+Schreibindex vor dem Leseindex lag. Andernfalls umfassten die zu verarbeitenden
+Daten die Reihe vom Lesezeiger bis zum Pufferende sowie vom Pufferanfang bis zum
+Schreibzeiger, da die beiden Zeiger stets korrekt positioniert waren.
 
-Dabei musste aber auch zwischen dem Fall unterschieden werden, wenn beide Zeiger
-gleichzeitig auf dieselbe Position zeigen: entweder ist der Ringpuffer leer,
-oder komplett voll beschrieben. Daher muss der Schreiber erkennen können, ob das
-aktuelle Byte bereits verarbeitet wurde und somit überschrieben werden darf.
-Andernfalls lässt sich nicht feststellen, ob die Senke voll ist und das
-Schreiben verzögert werden muss.
+Hierbei musste zusätzlich unterschieden werden, ob beide Zeiger auf dieselbe
+Position zeigen: Entweder ist der Ringpuffer dann leer oder vollständig gefüllt.
+Dies lässt sich dadurch lösen, dass der Schreiber erkennen kann, ob das aktuelle
+Byte noch unverarbeitet ist oder bereits gelesen wurde und somit überschrieben
+werden darf.
 
 In einem C++-Konferenzvortrag über eine
-\ac{MPMC}-Warteschlange~\cite{CppCon2024LockFreeQueue} basiert die
+\ac{MPMC}-Warteschlange~\cite{CppCon2024LockFreeQueue} basiert deren
 Implementierung auf folgendem Prinzip: Jede Position des Datenpuffers besitzt
 eine eindeutige Schreibsequenznummer. Bei der Datenentnahme wird diese atomar um
-die Gesamtlänge N des Puffers erhöht. Dadurch wird signalisiert, dass die Daten
-dieser Position in Iteration N verarbeitet wurden und in Iteration N+1 vom
+die Gesamtlänge $N$ des Puffers erhöht. Dadurch wird signalisiert, dass die Daten
+dieser Position in Iteration $N$ verarbeitet wurden und in Iteration $N+1$ vom
 Schreiber überschrieben werden können. Die Entscheidung hierüber erfolgt durch
 Vergleich mit der globalen Schreibsequenznummer, die ebenfalls nach jedem
 Schreibvorgang atomar inkrementiert wird.
@@ -97,19 +87,19 @@ Zustand als \mintinline{cpp}|bool| zu speichern. Dieser gibt an, ob die Daten an
 einer bestimmten Position noch verarbeitet werden müssen oder bereits
 überschrieben werden können.
 
-Um den zusätzlichen Speicherbedarf -- verursacht durch die explizite
+Um diesen zusätzlichen Speicherbedarf -- verursacht durch die explizite
 Zustandsmarkierung jedes Bytes im Puffer -- in der finalen Implementierung zu
-eliminieren, können die Zeiger auf eine stets korrekte Position verzichten.
-Stattdessen können sie einfach über den Puffer hinaus zählen. Bei jeder
-Verwendung wird ihr Wert durch eine Modulo-Operation mit der Puffergröße
+eliminieren, können die Zeiger auf eine stets korrekte Positionierung
+verzichten: Stattdessen können sie einfach über den Puffer hinaus zählen. Bei
+jeder Verwendung wird ihr Wert durch eine Modulo-Operation mit der Puffergröße
 normalisiert, wodurch sie dann auf die korrekte Position verweisen. Demnach
 reduziert sich die Berechnung der verfügbaren Datenmenge auf eine einfache
 Subtraktion zwischen beiden Zeigern.
 
-Wenn die Puffergröße einer Zweierpotenz entspricht, lässt sich die
-Modulo-Operation ebenfalls auf einen einzigen Zyklus reduzieren. Dieser geringe
+Wenn die Puffergröße eine Zweierpotenz ist, kann die Modulo-Operation hier
+ebenfalls auf einen einzigen Zyklus reduziert werden. Dieser minimale
 Mehraufwand stellt ein akzeptables Trade-off dar -- insbesondere im Vergleich
-zum eingesparten Speicherplatz für die Zustandsinformation.
+zum eingesparten Speicherbedarf für Zustandsinformationen.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -129,20 +119,18 @@ size_t normalize(size_t idx) { return idx % TSINK_CAPACITY; }
 
 \subsubsection{Schreibvorgang in die Senke}
 
-Auf ARM-Architekturen sind alle Zugriffe auf Bytes, Halbwörter (16-Bit) und
-Wörter (32-Bit) standardmäßig atomar sofern sie im Speicher ausgerichtet sind,
-und verursachen dabei keine Schreib-Lese-Konflikte, sowohl beim Lesen als auch
-beim Schreiben~\cite[S. A3-79]{ARM_DDI0403_EE}.
+Auf ARM-Architekturen sind alle Zugriffe auf Bytes, Halbwörter (16-Bit) sowie
+Wörter (32-Bit) standardmäßig atomar sofern sie im Speicher ausgerichtet
+sind~\cite[S. A3-79]{ARM_DDI0403_EE}, und verursachen somit keine
+Schreib-Lese-Konflikte, sowohl beim Lesen als auch beim Schreiben.
 
-Es muss jedoch sichergestellt werden, dass immer nur ein einziger Thread
-an eine Position des Ringpuffers schreiben kann, wenn mehrere
-Threads gleichzeitig auf dieselbe Position zugreifen wollen.
+Es muss sichergestellt werden, dass stets nur ein Thread an eine Position des
+Ringpuffers schreibt, falls mehrere Threads gleichzeitig darauf zugreifen.
 
-Hier kann eine \ac{CAS}-Operation eingesetzt werden, um sicherzustellen, dass
-der Schreibindex bei gleichzeitigen Zugriffen mehrerer Threads stets nur von
-einem Thread inkrementiert wird. Nach erfolgreicher Inkrementierung erhält
-dieser Thread das Recht, das Byte an der vorherigen Indexposition zu
-beschreiben.
+Hier lässt sich eine \ac{CAS}-Operation nutzen, um zu gewährleisten, dass der
+Schreibindex bei konkurrierendem Zugriff nur von einem Thread inkrementiert
+wird. Nach erfolgreicher Inkrementierung darf dieser Thread das Byte an der
+beanspruchten Indexposition beschreiben.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -159,30 +147,24 @@ bool write_or_fail(uint8_t elem) {
     \captionof{listing}{atomare Schreiboperation in die Senke}
 \end{code}
 
-Die Vorgehensweise gestaltet sich wie folgt: Zunächst wird der aktuelle
-Schreibindex als lokale Variable \mintinline{cpp}|expected| zwischengespeichert.
-Dann wird erstmal überprüft, ob der Puffer bereits voll ist -- in diesem Fall
-wird vorzeitig zurückgekehrt, andernfalls ist die Position mit dem aktuellen
-Index noch beschreibbar. Anschließend erfolgt die atomare CAS-Operation, bei der
-der Schreibindex mit dem zwischengespeicherten Wert verglichen und bei
-Übereinstimmung um eins inkrementiert wird. Durch diese atomare Operation, die
-Vergleich und Inkrement verbindet, kann nur ein Thread den Schreibindex
-erfolgreich erhöhen und Daten über den zwischengespeicherten Index schreiben.
-Die Synchronisation erfolgt somit auf nicht-blockierende (lock-free) Weise.
+Die Vorgehensweise ist wie folgt: Zunächst wird der aktuelle Schreibindex als
+lokale Variable \mintinline{cpp}|expected| zwischengespeichert. Anschließend
+wird geprüft, ob der Puffer bereits voll ist -- in diesem Fall erfolgt eine
+vorzeitige Rückkehr. Andernfalls ist die Position noch beschreibbar.
+Anschließend wird die atomare CAS-Operation durchgeführt, bei der der
+Schreibindex mit dem zwischengespeicherten Wert verglichen und bei
+Übereinstimmung inkrementiert wird. Durch die atomare Eigenschaft dieser
+kombinierten Operation wird sichergestellt, dass letztlich nur ein Thread den
+Index erfolgreich erhöhen und folglich Daten schreiben kann -- diese
+Synchronisation mit anderen Threads über CAS erfolgt somit nicht-blockierend
+(lock-free).
 
-Um auch das Schreiben mehrerer Bytes ebenfalls threadsicher zu gestalten, muss
-ein Mutex zum Einsatz kommen~\cite{FreeRTOSForumPrintf}. Im Gegensatz zu einem
-einfachen Semaphor stellt dies sicher, dass ein Thread den Mutex
-schnellstmöglich wieder freigibt und nicht vom Scheduler ausgeschlossen wird
-(\ref{sec:mutex}).
-
-Die Struktur \mintinline{cpp}|struct mtx_guard| ist hier implementiert. Sie
-nutzt \ac{RAII}, um beim Erstellen eines Objekts automatisch den Mutex zu
-sperren und ihn beim Verlassen des Gültigkeitsbereichs -- in diesem Fall beim
-Verlassen des \mintinline{cpp}|if|-Blocks -- wieder freizugeben. Falls nicht
-genügend Platz in der Senke vorhanden ist, wird kooperativ der Kontrollfluss für
-eine Millisekunde an den Scheduler zurückgegeben, um andauerndes Polling zu
-vermeiden.
+Um das Schreiben mehrerer Bytes ebenfalls threadsicher zu gestalten, muss der
+gesamte Vorgang durch geeignete Synchronisationsmechanismen geschützt
+werden~\cite{FreeRTOSForumPrintf}. Hier wird ein Mutex verwendet, da dieser --
+im Gegensatz zu einem einfachen Semaphor -- sicherstellt, dass der Thread den
+Mutex und damit die Kontrolle umgehend freigibt und nicht aufgrund niedrigerer
+Priorität blockiert wird (\ref{sec:mutex}).
 
 \begin{code}
 \begin{minted}{cpp}
@@ -204,10 +186,19 @@ void write_blocking(const uint8_t* ptr, size_t len) {
     \captionof{listing}{Blockierende Schreiboperation in die Senke}
 \end{code}
 
+Die Struktur \mintinline{cpp}|struct mtx_guard| ist hier implementiert. Sie
+nutzt \ac{RAII}, um beim Erstellen eines Objekts automatisch den Mutex zu
+sperren und ihn beim Verlassen des Gültigkeitsbereichs -- in diesem Fall beim
+Verlassen des \mintinline{cpp}|if|-Blocks -- wieder freizugeben. Falls nicht
+genügend Platz in der Senke vorhanden ist, wird kooperativ der Kontrollfluss für
+eine Millisekunde an den Scheduler zurückgegeben, um andauerndes Polling zu
+vermeiden.
+
 \subsubsection{Lesevorgang aus der Senke}
 
-Eine kleine, statisch allokierte FreeRTOS-Task wird erstellt, um kontinuierlich
-zu versuchen, verfügbare Daten aus der Senke zu entnehmen und verarbeiten.
+Eine statisch allokierte FreeRTOS-Task mit geringem Speicherbedarf wird
+erstellt, die kontinuierlich versucht, verfügbare Daten aus der Senke zu lesen
+und zu verarbeiten.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -237,23 +228,25 @@ void task_impl(void*) {
 }
 \end{minted}
     \captionof{listing}{Implementierung der Task zur Datenverarbeitung}
+    \label{code:consumer_task}
 \end{code}
 
-Zunächst wird die Größe der verfügbaren Daten vom Beginn des Ringpuffers bis zum
-Schreibindex mathematisch berechnet, sofern vorhanden, sowie die Größe vom
-Leseindex bis zum Pufferende, oder nur bis zum Schreibindex. Bei jedem Aufruf
-wartet \mintinline{cpp}|ulTaskNotifyTake()| auf den Abschluss der aktuellen
-IO-Operation, bevor eine neue gestartet werden kann -- falls die Operation noch
-nicht abgeschlossen ist.
+Es wird zunächst der Anteil der verfügbaren Daten berechnet, der vom
+Pufferanfang bis zum Schreibindex reicht. Dann wird die (Teil-)Menge vom
+Leseindex bis zum Pufferende ermittelt -- oder alternativ nur bis zum
+Schreibindex, falls dieser innerhalb dieses Bereichs liegt. Bei jedem Aufruf von
+\mintinline{cpp}|consume_and_wait()| wird durch
+\mintinline{cpp}|ulTaskNotifyTake()| auf den Abschluss der aktuellen
+I/O-Übertragung gewartet, bevor eine neue gestartet werden kann.
 
 Diese Vorgehensweise ist notwendig wenn \mintinline{cpp}|consume()| DMA nutzt:
-Die DMA-API zur Übertragung von der STM32-HAL signalisiert dabei lediglich der
+Die DMA-Übertragungsfunktion von der STM32-HAL signalisiert dabei lediglich der
 Hardware den gewünschten Transfervorgang und kehrt sofort
 zurück~\cite{HAL_UART_Transmit_DMA}. Das heißt, die Daten werden einfach zur
 Verarbeitung für den DMA eingereiht, während der Programmfluss unmittelbar
 fortgesetzt wird. Außerdem ist das globale, intern genutzte UART-Zustandsobjekt
-auch nicht wiedereintrittsfähig\footnotemark{} \cite{stm32_hal_reentrancy}.
-Daher müssen subsequente Aufrufe hierbei miteinander synchronisiert werden.
+auch nicht wiedereintrittsfähig\footnotemark{}~\cite{stm32_hal_reentrancy}.
+Daher müssen nachfolgende Aufrufe hierbei miteinander synchronisiert werden.
 
 \footnotetext{„Als wiedereintrittsfähig -- zu englisch reentrant -- wird ein
 Programm-Attribut beschrieben, welches die mehrfache (quasi-gleichzeitige)
@@ -262,7 +255,7 @@ quasi-gleichzeitig) ausgeführte Instanzen nicht gegenseitig
 beeinflussen.”~\cite{wiedereintrittsfaehigkeit}}
 
 Als Verbrauchsfunktion \mintinline{cpp}|consume()| kann beispielsweise die
-HAL-API von STM32 für DMA-Übertragungen verwendet werden. Diese nimmt einen
+DMA-Übertragungsfunktion von STM32-HAL verwendet werden. Diese nimmt einen
 Zeiger auf ein Array sowie die Größe der lesbaren Daten als Parameter entgegen.
 
 \begin{code}
@@ -272,13 +265,12 @@ auto tsink_consume_dma = [](const uint8_t* buf, size_t size) {
 }
 \end{minted}
     \captionof{listing}{Beispieldefinition einer Verbrauchsfunktion}
-    \label{code:consume_fn}
 \end{code}
 
-Erst wenn eine Task-Notifikation durch \mintinline{cpp}|consume_complete()|
-eintrifft -- ausgelöst durch eine \ac{ISR} der DMA-Hardware nach
-Übertragungsende -- wird die Task wieder entblockt, um weitere IO-Operationen zu
-initiieren.
+Erst wenn eine Task-Notifikation durch den Aufruf von
+\mintinline{cpp}|consume_complete()| eintrifft -- beispielsweise ausgelöst durch
+eine \ac{ISR} der DMA-Hardware nach Übertragungsende -- wird die Task wieder
+entblockt, um weitere I/O-Übertragungen zu initiieren.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -305,18 +297,24 @@ Für die Nutzung dieser Senke mit DMA und aktiviertem Datencache muss zunächst
 das Interrupt-Callback \mintinline{cpp}|HAL_UART_TxCpltCallback()| definiert
 werden, das nach jedem DMA-Transfer ausgelöst wird.
 
-Die Initialisierungsfunktion der Senke muss dann aufgerufen werden. Diese nimmt
-einen Funktionszeiger vom Typ \mintinline{cpp}|consume_fn| zur cache-kohärenten
-Datenverarbeitung (\ref{code:cache_clean}) sowie eine Priorität für die interne
-Verbraucher-Task als Argumente entgegen.
-
 \begin{code}
 \begin{minted}{cpp}
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
   if (huart->Instance == huart3.Instance)
     tsink::consume_complete<tsink::CALL_FROM::ISR>();
 }
+\end{minted}
+    \captionof{listing}{Interrupt-Callback bei Abschluss einer UART-Übertragung}
+\end{code}
 
+Die Senke wird durch den Aufruf ihrer Initialisierungsfunktion bereitgestellt.
+Diese nimmt einen Funktionszeiger vom Typ
+\mintinline{cpp}|consume_fn|~(\ref{code:consumer_task}) zur
+cache-kohärenten~(\ref{code:cache_clean}) Datenverarbeitung sowie eine Priorität
+für die interne Verbraucher-Task als Argumente entgegen.
+
+\begin{code}
+\begin{minted}{cpp}
 void main() {
   auto tsink_consume_dma = [](const uint8_t* buf, size_t size) static {
     auto flush_cache_aligned = [](uintptr_t addr, size_t size) static {
@@ -338,128 +336,136 @@ void main() {
     \captionof{listing}{Initialisierung der Senke mit DMA}
 \end{code}
 
-\subsubsection{Nutzung der Senke mit blockierender IO}
+% \subsubsection{Nutzung der Senke mit blockierender I/O}
+%
+% Ähnlich wie bei der Initialisierung über DMA, entfällt hier aber das
+% Interrupt-Callback, und die Funktion zur Datenverarbeitung wird durch die
+% Verwendung einer blockierenden Übertragungsfunktion ohne Leerung von Cache
+% vereinfacht, da ohne DMA keine manuelle Sicherstellung der Cache-Kohärenz
+% notwendig ist.
+%
+% \begin{code}
+% \begin{minted}{cpp}
+% int main() {
+%   auto tsink_consume = [](const uint8_t* buf, size_t size) static {
+%     HAL_UART_Transmit(&huart3, buf, size, HAL_MAX_DELAY);
+%     tsink::consume_complete<tsink::CALL_FROM::NON_ISR>();
+%   };
+%
+%   tsink::init(tsink_consume, osPriorityAboveNormal);
+% }
+% \end{minted}
+%     \captionof{listing}{Initialisierung der Senke mit blockierender I/O}
+% \end{code}
+%
+% Vielleicht wäre es sinnvoll, die beiden Befehle in einen kritischen Abschnitt zu
+% packen, um Kontextwechsel zwischen ihnen zu verhindern und damit Verzögerungen
+% bei der Signalisierung an die Senke zu vermeiden. Da die Senke im Rahmen dieser
+% Arbeit ausschließlich mit DMA genutzt wird, wird dieses Beispiel nicht weiter
+% berücksichtigt.
 
-Ähnlich wie bei der Initialisierung über DMA, entfällt hier aber der
-Interrupt-Callback, und die Funktion zur Datenverarbeitung wird durch die
-Verwendung der blockierenden API ohne Leerung von Cache vereinfacht, da ohne DMA
-keine manuelle Sicherstellung der Cache-Kohärenz notwendig ist.
+% \subsubsection{Benchmark}
+%
+% Ein Benchmark für die Senke wurde entwickelt, um deren Leistung unter paralleler
+% Last zu testen. Der Benchmark lässt eine Anzahl von
+% \mintinline{text}|BENCHMARK_N = 5| Threads gleichzeitig laufen, die jeweils eine
+% Anzahl von \mintinline{cpp}|iteration = 5000| Nachrichten mit ca. 80 Charaktern
+% nach Formatierung hintereinander über die Senke ausgeben.
+%
+% Nach Abschluss des Benchmarks werden die gemessenen Zeiten und die
+% Laufzeitstatistiken der jeweiligen Task ausgegeben.
+%
+% \begin{minipage}[t]{0.5\textwidth}
+%     \begin{code}
+%         \begin{minted}[linenos=false]{cpp}
+% time in ms: 7576
+% time in ms: 8071
+% time in ms: 9064
+% time in ms: 9386
+% time in ms: 9571
+% ===================================
+% Task            Time            %%
+% print_bench     0               <1%
+% IDLE            72844           76%
+% benchmark       4385            4%
+% benchmark       4221            4%
+% benchmark       4374            4%
+% benchmark       4470            4%
+% benchmark       4169            4%
+% tsink           312             <1%
+% Tmr Svc         0               <1%
+%     \end{minted}
+%         \captionof{listing}{Benchmark mit DMA}
+%     \end{code}
+% \end{minipage}
+% \hfill
+% \begin{minipage}[t]{0.5\textwidth}
+%     \begin{code}
+%         \begin{minted}[linenos=false]{cpp}
+% time in ms: 10964
+% time in ms: 11016
+% time in ms: 11285
+% time in ms: 11379
+% time in ms: 11405
+% ===================================
+% Task            Time            %%
+% print_bench     0               <1%
+% IDLE            0               <1%
+% benchmark       3624            3%
+% benchmark       3637            3%
+% benchmark       3623            3%
+% benchmark       3644            3%
+% benchmark       3631            3%
+% tsink           94876           83%
+% Tmr Svc         0               <1%
+%     \end{minted}
+%         \captionof{listing}{Benchmark mit blockierender I/O}
+%     \end{code}
+% \end{minipage}
+%
+% Die Ausgabe enthält zwei verschiedene Zeitmessungen für den Benchmark. Die erste
+% Messung erfasst die Zeitspanne vom Start der jeweiligen Task bis zu dessen
+% Beendigung. Die zweite Messung bezieht sich auf die
+% FreeRTOS-Laufzeitstatistiken, die durch \mintinline{cpp}|vTaskGetRunTimeStats()|
+% formatiert ausgegeben sind. Diese liefern die absolute, akkumulierte Zeit für
+% jede Task, die im Zustand „Running” verbracht hat, sowie deren prozentualen
+% Anteil an der Gesamtlaufzeit \cite{freertos_runtime_stats}.
+%
+% Der Benchmark zeigt, dass asynchrone Übertragung per DMA die Gesamtlaufzeit des
+% Benchmark-Prozesses im Vergleich zur I/O-gebundenen Variante um etwa $16\,\%$
+% verringerte, während gleichzeitig die I/O-gebundene Zeit freigegeben wurde,
+% sodass sie von anderen Tasks genutzt werden kann.
+%
+% Ebenso kann abgeleitet werden, dass durch die Verwendung von DMA die
+% Datenübertragungsrate nahezu das vorkonfigurierte Maximum der Baudrate von
+% $2.000.000\,\text{bps}$ erreicht wurde: Insgesamt wurden $1.908.759$ Bytes
+% übertragen, dabei hat ein UART-Frame per Byte eine standardmäßige Wortlänge von
+% 8 Bit, inklusive je 1 Start- und 1 Stopp-Bit, ohne Paritätsbit.
+%
+% \begin{align*}
+%     1.908.355\text{\,B} \times 10\text{\,b per Frame} =
+%     19.083.550 \text{\,b} = \text{Gesamte Bits}
+% \end{align*}
+%
+% Teilt man dies durch die gesamte Übertragungszeit, ergibt sich die effektive
+% Bitrate sowie der prozentuale Anteil im Vergleich zur maximalen Baudrate:
+%
+% \begin{align*}
+%     \text{Bitrate bei DMA} =
+%     \frac{19.083.550\text{\,b}}{9,571\text{\,s}} \approx
+%     1.993.893,01 \text{\,bps} \\
+%     \quad \Rightarrow 99,70\,\%\text{ des Maximums} \\
+%     \\
+%     \text{Bitrate bei blockierender I/O} =
+%     \frac{19.083.550\text{\,b}}{11,405\text{\,s}} \approx
+%     1.673.261,73 \text{\,bps} \\
+%     \quad \Rightarrow 83,66\,\% \text{ des Maximums}
+% \end{align*}
+%
+% Der Code für die Senke sowie den Benchmark befinden sich in den
+% Repositorys~\cite{freertos_threadsafe_sink, freertos_tsink_benchmark}.
 
-\begin{code}
-\begin{minted}{cpp}
-int main() {
-  auto tsink_consume = [](const uint8_t* buf, size_t size) static {
-    HAL_UART_Transmit(&huart3, buf, size, HAL_MAX_DELAY);
-    tsink::consume_complete<tsink::CALL_FROM::NON_ISR>();
-  };
-
-  tsink::init(tsink_consume, osPriorityAboveNormal);
-}
-\end{minted}
-    \captionof{listing}{Initialisierung der Senke mit blockierender IO}
-\end{code}
-
-\subsubsection{Benchmark}
-
-Ein Benchmark für die Senke wurde entwickelt, um deren Leistung unter paralleler
-Last zu testen. Der Benchmark lässt eine Anzahl von
-\mintinline{text}|BENCHMARK_N = 5| Threads gleichzeitig laufen, die jeweils eine
-Anzahl von \mintinline{cpp}|iteration = 5000| Nachrichten mit ca. 80 Charaktern
-nach Formatierung hintereinander über die Senke ausgeben.
-
-Nach Abschluss des Benchmarks werden die gemessenen Zeiten und die
-Laufzeitstatistiken der jeweiligen Task ausgegeben.
-
-\begin{minipage}[t]{0.5\textwidth}
-    \begin{code}
-        \begin{minted}[linenos=false]{cpp}
-time in ms: 7576
-time in ms: 8071
-time in ms: 9064
-time in ms: 9386
-time in ms: 9571
-===================================
-Task            Time            %%
-print_bench     0               <1%
-IDLE            72844           76%
-benchmark       4385            4%
-benchmark       4221            4%
-benchmark       4374            4%
-benchmark       4470            4%
-benchmark       4169            4%
-tsink           312             <1%
-Tmr Svc         0               <1%
-    \end{minted}
-        \captionof{listing}{Benchmark mit DMA}
-    \end{code}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.5\textwidth}
-    \begin{code}
-        \begin{minted}[linenos=false]{cpp}
-time in ms: 10964
-time in ms: 11016
-time in ms: 11285
-time in ms: 11379
-time in ms: 11405
-===================================
-Task            Time            %%
-print_bench     0               <1%
-IDLE            0               <1%
-benchmark       3624            3%
-benchmark       3637            3%
-benchmark       3623            3%
-benchmark       3644            3%
-benchmark       3631            3%
-tsink           94876           83%
-Tmr Svc         0               <1%
-    \end{minted}
-        \captionof{listing}{Benchmark mit blockierender IO}
-    \end{code}
-\end{minipage}
-
-Die Ausgabe enthält zwei verschiedene Zeitmessungen für den Benchmark. Die erste
-Messung erfasst die Zeitspanne vom Start der jeweiligen Task bis zu dessen
-Beendigung. Die zweite Messung bezieht sich auf die
-FreeRTOS-Laufzeitstatistiken, die durch \mintinline{cpp}|vTaskGetRunTimeStats()|
-formatiert ausgegeben sind. Diese liefern die absolute, akkumulierte Zeit für
-jede Task, die im Zustand „Running” verbracht hat, sowie deren prozentualen
-Anteil an der Gesamtlaufzeit \cite{freertos_runtime_stats}.
-
-Der Benchmark zeigt, dass asynchrone Übertragung per DMA die Gesamtlaufzeit des
-Benchmark-Prozesses im Vergleich zur IO-gebundenen Variante um etwa $16\,\%$
-verringerte, während gleichzeitig die IO-gebundene Zeit freigegeben wurde,
-sodass sie von anderen Tasks genutzt werden kann.
-
-Ebenso kann abgeleitet werden, dass durch die Verwendung von DMA die
-Datenübertragungsrate nahezu das vorkonfigurierte Maximum der Baudrate von
-$2.000.000\,\text{bps}$ erreicht wurde: Insgesamt wurden $1.908.759$ Bytes
-übertragen, dabei hat ein UART-Frame per Byte eine standardmäßige Wortlänge von
-8 Bit, inklusive je 1 Start- und 1 Stopp-Bit, ohne Paritätsbit.
-
-\begin{align*}
-    1.908.355\text{\,B} \times 10\text{\,b per Frame} =
-    19.083.550 \text{\,b} = \text{Gesamte Bits}
-\end{align*}
-
-Teilt man dies durch die gesamte Übertragungszeit, ergibt sich die effektive
-Bitrate sowie der prozentuale Anteil im Vergleich zur maximalen Baudrate:
-
-\begin{align*}
-    \text{Bitrate bei DMA} =
-    \frac{19.083.550\text{\,b}}{9,571\text{\,s}} \approx
-    1.993.893,01 \text{\,bps} \\
-    \quad \Rightarrow 99,70\,\%\text{ des Maximums} \\
-    \\
-    \text{Bitrate bei blockierender IO} =
-    \frac{19.083.550\text{\,b}}{11,405\text{\,s}} \approx
-    1.673.261,73 \text{\,bps} \\
-    \quad \Rightarrow 83,66\,\% \text{ des Maximums}
-\end{align*}
-
-Der Code für die Senke sowie den Benchmark befinden sich in den
-Repositorys~\cite{freertos_threadsafe_sink, freertos_tsink_benchmark}.
-
+% TODO
 \subsection{Aktivierung der DWT}
 
 Wie im vorherigen Abschnitt \ref{sec:dwt} erläutert, eignet sich die DWT gut zur
@@ -541,7 +547,7 @@ aus dem \mintinline{cpp}|pxCurrentTCB|-Objekt, das eigentlich speziell zur
 Task-Identifizierung für Drittanbieter-Software konzipiert
 ist~\cite{freertos_task_c_410}, kann in dem Fall auch als möglicherweise der
 leichtgewichtigste Identifikator genutzt werden. Da das Ausgeben des
-menschenlesbaren Namens keinen Bottleneck bei der IO-Übertragung verursacht und
+menschenlesbaren Namens keinen Bottleneck bei der I/O-Übertragung verursacht und
 man nicht nachträglich manuell jeden generierten Zyklenstempel der zugehörigen
 Task zuordnen muss, wird hier einfachheitshalber auf den Namen entschieden.
 
