@@ -246,6 +246,12 @@
 \newblock \,Version:\,2021. --
 \newblock Zugriff: 27. März 2025
 
+\bibitem[gnu]{gnu_atomic_builtins}
+\emph{6.51 Built-in functions for atomic memory access}.
+\newblock
+  \url{https://gcc.gnu.org/onlinedocs/gcc-4.6.2/gcc/Atomic-Builtins.html}. --
+\newblock Zugriff: 21. April 2025
+
 \bibitem[HAL]{HAL_UART_Transmit_DMA}
  ; SourceVu (Veranst.):
 \newblock \emph{HAL\_UART\_Transmit\_DMA Documentation}.
@@ -266,6 +272,13 @@
  ; International Organization for Standardization (Veranst.):
 \newblock \emph{ISO/IEC 14882:2020(E): Programming Languages --- C++}.
 \newblock Geneva, Switzerland, 2020
+
+\bibitem[KL22]{arm_sync_overview}
+\textsc{Ker~Liu}, Zaiping~B.:
+\newblock \emph{Synchronization Overview and Case Study on Arm Architecture}.
+\newblock \url{https://developer.arm.com/documentation/107630/1-0/?lang=en}.
+\newblock \,Version:\,2022. --
+\newblock Zugriff: 21. April 2025
 
 \bibitem[Kou23]{koubaa2023}
 \textsc{Koubaa}, Anis:
@@ -437,12 +450,6 @@
 \newblock \emph{Eintrittsinvarianz}.
 \newblock \url{https://de.wikipedia.org/wiki/Eintrittsinvarianz}. --
 \newblock Zugriff: 01. Mai 2025
-
-\bibitem[{Wik}d]{memory_ordering}
-\textsc{{Wikipedia contributors}}:
-\newblock \emph{Memory ordering}.
-\newblock \url{https://en.wikipedia.org/wiki/Memory_ordering}. --
-\newblock Zugriff: 21. April 2025
 
 \bibitem[Wik24]{waitstate_wiki}
 \textsc{Wikipedia}:

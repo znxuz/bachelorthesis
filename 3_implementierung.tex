@@ -240,19 +240,18 @@ Schreibindex, falls dieser innerhalb dieses Bereichs liegt. Bei jedem Aufruf von
 I/O-Übertragung gewartet, bevor eine neue gestartet werden kann.
 
 Diese Vorgehensweise ist notwendig wenn \mintinline{cpp}|consume()| DMA nutzt:
-Die DMA-Übertragungsfunktion von der STM32-HAL signalisiert dabei lediglich der
-Hardware den gewünschten Transfervorgang und kehrt sofort
+Die zugehörige Übertragungsfunktion aus der STM32-HAL signalisiert dabei
+lediglich der Hardware den gewünschten Transfervorgang und kehrt sofort
 zurück~\cite{HAL_UART_Transmit_DMA}. Das heißt, die Daten werden einfach zur
 Verarbeitung für den DMA eingereiht, während der Programmfluss unmittelbar
 fortgesetzt wird. Außerdem ist das globale, intern genutzte UART-Zustandsobjekt
-auch nicht wiedereintrittsfähig\footnotemark{}~\cite{stm32_hal_reentrancy}.
+auch nicht wiedereintrittsfähig\footnote{„Als wiedereintrittsfähig -- zu
+englisch reentrant -- wird ein Programm-Attribut beschrieben, welches die
+mehrfache (quasi-gleichzeitige) Nutzung eines Programm-Codes erlaubt, so dass
+sich gleichzeitig (oder quasi-gleichzeitig) ausgeführte Instanzen nicht
+gegenseitig
+beeinflussen.”~\cite{wiedereintrittsfaehigkeit}}~\cite{stm32_hal_reentrancy}.
 Daher müssen nachfolgende Aufrufe hierbei miteinander synchronisiert werden.
-
-\footnotetext{„Als wiedereintrittsfähig -- zu englisch reentrant -- wird ein
-Programm-Attribut beschrieben, welches die mehrfache (quasi-gleichzeitige)
-Nutzung eines Programm-Codes erlaubt, so dass sich gleichzeitig (oder
-quasi-gleichzeitig) ausgeführte Instanzen nicht gegenseitig
-beeinflussen.”~\cite{wiedereintrittsfaehigkeit}}
 
 Als Verbrauchsfunktion \mintinline{cpp}|consume()| kann beispielsweise die
 DMA-Übertragungsfunktion von STM32-HAL verwendet werden. Diese nimmt einen
@@ -468,7 +467,7 @@ void main() {
 % TODO
 \subsection{Aktivierung der DWT}
 
-Wie im vorherigen Abschnitt \ref{sec:dwt} erläutert, eignet sich die DWT gut zur
+Wie im vorherigen Abschnitt \ref{sec:dwt} erläutert, eignet sich die DWT zur
 Generierung von Echtzeitdaten in Form von Zyklenzahlen. Mittels der folgenden
 Konfigurationsschritte kann diese Debug-Einheit aktiviert werden:
 
@@ -539,8 +538,8 @@ void task_switched_isr(const char* name, uint8_t is_begin);
 
 Hierbei werden die Makros jeweils als ein Aufruf der Funktion
 \mintinline{cpp}|task_switched_isr()| mit dem Namen der aktuellen Task
-\mintinline{cpp}|pcTaskName| sowie eine boolesche Variable als Start/End-Marker
-definiert.
+(\mintinline{cpp}|pcTaskName|) sowie eine boolesche Variable als
+Start/End-Marker definiert.
 
 Das Feld \mintinline{cpp}|uxTaskNumber| vom Typ \mintinline{cpp}|unsigned long|
 aus dem \mintinline{cpp}|pxCurrentTCB|-Objekt, das eigentlich speziell zur
@@ -563,25 +562,25 @@ void task_switched_isr(const char* name, uint8_t is_begin) {
 \end{code}
 
 Die Funktion überprüft zunächst, ob die Aufzeichnung beim Kontextwechsel
-durchgeführt werden soll, und ruft anschließend \mintinline{cpp}|stamp()| auf --
+durchgeführt werden soll, und ruft anschließend \mintinline{cpp}|stamp()| auf
 wenn dies der Fall ist. Nebenbei wird ein Zähler inkrementiert, der die
 akkumulierte Anzahl von Kontextwechsel repräsentiert.
 
-Da das Schreiben eines Zyklenstempel bestehend aus mehreren Bytes in die Senke
-gleichzeitig aus mehreren Threads per se nicht „lock-free“ sein kann, darf es
-nicht direkt in einer ISR durchgeführt werden. Stattdessen müssen in
+
+Da das Schreiben eines Zyklenstempels -- bestehend aus mehreren Bytes --
+gleichzeitig aus mehreren Threads eine blockierende Operation darstellt, kann es
+nicht direkt in einer ISR erfolgen. Stattdessen müssen in
 \mintinline{cpp}|stamp()| die Daten zuerst in einen temporären Puffer
 geschrieben werden.
 
 \begin{code}
 \begin{minted}{cpp}
-inline constexpr size_t ISR_STAMP_BUF_SIZE = 512;
+inline constexpr size_t STAMP_BUF_SIZE = 512;
+inline cycle_stamp stamps[STAMP_BUF_SIZE]{};
+volatile inline std::atomic<size_t> stamp_idx = 0;
+volatile inline bool stamping_enabled = false;
 
-inline std::array<cycle_stamp, STAMP_BUF_SIZE> isr_stamps{};
-volatile inline size_t isr_stamp_idx = 0;
-volatile inline bool stamping_enabled = 0;
-
-void stamp(const char* name, bool is_begin) {
+inline void stamp(const char* name, bool is_begin) {
   volatile auto cycle = DWT->CYCCNT;
   volatile auto idx = stamp_idx.fetch_add(1);
   stamps[idx % STAMP_BUF_SIZE] = {name, cycle, is_begin};
@@ -591,17 +590,19 @@ void stamp(const char* name, bool is_begin) {
     Aktivierungsflag}
 \end{code}
 
-Standardmäßig verwendet \mintinline{cpp}|fetch_add()|
-\mintinline{cpp}|std::memory_order_seq_cst| als Wert für das letzte, optionale
-Argument \cite{cppreference_fetch_add}. Diese Option entspricht
-\mintinline{cpp}|__sync_synchronize()| aus der C-Welt und wirkt als vollständige
-Memory-Barrier-Anweisung~\cite{cppreference_memory_order}, ähnlich dem starken
-Speichermodell (strong memory model) bei x86-Plattformen, wo Operationen nicht
-umgeordnet werden oder zumindest für andere Threads nicht umgeordnet
-erscheinen \cite{memory_ordering}.
+Der Index wird dabei als Variable vom Typ \mintinline{cpp}|std::atomic<size_t>|
+deklariert, um atomare Inkrementierungen im Puffer zu ermöglichen. Standardmäßig
+nutzt \mintinline{cpp}|fetch_add()| \mintinline{cpp}|std::memory_order_seq_cst|
+als Wert für das letzte, optionale Memory-Barrier-Argument
+\cite{cppreference_fetch_add}. Diese Option entspricht
+\mintinline{cpp}|__sync_synchronize()| aus C und fungiert als vollständige
+Memory-Barrier-Anweisung~\cite{cppreference_memory_order}, bei der weder
+Speicheroperationen noch Instruktionen umgeordnet werden können
+\cite{gnu_atomic_builtins}.
 
-Die erfassten ISR-Zykluszahlen müssen dann zusätzlich von einer FreeRTOS-Task in
-einen menschenlesbaren String umgewandelt und in die Senke geschrieben werden.
+Die erfassten ISR-Zyklenstempel müssen dann zusätzlich von einer FreeRTOS-Task
+in einen menschenlesbaren String umgewandelt und in die Senke geschrieben
+werden.
 
 \begin{code}
     \begin{minted}{cpp}
@@ -622,8 +623,8 @@ auto output_stamps = []() static {
 
 \subsubsection{Im Nicht-ISR-Kontext}
 
-Für Nicht-ISR-Kontexte ist die Funktion zur direkten Ausgabe eines
-Zyklusstempels wie folgt definiert:
+Für Nicht-ISR-Kontexte ist die Funktion zur direkten Ausgabe eines Zyklenstempel
+wie folgt definiert:
 
 \begin{code}
 \begin{minted}{cpp}
@@ -660,19 +661,24 @@ ermittelt dessen Dauer.
 void func()
 { // --> t1 stamp in
   cycle_stamp_raii t1{"func"};
+
   { // --> t2 stamp in
     cycle_stamp_raii t2{"code block"};
   } // --> t2 stamp out
+
 } // --> t1 stamp out
 \end{minted}
     \captionof{listing}{Beispielnutzung einer RAII-Struktur}
 \end{code}
 
+\paragraph{Zeitliche Garantie der Erstellung}
+
 Unmittelbar nach der Erstellung eines solchen RAII-Objekts sollte ebenfalls ein
 Memory-Barrier erfolgen. Damit wird sichergestellt, dass das Objekt tatsächlich
-zum definierten Zeitpunkt erstellt wird und nicht beispielsweise durch
-Optimierungen umgeordnet wird, denn ARM-Architekturen verwenden standardmäßig
-ein schwaches Speichermodell (weak/relaxed memory order).
+zum definierten Zeitpunkt erstellt wird und nicht durch Software- oder
+Hardwareoptimierungen umgeordnet wird, die entweder durch Compilerflags wie
+\mintinline{text}|-O| oder aufgrund des schwachen Speichermodells (weak memory
+ordering) der ARM-Architektur ermöglicht werden \cite[S. 5]{arm_sync_overview}.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -682,16 +688,16 @@ std::atomic_thread_fence(std::memory_order_seq_cst);
     \captionof{listing}{Generierung eines Zyklenstempels via eines RAII-Objekts}
 \end{code}
 
-Laut des ISO-C++-Standards aus dem Jahr 2020 wird der Aufruf von Destruktoren
-mit „Side Effects”\footnotemark{} nicht durch Optimierung eliminiert und erfolgt
-garantiert am Ende des Ausführungsblocks, selbst wenn das Objekt nicht genutzt
-zu sein scheint~\cite[§6.7.5.4 Abs. 3]{iso_iec_14882_2020}, und zwar immer in
-der umgekehrten Reihenfolge, wie die Objekte kreiert worden sind
-\cite{isocpp_dtor_order}.
+\paragraph{Zeitliche Garantie von Destruktor-Aufruf}
 
-\footnotetext{Zu „Side Effects” zählen unter anderem Schreibzugriffe von
-Objekten sowie Schreib- und Lesezugriffe auf ein
-\mintinline{cpp}|volatile|-Objekt.~\cite{cppreference_eval_order}}
+Laut des ISO-C++-Standards aus dem Jahr 2020 wird der Aufruf von Destruktoren
+mit „Side Effects”\footnote{Zu „Side Effects” zählen unter anderem
+Schreibzugriffe von Objekten sowie Schreib- und Lesezugriffe auf ein
+\mintinline{cpp}|volatile|-Objekt.~\cite{cppreference_eval_order}} nicht durch
+Optimierung eliminiert und erfolgt garantiert am Ende des Ausführungsblocks,
+selbst wenn das Objekt nicht genutzt zu sein scheint~\cite[§6.7.5.4 Abs.
+3]{iso_iec_14882_2020}, und zwar immer in der umgekehrten Reihenfolge, wie die
+Objekte kreiert worden sind \cite{isocpp_dtor_order}.
 
 Durch die oben beschriebenen Maßnahmen lässt sich sicherstellen, dass die
 Erzeugung von Zyklenstempeln in Nicht-ISR-Kontexten ebenfalls zur Echtzeit
@@ -709,8 +715,8 @@ Button bei jedem Druck einen Interrupt auslöst.
 Im entsprechenden Interrupt-Callback wird ein Toggle-Mechanismus implementiert:
 Bei jedem Auslösen wird die boolesche Variable
 \mintinline{cpp}|stamping_enabled| invertiert. Gleichzeitig wird die
-Profiling-Task benachrichtigt, um die ISR-Zyklenstempel auszugeben.
-
+Profiling-Task benachrichtigt, um die ISR-Zyklenstempel in die Senke zu
+schreiben.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -741,25 +747,24 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 Um ungewollte Mehrfachauslösungen durch unpräzises Drücken zu vermeiden, ist
 eine kurze Debounce-Zeit notwendig.
 
-Zusammenfassend lässt sich festhalten, dass sich mithilfe von
-FreeRTOS-Trace-Hooks sowie RAII-basierter Zyklenstempelerfassung -- kombiniert
-mit dem vorhandenen User-Button -- ein leichtgewichtiges Profiling-System für
-FreeRTOS-Tasks und zeitkritische Codeabschnitte realisieren lässt.
-
 \subsection{Visualisierung von Profiling-Daten}
 
-Die Profiling-Daten werden im menschenlesbaren Format \linebreak
-\mintinline{text}|<Identifikator> <konvertierte Zeit> <Start-/End-Marker>|
-umgerechnet in Mikrosekunden ausgegeben.
+Die Profiling-Daten werden im menschenlesbaren Format ausgegeben. Sie bestehen aus:
 
-Sie folgen nicht einer strikt aufsteigenden Reihenfolge nach den konvertierten
-Zeiten, da die von den ISR generierten Zyklenstempel zunächst
-zwischengespeichert und erst später durch eine FreeRTOS-Task in einer frei
-wählbaren Frequenz ausgegeben werden müssen. Da jedoch jeder Zyklenstempel in
-Echtzeit ohne Verzögerung oder Overhead erzeugt wird, spiegelt die zugehörige
-Zyklenzahl und somit die konvertierten Zeitpunkten in Mikrosekunden die
-tatsächlichen Echtzeitaspekte des Systems korrekt wider. Daher ist eine strikt
-geordnete Ausgabe nicht zwingend erforderlich.
+\begin{quote}
+    \mintinline{text}|<Identifikator> <konvertierte Zeit> <Start-/End-Marker>|
+\end{quote}
+
+Die Zeitangaben werden in Mikrosekunden umgerechnet, indem sie durch die
+Taktfrequenz dividiert und auf die entsprechenden Genauigkeit skaliert werden.
+
+Sie folgen nicht einer aufsteigenden Reihenfolge nach den konvertierten Zeiten,
+da die von den ISR generierten Zyklenstempel zunächst zwischengespeichert und
+erst später durch eine FreeRTOS-Task in einer frei wählbaren Frequenz ausgegeben
+werden müssen. Da jedoch jeder Zyklenstempel in Echtzeit ohne Verzögerung oder
+Overhead erzeugt wird, spiegelt die zugehörige Zyklenzahl und somit die
+konvertierten Zeitpunkten die tatsächlichen Echtzeitaspekte des Systems korrekt
+wider. Daher ist eine strikt geordnete Ausgabe nicht zwingend erforderlich.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -783,21 +788,34 @@ Es wurde versucht, die parallele Ausgabe zu synchronisieren: Jeder Thread ruft
 die Schreibfunktion der Senke mit einem atomar inkrementierten Zähler auf.
 Dieser wird dann mit dem internen Zähler verglichen. Stimmen die Werte überein,
 wird die Schreiboperation ausgeführt, andernfalls wird der Thread blockiert.
-Dieser Versuch erwies sich als nicht erfolgreich, da die resultierende
-Performance aufgrund des nicht-deterministischen Schedulings um die Hälfte sank.
+Dieser Ansatz erwies sich als nicht erfolgreich, da die resultierende
+Performance durch das nicht-deterministische Scheduling ohne Threadbevorzugung
+um die Hälfte sank.
 
-Anschließend wurde versucht, alle Zyklenstempel zunächst in dem statischen
-Puffer zwischenzuspeichern, um das Erzeugen und Ausgabe komplett voneinander zu
-trennen. Mit diesem Ansatz konnte die Reihenfolge konsistent gehalten werden.
+Anschließend wurde versucht, alle Zyklenstempel in dem statischen Puffer
+zwischenzuspeichern. Damit wird das Erzeugen und Ausgabe von Zyklenstempeln
+komplett voneinander getrennt. Mit diesem Ansatz konnte die Reihenfolge
+konsistent gehalten werden.
 
-% \begin{code}
-% \begin{minted}{cpp}
-% uros 2 0
-% profile 2 1
-% profile 28 0
-% ...
-% w_ctrl 14031 1
-% w_ctrl 14133 0
-% \end{minted}
-%     \captionof{listing}{Profiling-Daten in aufsteigender Reihenfolge}
-% \end{code}
+\begin{code}
+\begin{minted}{cpp}
+IDLE 1 0
+profile 2 1
+profile 28 0
+IDLE 29 1
+IDLE 556 0
+tsink 557 1
+tsink 560 0
+uros 561 1
+uros 623 0
+IDLE 625 1
+IDLE 667 0
+...
+\end{minted}
+    \captionof{listing}{Profiling-Daten in aufsteigender Reihenfolge}
+\end{code}
+
+Zusammenfassend zeigt sich, dass sich mit FreeRTOS-Trace-Hooks und
+RAII-basierter Zyklenstempelerfassung in Kombination mit dem vorhandenen
+User-Button ein leichtgewichtiges Profiling-System für FreeRTOS-Tasks und
+zeitkritische Codeabschnitte implementieren lässt.

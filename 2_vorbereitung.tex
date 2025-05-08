@@ -272,9 +272,9 @@ extern QueueHandle_t vel_wheel_queue;
     \captionof{listing}{Deklaration der Queue-Objekte in der Header-Datei}
 \end{code}
 
-Die grundlegende Implementierung der jeweiligen Steuerungskomponenten bleibt
-größtenteils von der Micro-ROS-Struktur erhalten. Deren Initialisierung erfolgt
-in \mintinline{cpp}|freertos::init()|:
+Die grundlegende Implementierung der Steuerungskomponenten bleibt größtenteils
+gegenüber der Micro-ROS-Version erhalten. Die Initialisierung erfolgt in
+\mintinline{cpp}|freertos::init()| wie folgt:
 
 \begin{code}
 \begin{minted}{cpp}
