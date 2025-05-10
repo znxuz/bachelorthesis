@@ -7,13 +7,6 @@
 	Edition = {Volume 7},
 }
 
-@online{ARM_KA001499,
-  author = {{ARM Limited}},
-  title = {{Summary: How many instructions have been executed on a Cortex-M processor?}},
-  url = {https://developer.arm.com/documentation/ka001499/latest/},
-  note = {Zugriff: 14. März 2025}
-}
-
 @online{ARMv7_ref_man_dwt_cycle,
   author = {{ARM Limited}},
   title = {{ARMv7-M Architecture Reference Manual}},
@@ -56,13 +49,6 @@
   note = {Zugriff: 15. März 2025},
 }
 
-@online{freertos_tick_resolution,
-  author = {{FreeRTOS}},
-  title = {Tick Resolution},
-  url = {https://mobile.freertos.org/Documentation/02-Kernel/05-RTOS-implementation-tutorial/02-Building-blocks/11-Tick-Resolution},
-  note = {Zugriff: 15. März 2025},
-}
-
 @online{freertos_semphr_incl,
   author = {{FreeRTOS}},
   title = {semphr.h},
@@ -74,34 +60,6 @@
   author = {{FreeRTOS}},
   title = {Mutexes},
   url = {https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/02-Queues-mutexes-and-semaphores/02-Binary-semaphores#freertos-binary-semaphores},
-  note = {Zugriff: 15. März 2025},
-}
-
-@online{wikipedia_priority_inheritance,
-  author = {Wikipedia},
-  title = {Priority Inheritance},
-  url = {https://en.wikipedia.org/wiki/Priority_inheritance},
-  note = {Zugriff: 15. März 2025}
-}
-
-@online{wikipedia_priority_inversion,
-  author = {{Wikipedia}},
-  title = {Priority Inversion},
-  url = {https://en.wikipedia.org/wiki/Priority_inversion},
-  note = {Zugriff: 15. März 2025},
-}
-
-@online{FreertosForumSemphMtx,
-  author = {FreeRTOS},
-  title = {Mutex or Semaphore},
-  url = {https://forums.freertos.org/t/mutex-or-semaphore/14644/3},
-  note = {Zugriff: 15. März 2025}
-}
-
-@online{freertos_task_notifications_desc,
-  author = {{FreeRTOS}},
-  title = {Task Notifications},
-  url = {https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/03-Direct-to-task-notifications/01-Task-notifications#description},
   note = {Zugriff: 15. März 2025},
 }
 
@@ -142,15 +100,8 @@
 
 @online{HAL_UARTEx_ReceiveToIdle_IT,
   author = {STMicroelectronics},
-  title = {HAL\_UARTEx\_ReceiveToIdle\_IT},
-  url = {https://sourcevu.sysprogs.com/stm32/HAL/symbols/HAL_UARTEx_ReceiveToIdle_IT},
-  note = {Zugriff: 16. März 2025},
-}
-
-@online{HAL_UARTEx_RxEventCallback,
-  author = {STMicroelectronics},
-  title = {HAL\_UARTEx\_RxEventCallback Documentation},
-  url = {https://sourcevu.sysprogs.com/stm32/HAL/symbols/HAL_UARTEx_RxEventCallback},
+  title = {stm32f7xx\_hal\_uart\_ex.c - HAL\_UARTEx\_ReceiveToIdle\_IT},
+  url = {https://github.com/STMicroelectronics/stm32f7xx-hal-driver/blob/903af163202d9150c57b89ddacfa818e7722451f/Src/stm32f7xx_hal_uart_ex.c#L606},
   note = {Zugriff: 16. März 2025},
 }
 
@@ -172,7 +123,7 @@
 @online{freertos_memory_management,
   author = {{FreeRTOS}},
   title = {Static vs Dynamic Memory Allocation},
-  url = {https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/09-Memory-management/03-Static-vs-Dynamic-memory-allocation},
+  url = {https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/09-Memory-management/03-Static-vs-Dynamic-memory-allocation#creating-an-rtos-object-using-statically-allocated-ram},
   note = {Zugriff: 19. März 2025},
 }
 
@@ -186,7 +137,7 @@
 
 @online{ka001150,
   author       = {ARM Limited},
-  title        = {Cortex-M7 Documentation – Arm Developer},
+  title        = {Cortex-M7 Documentation - Arm Developer},
   version      = {1.0},
   url          = {https://developer.arm.com/documentation/ka001150/latest/},
   note = {Zugriff: 19. März 2025},
@@ -217,14 +168,6 @@
   howpublished = {Blog post}
 }
 
-@online{waitstate_wiki,
-  author = {Wikipedia},
-  title = {Waitstate},
-  year = {2024},
-  url = {https://de.wikipedia.org/wiki/Waitstate},
-  note = {Zugriff: 19. März 2025},
-}
-
 @online{embeddedexpert_cache,
   author       = {EmbeddedExpert.io},
   title        = {Understanding Cache Memory in Embedded Systems},
@@ -235,10 +178,8 @@
 
 @online{arm_den0042,
   title        = {Tightly Coupled Memory},
+  author       = {ARM Limited},
   url          = {https://developer.arm.com/documentation/den0042/a/Tightly-Coupled-Memory},
-  note         = {Document ID: DEN0042A},
-  organization = {Arm Limited},
-  version      = {A}
   note = {Zugriff: 20. März 2025},
 }
 
@@ -326,6 +267,13 @@
   note = {Zugriff: 27. März 2025},
 }
 
+@misc{wikipedia_cas,
+  title = {Compare-and-swap},
+  author = {Wikipedia},
+  url = {https://en.wikipedia.org/wiki/Compare-and-swap#Costs_and_benefits},
+  note = {Zugriff: 27. März 2025},
+}
+
 @online{FreeRTOSForumPrintf,
   author = {Richard Barry},
   title = {Implementation of printf that works in threads},
@@ -406,10 +354,26 @@
   note = {Zugriff: 21. April 2025},
 }
 
+@misc{stackoverflow_stdatomic,
+  author = {Kirill Kobelev},
+  title = {What is a memory fence?},
+  howpublished = {Stack Overflow},
+  year = {2012},
+  url = {https://stackoverflow.com/a/286705},
+  note = {Zugriff: 21. April 2025},
+}
+
 @online{cppreference_fetch_add,
   title = {std::atomic<T>::fetch\_add},
   author = {cppreference.com},
   url = {https://en.cppreference.com/w/cpp/atomic/atomic/fetch_add},
+  note = {Zugriff: 21. April 2025},
+}
+
+@online{wikipedia_membarrier,
+  author = {Wikipedia},
+  title = {Memory barrier - Out-of-order execution versus compiler reordering optimizations},
+  url = {https://en.wikipedia.org/wiki/Memory_barrier#Out-of-order_execution_versus_compiler_reordering_optimizations},
   note = {Zugriff: 21. April 2025},
 }
 
@@ -419,27 +383,6 @@
   year = {2022},
   url = {https://developer.arm.com/documentation/107630/1-0/?lang=en},
   note = {Zugriff: 21. April 2025},
-}
-
-@online{stm32_nucleo144_user_manual,
-  title = {STM32 MB1137 - User Manual},
-  author = {STMicroelectronics},
-  url = {https://www.st.com/resource/en/user_manual/um1974-stm32-nucleo144-boards-mb1137-stmicroelectronics.pdf},
-  note = {Zugriff: 21. April 2025},
-}
-
-@online{stm32f7_ref_manual,
-  title = {STM32 RM0410 - Reference Manual},
-  author = {STMicroelectronics},
-  url = {https://www.st.com/resource/en/reference_manual/rm0410-stm32f76xxx-and-stm32f77xxx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf},
-  note = {Zugriff: 21. April 2025},
-}
-
-@online{FreertosTasks,
-  title = {FreeRTOS scheduling},
-  url = {https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/01-Tasks-and-co-routines/04-Task-scheduling#the-default-rtos-scheduling-policy-single-core},
-  organization = {FreeRTOS},
-  note = {Zugriff: 01. Mai 2025},
 }
 
 @online{FreertosForumHF2019,
@@ -467,7 +410,7 @@
 }
 
 @online{wiedereintrittsfaehigkeit,
-  author = {{Wikipedia contributors}},
+  author = {Wikipedia},
   title = {Eintrittsinvarianz},
   url = {https://de.wikipedia.org/wiki/Eintrittsinvarianz},
   note = {Zugriff: 01. Mai 2025},

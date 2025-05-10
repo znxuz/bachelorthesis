@@ -2,9 +2,9 @@
 
 Am Anfang wurde die Robotersteuerungssoftware von Micro-ROS auf FreeRTOS
 umgestellt. Anschließend wurden eine Multi-Producer-Senke sowie ein Verfahren
-entwickelt, das Echtzeitinformationen über die Steuerungssoftware ausgeben kann.
+entwickelt, das Laufzeitinformationen über die Steuerungssoftware ausgeben kann.
 Abschließend wurde die Echtzeitfähigkeit basierend auf die erzeugten
-Profiling-Daten analysiert.
+Laufzeitdaten analysiert.
 
 \subsection{Fazit}
 
@@ -14,26 +14,28 @@ ROS-Komponenten kompatibel wird, dies allerdings mit erheblichem Overhead
 erkauft wird. Bei begrenztem Speicher oder Rechenleistung bleibt FreeRTOS mit
 seinem schlanken Kernel und den threadsicheren Queue-Implementierungen weiterhin
 eine geeignete Wahl gegenüber komplexeren RTOS-Lösungen -- insbesondere wenn
-harte Echtzeitanforderungen oder hochfrequente Aufgabenausführung prioritär
-sind.
+Echtzeitanforderungen oder hochfrequente Aufgabenausführungen prioritär sind.
 
-Darüber hinaus wurde gezeigt, dass sich die Leistung durch L1-Caches deutlich
-verbessern lässt, was für leistungskritische Software entscheidend ist.
+Zudem wurde demonstriert, dass L1-Caches die Performance signifikant steigern --
+eine für leistungskritische Software wesentliche Optimierung, die nicht
+vernachlässigt werden darf.
 
 \subsection{Ausblick}
 
 Für zukünftige Arbeiten könnte die Multi-Producer-Senke so weiterentwickelt
 werden, dass sie atomare Schreiboperationen auf 4-Byte-/32-Bit-Ebene
-unterstützt. Dadurch könnten die Echtzeitdaten nicht mehr im menschenlesbaren
-Format, sondern maschinenlesbar und komprimiert jeweils als 4-Byte-Dateneinheit
+unterstützt. Dadurch könnten die Laufzeitdaten nicht mehr im menschenlesbaren
+Format, sondern maschinenlesbar und komprimiert jeweils als 32-Bit-Dateneinheit
 ausgegeben werden.
 
-Dies würde erstens den Zwischenpuffer zum Speichern von durch Kontextwelchsel
-(Interrupt) generierten Zyklenstempeln überflüssig machen, da sie als 32-bit
-Daten atomar direkt in die Senke geschrieben werden könnten. Zweitens könnte ein
-Parser auf dem Host-System entwickelt werden, der idealerweise auch die
-Visualisierung sowie Analyse der Daten parallel in Echtzeit ermöglicht. Diese
-Vorgehensweise ähnelt der Rust-Bibliothek \mintinline{text}|defmt|, bei der die
-rechenintensive Formatierung von Logging-Informationen nicht auf dem
-ressourcenbeschränkten System erfolgt, sondern auf eine sekundäre Maschine
-ausgelagert wird.
+Dies würde erstens den Zwischenpuffer und den erforderlichen Mutex zum
+Serialisieren sowie Speichern von generierten Zyklenstempeln überflüssig machen,
+da sie als 32-bit-Daten atomar direkt in die Senke geschrieben werden könnten.
+Zweitens könnte dann ein dedizierter Parser auf dem Linux-Host entwickelt
+werden, der die Visualisierung übernimmt und idealerweise parallel eine
+Echtzeitanalyse durchführt.
+
+% Diese Vorgehensweise ähnelt der Rust-Bibliothek \mintinline{text}|defmt|, bei
+% der die rechenintensive Formatierung von Logging-Informationen nicht auf dem
+% ressourcenbeschränkten System erfolgt, sondern auf eine sekundäre Maschine
+% ausgelagert wird.

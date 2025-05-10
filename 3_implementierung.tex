@@ -1,39 +1,36 @@
-\section{Implementierung für die Echtzeitanalyse}
+\section{Umsetzung der Laufzeitmessung}
 
 Nachdem die Steuerungssoftware sowohl für FreeRTOS als auch für Micro-ROS
-entwickelt wurde, wird nun die Methode zur Echtzeitanalyse implementiert. Sie
-basiert zunächst auf FreeRTOS, um später die Portierung auf Micro-ROS nahtlos zu
-ermöglichen. Ziel ist es, die Ausführungszeiten von Tasks und zeitkritischen
-Funktionen exakt zu messen.
+entwickelt wurde, wird nun eine Methode zur Erfassung von Laufzeitdaten
+entwickelt. Sie basiert auf FreeRTOS, um später die Portierung auf Micro-ROS
+nahtlos zu ermöglichen. Ziel dabei ist es, die Ausführungszeiten von Tasks und
+zeitkritischen Funktionen mittels DWT (\ref{sec:dwt}) präzise zu erfassen.
 
-Aus Gründen der Einfachheit und aufgrund von Hardwarebeschränkungen wurde UART
+Der Ansatz dafür besteht grundsätzlich darin, zu Beginn und am Ende jedes
+Messabschnitts die aktuelle Zyklenzahl zu speichern.
+
+Aufgrund von Hardwarebeschränkungen und aus Gründen der Einfachheit wurde UART
 als Schnittstelle zur Datenübertragung zwischen Mikrocontroller und Host
-gewählt. Mit einer theoretischen Übertragungsrate von bis zu 12,5 Mbit/s bietet
-UART genügend Bandbreite~\cite[S. 2]{stm32_datasheet}, um die Echtzeitdaten
-zuverlässig zu übertragen.
+gewählt. Mit einer theoretischen Übertragungsrate von bis zu
+$12,5\,\text{Mbit/s}$ bietet UART genügend Bandbreite~\cite[S.
+2]{stm32_datasheet}, um die erfassten Daten zur Laufzeit kontinuierlich zu
+übertragen.
 
-Der Ansatz besteht darin, zu Beginn und am Ende jedes Messabschnitts die
-aktuelle Zyklenzahl zu erfassen.
-
-Daraus ergibt sich als Erstes die Notwendigkeit, eine \ac{MPSC} Queue bzw. eine
-Multi-Producer-Senke zu implementieren, welche die Echtzeitdaten kontinuierlich
-verarbeitet und sie über UART ausgibt. Die vorhandenen Stream- oder
-Messagebuffer von FreeRTOS eignen sich nicht für mehrere
-Producer~\cite{FreeRTOSStreamBuffer} und können in dem Fall nicht verwendet
-werden.
+Aus den inhärenten Eigenschaften der mehrfädigen Software ergibt sich zunächst
+die Notwendigkeit, eine \ac{MPSC}-Queue zu implementieren. Diese dient als
+Multi-Producer-Senke für die erfassten Laufzeitdaten und leitet sie zur
+Verarbeitung über UART weiter. Die vorhandenen Stream- oder Messagebuffer von
+FreeRTOS eignen sich nicht für mehrere Producer~\cite{FreeRTOSStreamBuffer}, und
+können in dem Fall nicht verwendet werden.
 
 \subsection{Multi-Producer-Senke}
 
-% Da sowohl FreeRTOS als auch Micro-ROS von Natur aus mehrfädig sind und die
-% Echtzeitanalyse Daten aus beliebigen Threads während der Laufzeit erfasst, muss
-% die Threadsicherheit gewährleistet werden. Dies ist notwendig, um zu verhindern,
-% dass die Daten durch Race Conditions beschädigt werden.
-
-Die grundlegende Idee sieht vor, dass Daten aus mehreren Threads direkt und zwar
-threadsicher in die Senke -- genauer gesagt in den internen Ringpuffer --
-geschrieben werden. Die Speicherung in einem statischen Puffer ist wesentlich
-schneller als beispielsweise die Verwendung einer verketteten Liste, da diese
-dynamische Heap-Allokationen erfordern würde.
+Die grundlegende Idee sieht vor, dass Daten aus mehreren Threads direkt und
+threadsicher in die Senke -- genauer gesagt in einen internen, statischen
+Ringpuffer -- geschrieben werden. Die Speicherung in einem statischen Puffer ist
+wesentlich schneller als beispielsweise die Verwendung einer verketteten Liste,
+da diese unter anderem dynamische Heap-Allokationen erfordern würde und zudem
+auch nicht cache-optimal ist.
 
 Da der vorab allokierte Speicher zwangsläufig begrenzt ist, muss die Senke im
 schlimmsten Fall erkennen können, wann sie weitere Schreibzugriffe blockieren
@@ -42,64 +39,66 @@ werden.
 
 Aber durch die Kombination von DMA mit Interrupts, die bei Abschluss jeder
 DMA-Übertragung ausgelöst werden, lässt sich die I/O-gebundene Wartezeit
-eliminieren. In diesem Fall reduziert sich die Datenausgabe auf das Schreiben in
-den Ringpuffer, während die eigentlichen I/O-Operationen durch den
-DMA-Controller unabhängig vom Prozessor erfolgen. Vorausgesetzt die I/O
+eliminieren. In diesem Fall reduziert sich die Ausgabe von Laufzeitdaten auf das
+reine Schreiben in den Ringpuffer, während die eigentliche I/O-Operation durch
+den DMA-Controller unabhängig vom Prozessor erfolgt. Vorausgesetzt die I/O
 überträgt die Daten schnell genug, um mit dem Eingangsdatenstrom Schritt zu
-halten, entstehen keine Blockiersituationen, in denen Tasks auf freien
+halten, entstehen keine Blockaden, in denen Threads oder Tasks auf freien
 Speicherplatz warten müssen.
 
-Daher wurde der Ansatz mit DMA gewählt, da in diesem Fall die Datenausgabe
-idealerweise nur wenige Zyklen ohne Wartezeit benötigt und sich aus Sicht des
-Prozessors bzw. Threads nahezu als nicht-blockierende Operation verhält.
+Daher wird der Ansatz mit DMA fortgeführt, da in diesem Fall die Datenausgabe
+idealerweise nur wenige Taktzyklen ohne Wartezeit benötigt und sich aus Sicht
+des Prozessors bzw. Threads nahezu als nicht-blockierende Operation verhält.
 
 \subsubsection{Aufbau}
 
-Wie bereits kurz erwähnt, besteht die Senke im Wesentlichen aus einem statisch
-allokierten Ringpuffer mit einem Schreib- und Lesezeiger. Diese Zeiger
-ermöglichen es, die Größe der geschriebenen Daten sowie den verbleibenden
-Speicherplatz zu ermitteln.
+Wie zuvor kurz erwähnt, besteht die Senke im Wesentlichen aus einem statisch
+allokierten Ringpuffer gepaart mit einem Schreib- und Lesezeiger. Diese Zeiger
+bzw. Indizes ermöglichen es unter anderem, die Größe der geschriebenen Daten
+sowie den verbleibenden Speicherplatz zu ermitteln.
 
-In der ersten Implementierungsversion wurde die verfügbare Datenmenge in der
-Senke als Differenz zwischen Schreib- und Lesezeiger berechnet, falls der
-Schreibindex vor dem Leseindex lag. Andernfalls umfassten die zu verarbeitenden
-Daten die Reihe vom Lesezeiger bis zum Pufferende sowie vom Pufferanfang bis zum
-Schreibzeiger, da die beiden Zeiger stets korrekt positioniert waren.
+In der ersten Implementierungsversion wurde die Menge der geschriebenen Daten
+einfach als Differenz zwischen dem Schreib- und Leseindex berechnet, wenn der
+Schreibindex numerisch \textit{nach} dem Schreibindex lag. Andernfalls umfassten
+die geschriebenen Daten die Reihe vom Leseindex bis zum Pufferende sowie vom
+Pufferanfang bis zum Schreibindex, da die beiden Indizes stets korrekt im
+Ringpuffer positioniert waren.
 
-Hierbei musste zusätzlich unterschieden werden, ob beide Zeiger auf dieselbe
-Position zeigen: Entweder ist der Ringpuffer dann leer oder vollständig gefüllt.
-Dies lässt sich dadurch lösen, dass der Schreiber erkennen kann, ob das aktuelle
-Byte noch unverarbeitet ist oder bereits gelesen wurde und somit überschrieben
-werden darf.
+Hierbei musste zusätzlich der Sonderfall berücksichtigt werden, bei dem beide
+Indizes auf dieselbe Position zeigten: Entweder ist der Ringpuffer leer oder
+vollständig gefüllt. Das Problem ließ sich dadurch lösen, indem der Schreiber
+überprüft, ob das Byte an der aktuellen Position noch unverarbeitet ist, oder
+wurde es bereits gelesen und kann somit überschrieben werden. Dies impliziert:
+wenn das aktuelle Byte überschreibbar ist, dann ist die Senke leer, andernfalls
+ist sie voll beschrieben.
 
 In einem C++-Konferenzvortrag über eine
 \ac{MPMC}-Warteschlange~\cite{CppCon2024LockFreeQueue} basiert deren
 Implementierung auf folgendem Prinzip: Jede Position des Datenpuffers besitzt
-eine eindeutige Schreibsequenznummer. Bei der Datenentnahme wird diese atomar um
-die Gesamtlänge $N$ des Puffers erhöht. Dadurch wird signalisiert, dass die Daten
+eine eindeutige Schreibsequenznummer. Bei Datenentnahme wird diese atomar um die
+Gesamtlänge $N$ des Puffers erhöht. Dadurch wird signalisiert, dass die Daten in
 dieser Position in Iteration $N$ verarbeitet wurden und in Iteration $N+1$ vom
 Schreiber überschrieben werden können. Die Entscheidung hierüber erfolgt durch
 Vergleich mit der globalen Schreibsequenznummer, die ebenfalls nach jedem
 Schreibvorgang atomar inkrementiert wird.
 
-Für den Fall einer Senke mit nur einem einzigen Verbraucher genügt es, den
-Zustand als \mintinline{cpp}|bool| zu speichern. Dieser gibt an, ob die Daten an
-einer bestimmten Position noch verarbeitet werden müssen oder bereits
-überschrieben werden können.
+Für den Fall einer Senke mit einem einzigen Verbraucher genügt es, den Zustand
+als \mintinline{cpp}|bool| zu speichern. Dieser gibt an, ob die Daten an einer
+bestimmten Position noch verarbeitet werden müssen oder bereits überschrieben
+werden können.
 
 Um diesen zusätzlichen Speicherbedarf -- verursacht durch die explizite
 Zustandsmarkierung jedes Bytes im Puffer -- in der finalen Implementierung zu
-eliminieren, können die Zeiger auf eine stets korrekte Positionierung
+eliminieren, können die Indizes auf eine stets korrekte Positionierung
 verzichten: Stattdessen können sie einfach über den Puffer hinaus zählen. Bei
 jeder Verwendung wird ihr Wert durch eine Modulo-Operation mit der Puffergröße
 normalisiert, wodurch sie dann auf die korrekte Position verweisen. Demnach
-reduziert sich die Berechnung der verfügbaren Datenmenge auf eine einfache
-Subtraktion zwischen beiden Zeigern.
+reduziert sich die Berechnung der verfügbaren Datenmenge ebenfalls auf eine
+einfache Subtraktion zwischen beiden Indizes -- vorausgesetzt dass beide Indexe
+vorzeichenlos sind.
 
 Wenn die Puffergröße eine Zweierpotenz ist, kann die Modulo-Operation hier
-ebenfalls auf einen einzigen Zyklus reduziert werden. Dieser minimale
-Mehraufwand stellt ein akzeptables Trade-off dar -- insbesondere im Vergleich
-zum eingesparten Speicherbedarf für Zustandsinformationen.
+ebenfalls auf einen einzigen Taktzyklus reduziert werden.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -114,23 +113,25 @@ size_t size() { return write_idx - read_idx; }
 size_t space() { return TSINK_CAPACITY - size(); }
 size_t normalize(size_t idx) { return idx % TSINK_CAPACITY; }
 \end{minted}
-    \captionof{listing}{Implementierung der Senke}
+    \captionof{listing}{Struktur der Senke}
 \end{code}
 
 \subsubsection{Schreibvorgang in die Senke}
 
-Auf ARM-Architekturen sind alle Zugriffe auf Bytes, Halbwörter (16-Bit) sowie
-Wörter (32-Bit) standardmäßig atomar sofern sie im Speicher ausgerichtet
-sind~\cite[S. A3-79]{ARM_DDI0403_EE}, und verursachen somit keine
-Schreib-Lese-Konflikte, sowohl beim Lesen als auch beim Schreiben.
+Auf ARM-Architekturen sind Zugriffe auf Bytes, Halbwörter (16-Bit) sowie Wörter
+(32-Bit) standardmäßig atomar, sofern sie im Speicher ausgerichtet sind~\cite[S.
+A3-79]{ARM_DDI0403_EE} und verursachen somit keine Schreib-Lese-Konflikte,
+sowohl beim Lesen als auch beim Schreiben.
 
-Es muss sichergestellt werden, dass stets nur ein Thread an eine Position des
-Ringpuffers schreibt, falls mehrere Threads gleichzeitig darauf zugreifen.
+Es muss aber sichergestellt werden, dass zu jedem Zeitpunkt nur ein Thread die
+nächste, freie Position des Ringpuffers beschreibt -- insbesondere bei
+gleichzeitigem Zugriff mehrerer Threads.
 
-Hier lässt sich eine \ac{CAS}-Operation nutzen, um zu gewährleisten, dass der
-Schreibindex bei konkurrierendem Zugriff nur von einem Thread inkrementiert
-wird. Nach erfolgreicher Inkrementierung darf dieser Thread das Byte an der
-beanspruchten Indexposition beschreiben.
+Hier lässt sich eine atomare \ac{CAS}-Operation nutzen, um sicherzustellen, dass
+der Schreibindex bei konkurrierendem Zugriff -- durch Vergleich mit einem
+übergebenen Wert -- nur von einem Thread inkrementiert wird. Nach erfolgreicher
+Inkrementierung darf dann der Thread Daten an der beanspruchten Indexposition
+beschreiben.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -148,19 +149,29 @@ bool write_or_fail(uint8_t elem) {
 \end{code}
 
 Die Vorgehensweise ist wie folgt: Zunächst wird der aktuelle Schreibindex als
-lokale Variable \mintinline{cpp}|expected| zwischengespeichert. Anschließend
-wird geprüft, ob der Puffer bereits voll ist -- in diesem Fall erfolgt eine
-vorzeitige Rückkehr. Andernfalls ist die Position noch beschreibbar.
-Anschließend wird die atomare CAS-Operation durchgeführt, bei der der
-Schreibindex mit dem zwischengespeicherten Wert verglichen und bei
-Übereinstimmung inkrementiert wird. Durch die atomare Eigenschaft dieser
-kombinierten Operation wird sichergestellt, dass letztlich nur ein Thread den
-Index erfolgreich erhöhen und folglich Daten schreiben kann -- diese
-Synchronisation mit anderen Threads über CAS erfolgt somit nicht-blockierend
-(lock-free).
+lokale Variable \mintinline{cpp}|expected| zwischengespeichert. Dann wird
+geprüft, ob der Puffer mit diesem Schreibindex bereits voll ist -- in diesem
+Fall erfolgt eine vorzeitige Rückkehr. Andernfalls ist diese Position frei und
+beschreibbar. Diese Garantie gilt ab diesem Zeitpunkt und bleibt auch in Zukunft
+bestehen, da die Senke danach nur noch weiteren Speicherplatz freigeben kann.
+
+Anschließend wird die CAS-Operation durchgeführt, bei der der Schreibindex mit
+dem zwischengespeicherten Wert verglichen und \textit{bei Übereinstimmung}
+inkrementiert wird. Der zwischengespeicherte Wert erfüllt somit eine
+Doppelfunktion: Er dient sowohl zur Speicherplatzabfrage, als auch als
+Synchronisationstoken für die atomare Indexinkrement. Falls der Schreibindex
+bereits inkrementiert wurde, scheitert der Vergleich, so dass die CAS-Operation
+\mintinline{cpp}|false| zurückgibt und der Schreibvorgang abgebrochen wird.
+
+Durch die atomare Ausführung der kombinierten Operation (Vergleich und
+Inkrement) mit Statusrückmeldung wird sichergestellt, dass letztlich nur ein
+Thread den Schreibindex erfolgreich inkrementieren und folglich Daten schreiben
+kann -- diese CAS-basierte Synchronisation mit anderen Threads erfolgt daher
+nicht-blockierend, was im Vergleich zur Deaktivierung von Interrupts
+ressourcenschonender und somit vorteilhaft ist \cite{wikipedia_cas}.
 
 Um das Schreiben mehrerer Bytes ebenfalls threadsicher zu gestalten, muss der
-gesamte Vorgang durch geeignete Synchronisationsmechanismen geschützt
+gesamte Schreibvorgang durch geeignete Synchronisationsmechanismen geschützt
 werden~\cite{FreeRTOSForumPrintf}. Hier wird ein Mutex verwendet, da dieser --
 im Gegensatz zu einem einfachen Semaphor -- sicherstellt, dass der Thread den
 Mutex und damit die Kontrolle umgehend freigibt und nicht aufgrund niedrigerer
@@ -186,19 +197,17 @@ void write_blocking(const uint8_t* ptr, size_t len) {
     \captionof{listing}{Blockierende Schreiboperation in die Senke}
 \end{code}
 
-Die Struktur \mintinline{cpp}|struct mtx_guard| ist hier implementiert. Sie
-nutzt \ac{RAII}, um beim Erstellen eines Objekts automatisch den Mutex zu
-sperren und ihn beim Verlassen des Gültigkeitsbereichs -- in diesem Fall beim
-Verlassen des \mintinline{cpp}|if|-Blocks -- wieder freizugeben. Falls nicht
-genügend Platz in der Senke vorhanden ist, wird kooperativ der Kontrollfluss für
-eine Millisekunde an den Scheduler zurückgegeben, um andauerndes Polling zu
-vermeiden.
+Die Struktur \mintinline{cpp}|struct mtx_guard| nutzt \ac{RAII}, um beim
+Erstellen eines Objekts automatisch den Mutex zu sperren und ihn beim Verlassen
+des Gültigkeitsbereichs -- in diesem Fall beim Verlassen des
+\mintinline{cpp}|if|-Blocks -- wieder freizugeben. Falls nicht genügend Platz in
+der Senke vorhanden ist, wird kooperativ der Kontrollfluss für eine Millisekunde
+an den Scheduler zurückgegeben, um andauerndes Polling zu vermeiden.
 
 \subsubsection{Lesevorgang aus der Senke}
 
-Eine statisch allokierte FreeRTOS-Task mit geringem Speicherbedarf wird
-erstellt, die kontinuierlich versucht, verfügbare Daten aus der Senke zu lesen
-und zu verarbeiten.
+Eine statisch allokierte FreeRTOS-Task wird erzeugt, die kontinuierlich
+versucht, verfügbare Daten aus der Senke zu verarbeiten.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -231,45 +240,43 @@ void task_impl(void*) {
     \label{code:consumer_task}
 \end{code}
 
-Es wird zunächst der Anteil der verfügbaren Daten berechnet, der vom
-Pufferanfang bis zum Schreibindex reicht. Dann wird die (Teil-)Menge vom
-Leseindex bis zum Pufferende ermittelt -- oder alternativ nur bis zum
-Schreibindex, falls dieser innerhalb dieses Bereichs liegt. Bei jedem Aufruf von
-\mintinline{cpp}|consume_and_wait()| wird durch
-\mintinline{cpp}|ulTaskNotifyTake()| auf den Abschluss der aktuellen
-I/O-Übertragung gewartet, bevor eine neue gestartet werden kann.
+Zunächst wird der mögliche Anteil der verfügbaren Daten, der sich vom
+Pufferanfang bis zum Schreibindex erstreckt, mathematisch berechnet. Der Anteil
+ist nur gültig, wenn nach der Normalisierung der beiden Indizes der Schreibindex
+hinter dem Leseindex liegt: In diesem Fall wurde der Ringpuffer bis zum Ende
+beschrieben und beginnt wieder am Anfang. Dann wird die (Teil-)Menge vom
+aktuellen Leseindex bis zum Schreibindex oder Pufferende -- abhängig vom
+berechneten Anteil -- bestimmt. Diese Vorgehensweise ist notwendig, da die API
+zur UART-Übertragung einen Zeiger und eine Größe als Parameter erwartet und der
+Ringpuffer aufgrund seiner Funktionsweise dies berücksichtigen muss.
 
-Diese Vorgehensweise ist notwendig wenn \mintinline{cpp}|consume()| DMA nutzt:
-Die zugehörige Übertragungsfunktion aus der STM32-HAL signalisiert dabei
-lediglich der Hardware den gewünschten Transfervorgang und kehrt sofort
+Bei jedem Aufruf von \mintinline{cpp}|consume_and_wait()| wird durch
+\mintinline{cpp}|ulTaskNotifyTake()| auf den Abschluss der aktuell laufenden
+I/O-Übertragung gewartet, bevor eine neue gestartet werden kann. Diese
+Vorgehensweise ist ebenfalls notwendig bei Übertragungen mittels DMA: Die
+zugehörige Übertragungsfunktion aus der STM32-HAL signalisiert dabei lediglich
+der Hardware den gewünschten Transfervorgang und kehrt sofort
 zurück~\cite{HAL_UART_Transmit_DMA}. Das heißt, die Daten werden einfach zur
 Verarbeitung für den DMA eingereiht, während der Programmfluss unmittelbar
-fortgesetzt wird. Außerdem ist das globale, intern genutzte UART-Zustandsobjekt
+fortgesetzt wird. Zudem ist das globale, intern genutzte UART-Zustandsobjekt
 auch nicht wiedereintrittsfähig\footnote{„Als wiedereintrittsfähig -- zu
 englisch reentrant -- wird ein Programm-Attribut beschrieben, welches die
 mehrfache (quasi-gleichzeitige) Nutzung eines Programm-Codes erlaubt, so dass
 sich gleichzeitig (oder quasi-gleichzeitig) ausgeführte Instanzen nicht
 gegenseitig
-beeinflussen.”~\cite{wiedereintrittsfaehigkeit}}~\cite{stm32_hal_reentrancy}.
-Daher müssen nachfolgende Aufrufe hierbei miteinander synchronisiert werden.
+beeinflussen.”~\cite{wiedereintrittsfaehigkeit}}~\cite{stm32_hal_reentrancy},
+weshalb die zugehörigen APIs nicht aus mehreren Threads gleichzeitig aufgerufen
+werden dürfen. Daher müssen nachfolgende Aufrufe hierbei miteinander
+synchronisiert werden.
 
-Als Verbrauchsfunktion \mintinline{cpp}|consume()| kann beispielsweise die
-DMA-Übertragungsfunktion von STM32-HAL verwendet werden. Diese nimmt einen
-Zeiger auf ein Array sowie die Größe der lesbaren Daten als Parameter entgegen.
+Der Funktionszeiger \mintinline{cpp}|consume()| für zur Datenverarbeitung lässt
+sich bei der Senke-Initialisierung beispielsweise mit der
+UART-DMA-Übertragungsfunktion aus der STM32-HAL konfigurieren
+(\ref{code:sink_initialization}).
 
-\begin{code}
-\begin{minted}{cpp}
-auto tsink_consume_dma = [](const uint8_t* buf, size_t size) {
-  HAL_UART_Transmit_DMA(&huart3, buf, size);
-}
-\end{minted}
-    \captionof{listing}{Beispieldefinition einer Verbrauchsfunktion}
-\end{code}
-
-Erst wenn eine Task-Notifikation durch den Aufruf von
-\mintinline{cpp}|consume_complete()| eintrifft -- beispielsweise ausgelöst durch
-eine \ac{ISR} der DMA-Hardware nach Übertragungsende -- wird die Task wieder
-entblockt, um weitere I/O-Übertragungen zu initiieren.
+Analog zu \ref{code:uart_isr} wird die Task erst wieder entblockt, wenn eine
+Task-Notifikation eintrifft -- beispielsweise ausgelöst durch eine \ac{ISR} der
+DMA-Hardware nach Übertragungsende, um weitere I/O-Übertragungen zu starten.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -290,11 +297,12 @@ void consume_complete() {
     \captionof{listing}{Callback-Funktion für die Task-Notifikation}
 \end{code}
 
-\subsubsection{Nutzung der Senke mit DMA}
+\subsubsection{Nutzung der Senke mit UART-DMA}
 
-Für die Nutzung dieser Senke mit DMA und aktiviertem Datencache muss zunächst
-das Interrupt-Callback \mintinline{cpp}|HAL_UART_TxCpltCallback()| definiert
-werden, das nach jedem DMA-Transfer ausgelöst wird.
+Für die Nutzung dieser Senke mit UART kombiniert mit DMA und aktiviertem
+Datencache muss zunächst das Interrupt-Callback
+\mintinline{cpp}|HAL_UART_TxCpltCallback()| definiert werden, das nach jeder
+DMA-Übertragung ausgelöst wird.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -307,10 +315,10 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
 \end{code}
 
 Die Senke wird durch den Aufruf ihrer Initialisierungsfunktion bereitgestellt.
-Diese nimmt einen Funktionszeiger vom Typ
-\mintinline{cpp}|consume_fn|~(\ref{code:consumer_task}) zur
-cache-kohärenten~(\ref{code:cache_clean}) Datenverarbeitung sowie eine Priorität
-für die interne Verbraucher-Task als Argumente entgegen.
+Wie zuvor kurz erwähnt, nimmt diese einen Funktionszeiger, dessen
+Implementierung eine cache-kohärente Datenverarbeitung (\ref{code:cache_clean})
+durchführt, sowie eine Priorität für die interne Task~(\ref{code:consumer_task})
+als Argumente entgegen.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -333,6 +341,7 @@ void main() {
 }
 \end{minted}
     \captionof{listing}{Initialisierung der Senke mit DMA}
+    \label{code:sink_initialization}
 \end{code}
 
 % \subsubsection{Nutzung der Senke mit blockierender I/O}
@@ -464,12 +473,11 @@ void main() {
 % Der Code für die Senke sowie den Benchmark befinden sich in den
 % Repositorys~\cite{freertos_threadsafe_sink, freertos_tsink_benchmark}.
 
-% TODO
 \subsection{Aktivierung der DWT}
 
 Wie im vorherigen Abschnitt \ref{sec:dwt} erläutert, eignet sich die DWT zur
-Generierung von Echtzeitdaten in Form von Zyklenzahlen. Mittels der folgenden
-Konfigurationsschritte kann diese Debug-Einheit aktiviert werden:
+Generierung von Laufzeitdaten in Form von Zyklenzahlen. Mittels der folgenden
+Konfigurationsschritte kann sie aktiviert werden:
 
 \begin{code}
 \begin{minted}{cpp}
@@ -491,7 +499,7 @@ ausgelesen werden.
 Drei wesentliche Informationen werden bei der Aufzeichnung von Zyklenstempeln
 erfasst: der Identifikator der zugehörigen Task oder Funktion, die aktuelle
 Zyklenzahl sowie ein Marker, der Beginn oder Ende einer Dauer kennzeichnet.
-Diese Daten werden in einer Struktur gespeichert.
+Diese Daten werden in einer Struktur gespeichert:
 
 \begin{code}
 \begin{minted}{cpp}
@@ -506,23 +514,22 @@ struct cycle_stamp {
     \captionof{listing}{Definition des Zyklenstempels}
 \end{code}
 
-Die statische Variable speichert die Ausgangszyklenzahl zur Laufzeit und dient
-lediglich als Referenzpunkt zur Normalisierung der Messwerte.
+Die statische Variable speichert zur Laufzeit die Zyklenzahl zu Beginn eines
+Samplings und dient als Referenzpunkt zur Normalisierung der Messwerte.
 
 \subsubsection{Beim Kontextwechsel}
 
 FreeRTOS bietet Makros (\ref{sec:trace_hooks}), die beim Kontextwechsel -- oder
 genauer gesagt zu Beginn und auch beim Abschluss jedes FreeRTOS-Zeitabschnitts
-(time slice) einer laufenden Task -- als Callbacks in einer ISR aufgerufen
-werden können. Das Makro \mintinline{cpp}|traceTASK_SWITCHED_IN()| wird
-aufgerufen, unmittelbar nachdem eine Task zum Ausführen oder Fortfahren
-ausgewählt wurde. \mintinline{cpp}|traceTASK_SWITCHED_OUT()| wird aufgerufen,
-unmittelbar bevor der Programmlauf zu einer neuen Task gewechselt wird. An
-diesen Zeitpunkten innerhalb vom Scheduling-Code enthält
-\mintinline{cpp}|pxCurrentTCB| -- der interne Task-Control-Block-Struktur von
-FreeRTOS -- die Metadaten der aktuellen Task, wodurch der Nutzer die Möglichkeit
-hat, direkt darauf als Funktionsargument zuzugreifen, um Informationen über die
-gerade laufenden Task zu erlangen. (\cite{freertos_rtos_trace_hooks})
+(time slice) der aktuellen Task -- als Callbacks aufgerufen werden können. Das
+Makro \mintinline{cpp}|traceTASK_SWITCHED_IN()| wird aufgerufen, unmittelbar
+nachdem eine Task zum Ausführen bzw. Fortfahren ausgewählt wurde.
+\mintinline{cpp}|traceTASK_SWITCHED_OUT()| wird aufgerufen, unmittelbar bevor
+der Programmlauf zu einer neuen Task gewechselt wird. An diesen Zeitpunkten
+innerhalb vom Scheduling-Code enthält \mintinline{cpp}|pxCurrentTCB| -- der
+interne Task-Control-Block-Struktur von FreeRTOS -- die Metadaten der aktuellen
+Task, wodurch der Nutzer die Möglichkeit hat, direkt darauf als
+Funktionsargument zuzugreifen. (\cite{freertos_rtos_trace_hooks})
 
 \begin{code}
 \begin{minted}{cpp}
@@ -539,16 +546,17 @@ void task_switched_isr(const char* name, uint8_t is_begin);
 Hierbei werden die Makros jeweils als ein Aufruf der Funktion
 \mintinline{cpp}|task_switched_isr()| mit dem Namen der aktuellen Task
 (\mintinline{cpp}|pcTaskName|) sowie eine boolesche Variable als
-Start/End-Marker definiert.
+Start/End-Marker definiert. Diese Funktion kann später in einer separaten
+Übersetzungseinheit implementiert werden.
 
 Das Feld \mintinline{cpp}|uxTaskNumber| vom Typ \mintinline{cpp}|unsigned long|
-aus dem \mintinline{cpp}|pxCurrentTCB|-Objekt, das eigentlich speziell zur
+aus dem \mintinline{cpp}|pxCurrentTCB|-Objekt, das speziell zur
 Task-Identifizierung für Drittanbieter-Software konzipiert
 ist~\cite{freertos_task_c_410}, kann in dem Fall auch als möglicherweise der
 leichtgewichtigste Identifikator genutzt werden. Da das Ausgeben des
-menschenlesbaren Namens keinen Bottleneck bei der I/O-Übertragung verursacht und
-man nicht nachträglich manuell jeden generierten Zyklenstempel der zugehörigen
-Task zuordnen muss, wird hier einfachheitshalber auf den Namen entschieden.
+menschenlesbaren Namens keinen Bottleneck verursacht und man nicht nachträglich
+jeden generierten Zyklenstempel der zugehörigen Task zuordnen muss, wird hier
+einfachheitshalber auf den Namen entschieden.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -558,19 +566,18 @@ void task_switched_isr(const char* name, uint8_t is_begin) {
   ctx_switch_cnt += 1;
 }
 \end{minted}
-    \captionof{listing}{Zyklenstempelgenerierung beim Kontextwechsel}
+    \captionof{listing}{Funktion zur Zyklenstempelgenerierung beim Kontextwechsel}
 \end{code}
 
-Die Funktion überprüft zunächst, ob die Aufzeichnung beim Kontextwechsel
+Die Funktion überprüft zunächst, ob eine Aufzeichnung beim Kontextwechsel
 durchgeführt werden soll, und ruft anschließend \mintinline{cpp}|stamp()| auf
 wenn dies der Fall ist. Nebenbei wird ein Zähler inkrementiert, der die
 akkumulierte Anzahl von Kontextwechsel repräsentiert.
 
-
-Da das Schreiben eines Zyklenstempels -- bestehend aus mehreren Bytes --
-gleichzeitig aus mehreren Threads eine blockierende Operation darstellt, kann es
-nicht direkt in einer ISR erfolgen. Stattdessen müssen in
-\mintinline{cpp}|stamp()| die Daten zuerst in einen temporären Puffer
+Da das threadsichere Schreiben eines Zyklenstempels -- der aus mehreren Bytes
+besteht -- mittels Mutex schließlich eine blockierende Operation darstellt, kann
+es nicht direkt in einer ISR erfolgen. Stattdessen müssen in
+\mintinline{cpp}|stamp()| die erfassten Daten zuerst in einen temporären Puffer
 geschrieben werden.
 
 \begin{code}
@@ -590,19 +597,33 @@ inline void stamp(const char* name, bool is_begin) {
     Aktivierungsflag}
 \end{code}
 
-Der Index wird dabei als Variable vom Typ \mintinline{cpp}|std::atomic<size_t>|
-deklariert, um atomare Inkrementierungen im Puffer zu ermöglichen. Standardmäßig
-nutzt \mintinline{cpp}|fetch_add()| \mintinline{cpp}|std::memory_order_seq_cst|
-als Wert für das letzte, optionale Memory-Barrier-Argument
-\cite{cppreference_fetch_add}. Diese Option entspricht
-\mintinline{cpp}|__sync_synchronize()| aus C und fungiert als vollständige
-Memory-Barrier-Anweisung~\cite{cppreference_memory_order}, bei der weder
-Speicheroperationen noch Instruktionen umgeordnet werden können
-\cite{gnu_atomic_builtins}.
+Der Schreibindex wird dabei als Variable vom Typ
+\mintinline{cpp}|std::atomic<size_t>| definiert, um eine atomare Inkrementierung
+mit gleichzeitiger Rückgabe des vorherigen Wertes zu ermöglichen.
+
+% Standardmäßig nutzt \mintinline{cpp}|fetch_add()|
+% \mintinline{cpp}|std::memory_order_seq_cst| als Wert für das letzte, optionale
+% Argument zum Zweck der Speichersynchronisation (Memory-Barrier)
+% \cite{cppreference_fetch_add}. Diese Option entspricht
+% \mintinline{cpp}|__sync_synchronize()| aus C und fungiert als vollständige
+% Memory-Barrier-Anweisung~\cite{gnu_atomic_builtins}, bei der weder
+% Speicheroperationen noch Befehle relativ zu ihrer Position in der
+% Ausführungsreihenfolge hardwareseitig umgeordnet werden können
+% \cite{stackoverflow_stdatomic}. Konkret bedeutet dies: Alle Operationen
+% \textit{vor} einer vollständigen Memory-Barrier-Anweisung müssen abgeschlossen
+% sein, bevor Operationen \textit{nach} der Barriere ausgeführt werden können
+% \cite{cppreference_memory_order}. Damit wird genau festgelegt, in welcher
+% Reihenfolge die Speicherzugriffe sowohl innerhalb des eigenen Threads als auch
+% in Bezug auf andere Threads erfolgen müssen.
+%
+% Dadurch wird sichergestellt, dass die Zyklenzahl immer vor dem Inkrement des
+% Schreibindexes erfasst wird. Dies verhindert beispielsweise, dass ein Thread die
+% Zyklenzahl vor dem Inkrement zwischenspeichert, während ein anderer Thread sie
+% erst nach dem Inkrement erfasst, was zu einer fehlerhaften Reihenfolge führen
+% würde.
 
 Die erfassten ISR-Zyklenstempel müssen dann zusätzlich von einer FreeRTOS-Task
-in einen menschenlesbaren String umgewandelt und in die Senke geschrieben
-werden.
+in ein menschenlesbares Format umgewandelt und in die Senke geschrieben werden.
 
 \begin{code}
     \begin{minted}{cpp}
@@ -623,8 +644,8 @@ auto output_stamps = []() static {
 
 \subsubsection{Im Nicht-ISR-Kontext}
 
-Für Nicht-ISR-Kontexte ist die Funktion zur direkten Ausgabe eines Zyklenstempel
-wie folgt definiert:
+Für Nicht-ISR-Kontexte ist die Funktion zur direkten Ausgabe eines
+Zyklenstempels wie folgt definiert:
 
 \begin{code}
 \begin{minted}{cpp}
@@ -653,8 +674,6 @@ struct cycle_stamp_raii {
 Das RAII-Konzept kommt ebenfalls hier zur Anwendung: Beim Erstellen eines
 Objekts dieses Typs wird automatisch \mintinline{cpp}|stamp_direct()|
 aufgerufen, beim Zerstören -- beim Verlassen des Gültigkeitsbereichs -- erneut.
-Dadurch markiert es Beginn und Ende eines zeitkritischen Abschnitts und
-ermittelt dessen Dauer.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -675,18 +694,22 @@ void func()
 
 Unmittelbar nach der Erstellung eines solchen RAII-Objekts sollte ebenfalls ein
 Memory-Barrier erfolgen. Damit wird sichergestellt, dass das Objekt tatsächlich
-zum definierten Zeitpunkt erstellt wird und nicht durch Software- oder
-Hardwareoptimierungen umgeordnet wird, die entweder durch Compilerflags wie
-\mintinline{text}|-O| oder aufgrund des schwachen Speichermodells (weak memory
-ordering) der ARM-Architektur ermöglicht werden \cite[S. 5]{arm_sync_overview}.
+zum definierten Zeitpunkt erstellt wird und nicht durch Hardwareoptimierungen
+umgeordnet wird \cite{wikipedia_membarrier}, die aufgrund des schwachen
+Speichermodells (weak memory ordering) der ARM-Architektur ermöglicht werden
+\cite[S. 5]{arm_sync_overview}.
 
 \begin{code}
 \begin{minted}{cpp}
-freertos::cycle_stamp_raii _{"p_ctrl"};
+volatile freertos::cycle_stamp_raii _{"p_ctrl"};
 std::atomic_thread_fence(std::memory_order_seq_cst);
 \end{minted}
     \captionof{listing}{Generierung eines Zyklenstempels via eines RAII-Objekts}
 \end{code}
+
+Softwareseitig lässt sich das Schlüsselwort \mintinline{cpp}|volatile| nutzen,
+um die beabsichtigte Ausführungsreihenfolge auch bei aktivierten
+Compileroptimierungen wie \mintinline{text}|-Os| zu erzwingen.
 
 \paragraph{Zeitliche Garantie von Destruktor-Aufruf}
 
@@ -697,20 +720,19 @@ Schreibzugriffe von Objekten sowie Schreib- und Lesezugriffe auf ein
 Optimierung eliminiert und erfolgt garantiert am Ende des Ausführungsblocks,
 selbst wenn das Objekt nicht genutzt zu sein scheint~\cite[§6.7.5.4 Abs.
 3]{iso_iec_14882_2020}, und zwar immer in der umgekehrten Reihenfolge, wie die
-Objekte kreiert worden sind \cite{isocpp_dtor_order}.
+Objekte erzeugt worden sind \cite{isocpp_dtor_order}.
 
-Durch die oben beschriebenen Maßnahmen lässt sich sicherstellen, dass die
+Durch die oben beschriebenen Maßnahmen lässt sich somit sicherstellen, dass die
 Erzeugung von Zyklenstempeln in Nicht-ISR-Kontexten ebenfalls zur Echtzeit
 erfolgt.
 
 \subsection{Streaming-Mode via Button}
 
 Laut Benutzerhandbuch des Boards ist der User-Button standardmäßig mit dem
-I/O-Pin PC13 verbunden~\cite[S. 24, 6.6]{stm32_nucleo144_user_manual}, was der
-EXTI-Linie 13 entspricht~\cite[S. 322, 11.8]{stm32f7_ref_manual}.
-Praktischerweise muss in STM32CubeMX nur die Option für EXTI-Line-Interrupts der
-Linien 10 bis 15 unter \textit{System Core/NVIC} aktiviert werden, sodass der
-Button bei jedem Druck einen Interrupt auslöst.
+I/O-Pin PC13 verbunden, was der EXTI-Linie 13 entspricht. Praktischerweise muss
+in STM32CubeMX nur die Option für EXTI-Line-Interrupts der Linien 10 bis 15
+unter \textit{System Core/NVIC} aktiviert werden, sodass der Button bei jedem
+Druck einen Interrupt auslöst.
 
 Im entsprechenden Interrupt-Callback wird ein Toggle-Mechanismus implementiert:
 Bei jedem Auslösen wird die boolesche Variable
@@ -747,7 +769,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 Um ungewollte Mehrfachauslösungen durch unpräzises Drücken zu vermeiden, ist
 eine kurze Debounce-Zeit notwendig.
 
-\subsection{Visualisierung von Profiling-Daten}
+\subsection{Profiling-Daten -- Überblick}
 
 Die Profiling-Daten werden im menschenlesbaren Format ausgegeben. Sie bestehen aus:
 
@@ -755,12 +777,13 @@ Die Profiling-Daten werden im menschenlesbaren Format ausgegeben. Sie bestehen a
     \mintinline{text}|<Identifikator> <konvertierte Zeit> <Start-/End-Marker>|
 \end{quote}
 
-Die Zeitangaben werden in Mikrosekunden umgerechnet, indem sie durch die
-Taktfrequenz dividiert und auf die entsprechenden Genauigkeit skaliert werden.
+Die Zeitangaben werden in Mikrosekunden umgerechnet, indem man sie durch die
+Taktfrequenz teilt, mit $1.000.000$ multipliziert und auf die gewünschte
+Genauigkeit rundet.
 
 Sie folgen nicht einer aufsteigenden Reihenfolge nach den konvertierten Zeiten,
 da die von den ISR generierten Zyklenstempel zunächst zwischengespeichert und
-erst später durch eine FreeRTOS-Task in einer frei wählbaren Frequenz ausgegeben
+erst später durch die FreeRTOS-Task in einer frei wählbaren Frequenz ausgegeben
 werden müssen. Da jedoch jeder Zyklenstempel in Echtzeit ohne Verzögerung oder
 Overhead erzeugt wird, spiegelt die zugehörige Zyklenzahl und somit die
 konvertierten Zeitpunkten die tatsächlichen Echtzeitaspekte des Systems korrekt
@@ -784,18 +807,21 @@ tsink 336 0     << mittels FreeRTOS-Task periodisch ausgegeben
     \captionof{listing}{Ausschnitt der Profiling-Daten}
 \end{code}
 
-Es wurde versucht, die parallele Ausgabe zu synchronisieren: Jeder Thread ruft
-die Schreibfunktion der Senke mit einem atomar inkrementierten Zähler auf.
-Dieser wird dann mit dem internen Zähler verglichen. Stimmen die Werte überein,
-wird die Schreiboperation ausgeführt, andernfalls wird der Thread blockiert.
-Dieser Ansatz erwies sich als nicht erfolgreich, da die resultierende
-Performance durch das nicht-deterministische Scheduling ohne Threadbevorzugung
-um die Hälfte sank.
+Es wurde versucht, die Ausgabe miteinander zu synchronisieren: Jeder Thread ruft
+die Schreibfunktion der Senke mit einem globalen atomaren Zähler auf. Dieser
+wird dann mit dem internen Zähler verglichen. Stimmen die Werte überein, wird
+die Schreiboperation ausgeführt, andernfalls wird der Thread blockiert. Dieser
+Ansatz erwies sich als nicht erfolgreich, da die resultierende Systemleistung
+durch das nicht-deterministische Scheduling ohne Threadbevorzugung circa um die
+Hälfte sank.
 
-Anschließend wurde versucht, alle Zyklenstempel in dem statischen Puffer
+Anschließend wurde versucht, alle Zyklenstempel vorab in dem statischen Puffer
 zwischenzuspeichern. Damit wird das Erzeugen und Ausgabe von Zyklenstempeln
 komplett voneinander getrennt. Mit diesem Ansatz konnte die Reihenfolge
-konsistent gehalten werden.
+konsistent gehalten werden. Allerdings führt diese Lösung dazu, dass der
+Multi-Producer-Aspekt der Queue bzw. Senke nicht mehr benötigt wird, da alle
+Daten nun von einem einzigen Producer stammen, obwohl die Senke technisch
+korrekt funktioniert und in diesem Kontext weiterhin zur Ausgabe verwendet wird.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -811,11 +837,13 @@ uros 623 0
 IDLE 625 1
 IDLE 667 0
 ...
+odom 6613 1
+odom 6694 0
 \end{minted}
     \captionof{listing}{Profiling-Daten in aufsteigender Reihenfolge}
 \end{code}
 
-Zusammenfassend zeigt sich, dass sich mit FreeRTOS-Trace-Hooks und
+Zusammenfassend zeigt sich, dass sich mit der DWT, FreeRTOS-Trace-Hooks sowie
 RAII-basierter Zyklenstempelerfassung in Kombination mit dem vorhandenen
-User-Button ein leichtgewichtiges Profiling-System für FreeRTOS-Tasks und
-zeitkritische Codeabschnitte implementieren lässt.
+User-Button eine leichtgewichtige Profiling-Methode für FreeRTOS-Tasks und
+Codeabschnitte implementieren lässt.

@@ -6,33 +6,31 @@ Echtzeitleistung beider Plattformen zu analysieren und miteinander zu
 vergleichen.
 
 Beide Systeme sind für die Steuerung eines mobilen Roboters auf einem Cortex-M7
-Mikrocontroller von Arm entwickelt, unterscheiden sich jedoch in ihrer
-grundlegenden Architektur, was sich auch in ihrer Echtzeitfähigkeit und
-Ressourcennutzung widerspiegelt. Während Micro-ROS auf dem \ac{ROS 2} Framework
-aufbaut und eine höhere Abstraktionsebene sowie standardisierte
-Kommunikationsschnittstellen mittels der integrierten \ac{DDS}-Middleware
-bietet, basiert dies selbst auf FreeRTOS. Die Portierung auf FreeRTOS kann daher
-als eine Reduzierung der Abhängigkeitsebene betrachtet werden. Dies ermöglicht
-eine direktere und effizientere Nutzung der zugrunde liegenden Echtzeit-, sowie
-Speicherressourcen.
+Mikrocontroller von Arm ausgelegt, unterscheiden sich aber in ihrer
+zugrundeliegenden Softwarearchitektur: Während Micro-ROS auf dem \ac{ROS 2}
+Framework aufbaut und eine höhere Abstraktionsebene sowie standardisierte
+Kommunikationsschnittstellen mittels einer integrierten \ac{DDS}-Middleware
+bietet, basiert dies selbst auf einem \ac{RTOS} wie FreeRTOS. Die Portierung auf
+FreeRTOS kann daher als eine Reduzierung einer Abhängigkeitsebene betrachtet
+werden. Dies ermöglicht eine direktere und damit effizientere Nutzung der
+zugrundeliegenden Echtzeit-, sowie Speicherressourcen.
 
 \begin{figure}[htb] \centering
     \includegraphics[width=0.8\textwidth]{assets/Micro-ROS_architecture}
     \caption{Micro-ROS Architektur\cite[S. 6]{koubaa2023}}
 \end{figure}
 
-Nach der Portierung auf FreeRTOS wird die Echtzeitleistung der
-Steuerungssoftware analysiert, wobei insbesondere die Ausführungsdauer
-zeitkritischer Funktionen sowie Tasks untersucht wird. Der Vergleich soll unter
-anderem aufzeigen, inwiefern FreeRTOS durch die Eliminierung dieser zusätzlichen
-Abhängigkeit eine effizientere und leichtgewichtige Lösung für kritische
-Roboteranwendungen darstellt. Dabei soll der Einsatz einer zyklengenauen Messung
-des Programmablaufs ermöglicht werden, um fundierte Aussagen über die
-Echtzeitfähigkeit  beider Plattformen zu treffen, und den Leistungsgewinn anhand
-dieses  Beispiels für eine Steuerungssoftware quantitativ zu belegen.
+Danach wird die Echtzeitleistung der Steuerungssoftware basierend auf den beiden
+Plattformen analysiert, wobei die Ausführungsdauer zeitkritischer Funktionen
+sowie Tasks untersucht wird. Der Vergleich soll unter anderem aufzeigen,
+inwiefern FreeRTOS durch die Eliminierung dieser zusätzlichen Abhängigkeit eine
+effizientere und leichtgewichtigere Lösung darstellt. Dabei soll der Einsatz
+einer zyklengenauen Messung des Programmablaufs ermöglicht werden, um fundierte
+Aussagen über das Echtzeitverhalten beider Plattformen zu treffen und den
+Leistungsgewinn quantitativ zu belegen.
 
-Die Arbeit gliedert sich in drei Hauptteile: Nach einer Einführung in die
-grundlegenden Konzepte folgt eine detaillierte Beschreibung der Implementierung
-des FreeRTOS-Systems sowie des Verfahrens zur Echtzeitanalyse. Den Abschluss
-bildet die Präsentation der Ergebnisse, deren Bewertung sowie mögliche
-Optimierungsansätze.
+Die Arbeit gliedert sich in vier Hauptteile: Nach einer Einführung in die
+grundlegenden Konzepte wird zunächst die Implementierung der Steuerungssoftware
+auf FreeRTOS beschrieben. Anschließend wird Implementierung zur Erfassung von
+Laufzeitdaten detailliert dargestellt. Den Abschluss bildet die Präsentation der
+Ergebnisse, deren Bewertung sowie mögliche Optimierungsansätze.

@@ -15,15 +15,7 @@
   --
 \newblock Zugriff: 21. März 2025
 
-\bibitem[arma]{arm_den0042}
- ; Arm Limited (Veranst.):
-\newblock \emph{Tightly Coupled Memory}.
-\newblock
-  \url{https://developer.arm.com/documentation/den0042/a/Tightly-Coupled-Memory}.
-  --
-\newblock Document ID: DEN0042A
-
-\bibitem[{ARM}b]{ARMv7_ref_man_dwt_profiling}
+\bibitem[{ARM}a]{ARMv7_ref_man_dwt_profiling}
 \textsc{{ARM Limited}}:
 \newblock \emph{{ARMv7-M Architecture Reference Manual}}.
 \newblock
@@ -31,7 +23,7 @@
   --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{ARM}c]{ARMv7_ref_man_dwt_cycle}
+\bibitem[{ARM}b]{ARMv7_ref_man_dwt_cycle}
 \textsc{{ARM Limited}}:
 \newblock \emph{{ARMv7-M Architecture Reference Manual}}.
 \newblock
@@ -39,19 +31,12 @@
   --
 \newblock Zugriff: 14. März 2025
 
-\bibitem[{Arm}d]{Arm_DWT_Programmers_Model}
+\bibitem[{Arm}c]{Arm_DWT_Programmers_Model}
 \textsc{{Arm Limited}}:
 \newblock \emph{{Data Watchpoint and Trace Unit (DWT) Programmer's Model}}.
 \newblock
   \url{https://developer.arm.com/documentation/ddi0439/b/Data-Watchpoint-and-Trace-Unit/DWT-Programmers-Model}.
   --
-\newblock Zugriff: 14. März 2025
-
-\bibitem[{ARM}e]{ARM_KA001499}
-\textsc{{ARM Limited}}:
-\newblock \emph{{Summary: How many instructions have been executed on a
-  Cortex-M processor?}}
-\newblock \url{https://developer.arm.com/documentation/ka001499/latest/}. --
 \newblock Zugriff: 14. März 2025
 
 \bibitem[ARM21]{ARM_DDI0403_EE}
@@ -91,25 +76,11 @@
 \newblock \,Version:\,2023. --
 \newblock Zugriff: 21. März 2025
 
-\bibitem[cppa]{cppreference_eval_order}
+\bibitem[cpp]{cppreference_eval_order}
 \textsc{cppreference.com}:
 \newblock \emph{Order of evaluation}.
 \newblock \url{https://en.cppreference.com/w/c/language/eval_order}. --
 \newblock Zugriff: 29. März 2025
-
-\bibitem[cppb]{cppreference_fetch_add}
-\textsc{cppreference.com}:
-\newblock \emph{std::atomic<T>::fetch\_add}.
-\newblock \url{https://en.cppreference.com/w/cpp/atomic/atomic/fetch_add}. --
-\newblock Zugriff: 21. April 2025
-
-\bibitem[cppc]{cppreference_memory_order}
-\textsc{cppreference.com}:
-\newblock \emph{std::memory\_order}.
-\newblock
-  \url{https://en.cppreference.com/w/cpp/atomic/memory_order#Sequentially-consistent_ordering}.
-  --
-\newblock Zugriff: 21. April 2025
 
 \bibitem[Dam19]{FreertosForumHF2019}
 \textsc{Damon}, Richard:
@@ -133,15 +104,7 @@
 \newblock \,Version:\,2025. --
 \newblock Zugriff: 29. März 2025
 
-\bibitem[Frea]{FreertosTasks}
- ; FreeRTOS (Veranst.):
-\newblock \emph{FreeRTOS scheduling}.
-\newblock
-  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/01-Tasks-and-co-routines/04-Task-scheduling#the-default-rtos-scheduling-policy-single-core}.
-  --
-\newblock Zugriff: 01. Mai 2025
-
-\bibitem[Freb]{freertos_task_c_410}
+\bibitem[Frea]{freertos_task_c_410}
 \textsc{FreeRTOS}:
 \newblock \emph{FreeRTOS Source Code}.
 \newblock
@@ -149,7 +112,7 @@
   --
 \newblock Zugriff: 29. März 2025
 
-\bibitem[{Fre}c]{freertos_semphr_doc}
+\bibitem[{Fre}b]{freertos_semphr_doc}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Mutexes}.
 \newblock
@@ -157,7 +120,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}d]{freertos_rtos_tick}
+\bibitem[{Fre}c]{freertos_rtos_tick}
 \textsc{{FreeRTOS}}:
 \newblock \emph{The RTOS Tick}.
 \newblock
@@ -165,7 +128,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}e]{freertos_rtos_trace_hooks}
+\bibitem[{Fre}d]{freertos_rtos_trace_hooks}
 \textsc{{FreeRTOS}}:
 \newblock \emph{RTOS Trace Feature}.
 \newblock
@@ -173,7 +136,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}f]{freertos_semphr_incl}
+\bibitem[{Fre}e]{freertos_semphr_incl}
 \textsc{{FreeRTOS}}:
 \newblock \emph{semphr.h}.
 \newblock
@@ -181,23 +144,15 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}g]{freertos_memory_management}
+\bibitem[{Fre}f]{freertos_memory_management}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Static vs Dynamic Memory Allocation}.
 \newblock
-  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/09-Memory-management/03-Static-vs-Dynamic-memory-allocation}.
+  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/09-Memory-management/03-Static-vs-Dynamic-memory-allocation#creating-an-rtos-object-using-statically-allocated-ram}.
   --
 \newblock Zugriff: 19. März 2025
 
-\bibitem[{Fre}h]{freertos_task_notifications_desc}
-\textsc{{FreeRTOS}}:
-\newblock \emph{Task Notifications}.
-\newblock
-  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/03-Direct-to-task-notifications/01-Task-notifications#description}.
-  --
-\newblock Zugriff: 15. März 2025
-
-\bibitem[{Fre}i]{freertos_task_notifications_usage}
+\bibitem[{Fre}g]{freertos_task_notifications_usage}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Task Notifications - Performance Benefits and Usage
   Restrictions}.
@@ -206,7 +161,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}j]{freertos_tasks_c_308}
+\bibitem[{Fre}h]{freertos_tasks_c_308}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
@@ -214,7 +169,7 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}k]{freertos_tasks_c_4990}
+\bibitem[{Fre}i]{freertos_tasks_c_4990}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
@@ -222,19 +177,11 @@
   --
 \newblock Zugriff: 15. März 2025
 
-\bibitem[{Fre}l]{freertos_tasks_c_4614}
+\bibitem[{Fre}j]{freertos_tasks_c_4614}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
   \url{https://github.com/znxuz/mecarover/blob/5ba898b9051b682c8f6cfce867b99b681a5dda7f/Middlewares/Third_Party/FreeRTOS/Source/tasks.c#L4614}.
-  --
-\newblock Zugriff: 15. März 2025
-
-\bibitem[{Fre}m]{freertos_tick_resolution}
-\textsc{{FreeRTOS}}:
-\newblock \emph{Tick Resolution}.
-\newblock
-  \url{https://mobile.freertos.org/Documentation/02-Kernel/05-RTOS-implementation-tutorial/02-Building-blocks/11-Tick-Resolution}.
   --
 \newblock Zugriff: 15. März 2025
 
@@ -246,11 +193,13 @@
 \newblock \,Version:\,2021. --
 \newblock Zugriff: 27. März 2025
 
-\bibitem[gnu]{gnu_atomic_builtins}
-\emph{6.51 Built-in functions for atomic memory access}.
+\bibitem[Fre25]{freertos_runtime_stats}
+\textsc{FreeRTOS}:
+\newblock \emph{Run-time Statistics}.
 \newblock
-  \url{https://gcc.gnu.org/onlinedocs/gcc-4.6.2/gcc/Atomic-Builtins.html}. --
-\newblock Zugriff: 21. April 2025
+  \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/08-Run-time-statistics#description}.
+\newblock \,Version:\,2025. --
+\newblock Zugriff: 28. März 2025
 
 \bibitem[HAL]{HAL_UART_Transmit_DMA}
  ; SourceVu (Veranst.):
@@ -287,11 +236,19 @@
 \newblock Springer Verlag, 2023. --
 \newblock ISBN 978--3--031--09061--5
 
-\bibitem[Lim]{ka001150}
+\bibitem[Lima]{ka001150}
 \textsc{Limited}, ARM:
-\newblock \emph{Cortex-M7 Documentation – Arm Developer}.
+\newblock \emph{Cortex-M7 Documentation - Arm Developer}.
 \newblock \url{https://developer.arm.com/documentation/ka001150/latest/}. --
 \newblock Zugriff: 19. März 2025
+
+\bibitem[Limb]{arm_den0042}
+\textsc{Limited}, ARM:
+\newblock \emph{Tightly Coupled Memory}.
+\newblock
+  \url{https://developer.arm.com/documentation/den0042/a/Tightly-Coupled-Memory}.
+  --
+\newblock Zugriff: 20. März 2025
 
 \bibitem[lwi]{lwip_pitfalls}
 \emph{lwIP: Common Pitfalls}.
@@ -361,23 +318,7 @@
 \newblock \,Version:\,2023. --
 \newblock Zugriff: 01. Mai 2025
 
-\bibitem[STMa]{HAL_UARTEx_ReceiveToIdle_IT}
-\textsc{STMicroelectronics}:
-\newblock \emph{HAL\_UARTEx\_ReceiveToIdle\_IT}.
-\newblock
-  \url{https://sourcevu.sysprogs.com/stm32/HAL/symbols/HAL_UARTEx_ReceiveToIdle_IT}.
-  --
-\newblock Zugriff: 16. März 2025
-
-\bibitem[STMb]{HAL_UARTEx_RxEventCallback}
-\textsc{STMicroelectronics}:
-\newblock \emph{HAL\_UARTEx\_RxEventCallback Documentation}.
-\newblock
-  \url{https://sourcevu.sysprogs.com/stm32/HAL/symbols/HAL_UARTEx_RxEventCallback}.
-  --
-\newblock Zugriff: 16. März 2025
-
-\bibitem[STMc]{an4839}
+\bibitem[STMa]{an4839}
 \textsc{STMicroelectronics}:
 \newblock \emph{Level 1 Cache on STM32F7 Series and STM32H7 Series}.
 \newblock Application Note.
@@ -386,23 +327,7 @@
   --
 \newblock Zugriff: 19. März 2025
 
-\bibitem[STMd]{stm32_nucleo144_user_manual}
-\textsc{STMicroelectronics}:
-\newblock \emph{STM32 MB1137 - User Manual}.
-\newblock
-  \url{https://www.st.com/resource/en/user_manual/um1974-stm32-nucleo144-boards-mb1137-stmicroelectronics.pdf}.
-  --
-\newblock Zugriff: 21. April 2025
-
-\bibitem[STMe]{stm32f7_ref_manual}
-\textsc{STMicroelectronics}:
-\newblock \emph{STM32 RM0410 - Reference Manual}.
-\newblock
-  \url{https://www.st.com/resource/en/reference_manual/rm0410-stm32f76xxx-and-stm32f77xxx-advanced-armbased-32bit-mcus-stmicroelectronics.pdf}.
-  --
-\newblock Zugriff: 21. April 2025
-
-\bibitem[STMf]{an4667}
+\bibitem[STMb]{an4667}
 \textsc{STMicroelectronics}:
 \newblock \emph{STM32F7 Series System Architecture and Performance}.
 \newblock Application Note.
@@ -411,13 +336,21 @@
   --
 \newblock Zugriff: 19. März 2025
 
-\bibitem[STMg]{stm32_datasheet}
+\bibitem[STMc]{stm32_datasheet}
 \textsc{STMicroelectronics}:
 \newblock \emph{STM32F767ZI Datasheet}.
 \newblock \url{https://www.st.com/resource/en/datasheet/stm32f767zi.pdf}. --
 \newblock Zugriff: 20. März 2025
 
-\bibitem[STMh]{AN4187}
+\bibitem[STMd]{HAL_UARTEx_ReceiveToIdle_IT}
+\textsc{STMicroelectronics}:
+\newblock \emph{stm32f7xx\_hal\_uart\_ex.c - HAL\_UARTEx\_ReceiveToIdle\_IT}.
+\newblock
+  \url{https://github.com/STMicroelectronics/stm32f7xx-hal-driver/blob/903af163202d9150c57b89ddacfa818e7722451f/Src/stm32f7xx_hal_uart_ex.c#L606}.
+  --
+\newblock Zugriff: 16. März 2025
+
+\bibitem[STMe]{AN4187}
 \textsc{STMicroelectronics}:
 \newblock \emph{Using the CRC Peripheral on STM32 Microcontrollers},
   \url{https://www.st.com/resource/en/application_note/an4187-using-the-crc-peripheral-on-stm32-microcontrollers-stmicroelectronics.pdf}.
@@ -433,30 +366,27 @@
 \newblock \,Version:\,2024. --
 \newblock Zugriff: 27. März 2025
 
-\bibitem[Wika]{wikipedia_priority_inheritance}
+\bibitem[Wika]{wikipedia_cas}
 \textsc{Wikipedia}:
-\newblock \emph{Priority Inheritance}.
-\newblock \url{https://en.wikipedia.org/wiki/Priority_inheritance}. --
-\newblock Zugriff: 15. März 2025
+\newblock \emph{Compare-and-swap}.
+\newblock
+  \url{https://en.wikipedia.org/wiki/Compare-and-swap#Costs_and_benefits}. --
+\newblock Zugriff: 27. März 2025
 
-\bibitem[{Wik}b]{wikipedia_priority_inversion}
-\textsc{{Wikipedia}}:
-\newblock \emph{Priority Inversion}.
-\newblock \url{https://en.wikipedia.org/wiki/Priority_inversion}. --
-\newblock Zugriff: 15. März 2025
-
-\bibitem[{Wik}c]{wiedereintrittsfaehigkeit}
-\textsc{{Wikipedia contributors}}:
+\bibitem[Wikb]{wiedereintrittsfaehigkeit}
+\textsc{Wikipedia}:
 \newblock \emph{Eintrittsinvarianz}.
 \newblock \url{https://de.wikipedia.org/wiki/Eintrittsinvarianz}. --
 \newblock Zugriff: 01. Mai 2025
 
-\bibitem[Wik24]{waitstate_wiki}
+\bibitem[Wikc]{wikipedia_membarrier}
 \textsc{Wikipedia}:
-\newblock \emph{Waitstate}.
-\newblock \url{https://de.wikipedia.org/wiki/Waitstate}.
-\newblock \,Version:\,2024. --
-\newblock Zugriff: 19. März 2025
+\newblock \emph{Memory barrier - Out-of-order execution versus compiler
+  reordering optimizations}.
+\newblock
+  \url{https://en.wikipedia.org/wiki/Memory_barrier#Out-of-order_execution_versus_compiler_reordering_optimizations}.
+  --
+\newblock Zugriff: 21. April 2025
 
 \bibitem[Xu25]{mecarover_freertos_profiling}
 \textsc{Xu}, Zijian:
