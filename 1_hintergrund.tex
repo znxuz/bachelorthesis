@@ -1,14 +1,15 @@
+% TODO
 \section{Theorien}
 
 \subsection{FreeRTOS}
 
 FreeRTOS ist ein leichtgewichtiges, quelloffenes RTOS, das speziell für
 Mikrocontroller und eingebettete Systeme entwickelt wurde. Es zeichnet sich
-unter anderem durch deterministisches Verhalten mit Echtzeitgarantie sowie
+unter anderem durch ein deterministisches Thread-Ausführungsverhalten sowie
 Konfigurierbarkeit von Heap-Allokationen aus. Diese Eigenschaften machen es zu
 einer geeigneten Wahl für mehrfädige Software, insbesondere wenn harte
-Echtzeitanforderungen oder fein abgestimmte Kontrolle über Ressourcennutzung im
-Vordergrund stehen.
+Echtzeitanforderungen \cite{freertos_tutorial} oder fein abgestimmte Kontrolle
+über Ressourcennutzung im Vordergrund stehen.
 
 \subsubsection{Features}
 
@@ -31,7 +32,7 @@ erläutert.
 Queues sind eine Kernkomponente von FreeRTOS. Sie ermöglichen nicht nur eine
 Inter-Task-Kommunikation durch threadsicheren FIFO-Datenaustausch, sondern
 dienen auch als Task-Synchronisationsmechanismen: Die Semaphore und Mutexe sind
-schlicht auf Queues aufgebaut \cite{freertos_semphr_incl}.
+schlicht auf Queues aufgebaut \cite{freertos_semphr_incl, freertos_queue_mtx}.
 
 \paragraph{Semaphore und Mutexe} \label{sec:mutex}
 
@@ -82,7 +83,7 @@ dekrementiert~\cite{freertos_tasks_c_4614}.
 \paragraph{Trace Hooks} \label{sec:trace_hooks}
 
 „Trace Hooks“ sind spezielle, von FreeRTOS bereitgestellte Makros. Sie
-ermöglichen beispielsweise die Verfolgung oder Protokollierung von
+ermöglichen beispielsweise die Verfolgung bzw. Protokollierung von
 Systemereignissen. Diese Makros werden direkt innerhalb von Interrupts beim
 Scheduling aufgerufen und sollten stets vor der Einbindung von
 \mintinline{text}|FreeRTOS.h| definiert werden \cite{freertos_rtos_trace_hooks}.
@@ -114,7 +115,7 @@ Peripheriebusse, die alle über den \ac{AHB}-Bus an die AXI angebunden sind
 
 Aus der Matrix wird außerdem deutlich, dass für den Speicher zwischen SRAM und
 TCM-RAM unterschieden wird. Der \ac{TCM} verfügt jeweils für Instruktionen und
-Daten über einen dedizierten Kanal zum Prozessor und ist \textit{nicht}
+Daten über einen dedizierten Kanal direkt zum Prozessor und ist \textit{nicht}
 cachefähig, bietet aber als Besonderheit niedrigere und konsistente
 Zugriffszeiten als SRAM. Dies macht sie besonders geeignet für zeitkritische
 Routinen wie Interrupt-Handler oder kritische Echtzeitaufgaben.
@@ -134,14 +135,13 @@ Shared-Memory, Device-Memory oder Strongly-Ordered-Memory) gecacht werden kann
     \label{fig:internal_mem_table}
 \end{figure}
 
-Aus der Tabelle für den internen Speicher wird deutlich, dass der Flash ab der
-Adresse $0x0800 0000$ über der AXI-Bus angesprochen wird
-(\ref{fig:internal_mem_table}). Diese Adresse ist auch im Linker-Skript
-standardmäßig für den Flash festgelegt. Daher kann der Instruktionscache über
-den AXI-Bus für den Flash genutzt werden, sofern der Boot-Pin sowie die
-assoziierten \mintinline{text}|BOOT_ADDx| Registerkonfigurationen korrekt
-eingestellt sind \cite[S. 28]{stm32_datasheet} und die Firmware an die
-Standardadresse geflasht wird.
+Aus der Tabelle \ref{fig:internal_mem_table} wird deutlich, dass der Flash ab
+der Adresse $0x0800 0000$ über der AXI-Bus angesprochen wird . Diese Adresse ist
+auch im Linker-Skript standardmäßig für den Flash festgelegt. Daher kann der
+Instruktionscache über den AXI-Bus für den Flash genutzt werden, sofern der
+Boot-Pin sowie die assoziierten \mintinline{text}|BOOT_ADDx|
+Registerkonfigurationen korrekt eingestellt sind \cite[S. 28]{stm32_datasheet}
+und die Firmware an die Standardadresse geflasht und gestartet wird.
 
 \begin{code}
 \begin{minted}{c}
@@ -173,14 +173,14 @@ void SCB_CleanInvalidateDCache(void)
 
 \subsubsection{Cache-Leerung} \label{sec:cache_clean}
 
-Bei einer Cache-Leerung (cache clean) wird der modifizierte Cache, den vom
-Prozessor während der Programmausführung aktualisiert wurden, zurück in den
+Bei einer Cache-Leerung (cache clean) werden die modifizierten Cache-Zeilen, die
+vom Prozessor während der Programmausführung aktualisiert wurden, zurück in den
 Hauptspeicher geschrieben. Dieser Vorgang wird gelegentlich auch als „flush”
 bezeichnet.
 
 \subsubsection{Cache-Invalidierung} \label{sec:cache_invalidate}
 
-Eine Cache-Invalidierung markiert hingegen den Cache als ungültig, sodass bei
+Eine Cache-Invalidierung markiert hingegen den Cache als ungültig, so dass bei
 dem nachfolgenden Zugriff auf die assoziierten Daten diese zwingend erneut aus
 dem Hauptspeicher geladen und der Cache entsprechend aktualisiert werden.
 
@@ -194,8 +194,9 @@ Speicherbereiche zugreift.
 Damit der DMA-Controller stets auf korrekte Daten zugreifen kann, ist eine
 manuelle Cache-Leerung (\ref{sec:cache_clean}) \textit{nach} jedem
 Schreibvorgang von Seiten der CPU erforderlich \cite[S. 6]{an4839}. Ohne diesen
-Schritt würden die Änderungen nicht im SRAM widergespiegelt, und der
-DMA-Controller würde weiterhin veraltete Daten verwenden.
+Schritt würden die Änderungen nicht umgehend im Speicher widergespiegelt, und
+der DMA-Controller würde in der Zwischenzeit auf die veralteten und somit
+ungültigen Daten zugreifen.
 
 \subsubsection{Cache-Invalidierung bei DMA}
 
@@ -209,8 +210,8 @@ müssen stets manuell aktualisiert werden.
 \subsection{Methode zur Erfassung von Laufzeitdaten} \label{sec:dwt}
 
 Für die Echtzeitfähigkeitsanalyse der Steuerungssoftware wird eine Methode
-benötigt, die beliebige Softwareabschnitte flexibel vermessen kann. Da es sich
-um eine mehrfädige Anwendung handelt, muss gewährleistet sein, dass die
+benötigt, die Code- bzw. Ausführungsabschnitte flexibel messen kann. Da es sich
+dabei um eine mehrfädige Anwendung handelt, muss gewährleistet sein, dass die
 Messungen trotz präemptives Scheduling, auftretender Interrupts sowie Software-
 und Hardwareoptimierungen threadsicher und präzise durchgeführt werden. Die
 endgültige Lösung muss garantieren, dass dabei keine Race Conditions entstehen
@@ -218,7 +219,7 @@ und auch die Zeiterfassung selbst keinen nennenswerten Overhead verursacht.
 
 Daher bietet sich die \ac{DWT} als geeigneter Ansatz zur Protokollierung von
 Laufzeiten an. Die DWT ist eine in ARM-Prozessoren eingebaute Debugging-Einheit,
-die unter anderem ein umfangreiches Profiling mittels verschiedener Zähler
+die unter anderem ein funktionsreiches Profiling mittels verschiedener Zähler
 unterstützen \cite{ARMv7_ref_man_dwt_profiling}. Ein für diese Arbeit zentraler
 Baustein ist der Zyklenzähler \mintinline{c}|DWT_CYCCNT|, der bei jedem CPU-Takt
 inkrementiert wird, solange sich der Prozessor nicht im Debug-Zustand befindet
@@ -235,7 +236,7 @@ DWT nutzt, um Live-Code-Profiling auf eingebetteten Systemen durchzuführen
 
 Das Segger SystemView nutzt den DWT-Zyklenzähler, indem die Funktion \linebreak
 \mintinline{c}|SEGGER_SYSVIEW_GET_TIMESTAMP()| für Cortex-M3/4/7-Prozessoren
-einfach die hardkodierte Registeradresse des
-Zyklenzählers~\cite{Arm_DWT_Programmers_Model} zurückgibt \cite[S.
+einfach auf die hardkodierte Registeradresse des
+Zyklenzählers~\cite{Arm_DWT_Programmers_Model} zugreift \cite[S.
 65]{Segger_SystemView_manual}, anstatt die interne Funktion
 \mintinline{c}|SEGGER_SYSVIEW_X_GetTimestamp()| aufzurufen.

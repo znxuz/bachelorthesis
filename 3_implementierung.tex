@@ -6,10 +6,10 @@ entwickelt. Sie basiert auf FreeRTOS, um später die Portierung auf Micro-ROS
 nahtlos zu ermöglichen. Ziel dabei ist es, die Ausführungszeiten von Tasks und
 zeitkritischen Funktionen mittels DWT (\ref{sec:dwt}) präzise zu erfassen.
 
-Der Ansatz dafür besteht grundsätzlich darin, zu Beginn und am Ende jedes
+Der Ansatz besteht grundsätzlich darin, zu Beginn und am Ende jedes
 Messabschnitts die aktuelle Zyklenzahl zu speichern.
 
-Aufgrund von Hardwarebeschränkungen und aus Gründen der Einfachheit wurde UART
+Aufgrund von Hardwareeinschränkungen und aus Gründen der Einfachheit wurde UART
 als Schnittstelle zur Datenübertragung zwischen Mikrocontroller und Host
 gewählt. Mit einer theoretischen Übertragungsrate von bis zu
 $12,5\,\text{Mbit/s}$ bietet UART genügend Bandbreite~\cite[S.
@@ -17,7 +17,7 @@ $12,5\,\text{Mbit/s}$ bietet UART genügend Bandbreite~\cite[S.
 übertragen.
 
 Aus den inhärenten Eigenschaften der mehrfädigen Software ergibt sich zunächst
-die Notwendigkeit, eine \ac{MPSC}-Queue zu implementieren. Diese dient als
+die Notwendigkeit, eine \ac{MPSC}-Queue zu implementieren. Diese dient als eine
 Multi-Producer-Senke für die erfassten Laufzeitdaten und leitet sie zur
 Verarbeitung über UART weiter. Die vorhandenen Stream- oder Messagebuffer von
 FreeRTOS eignen sich nicht für mehrere Producer~\cite{FreeRTOSStreamBuffer}, und
@@ -37,8 +37,8 @@ schlimmsten Fall erkennen können, wann sie weitere Schreibzugriffe blockieren
 muss. So wird verhindert, dass noch nicht verarbeitete Daten überschrieben
 werden.
 
-Aber durch die Kombination von DMA mit Interrupts, die bei Abschluss jeder
-DMA-Übertragung ausgelöst werden, lässt sich die I/O-gebundene Wartezeit
+Durch die Kombination von DMA mit Interrupts, die bei Abschluss jeder
+DMA-Übertragung ausgelöst werden, lässt sich aber die I/O-gebundene Wartezeit
 eliminieren. In diesem Fall reduziert sich die Ausgabe von Laufzeitdaten auf das
 reine Schreiben in den Ringpuffer, während die eigentliche I/O-Operation durch
 den DMA-Controller unabhängig vom Prozessor erfolgt. Vorausgesetzt die I/O
@@ -59,7 +59,7 @@ sowie den verbleibenden Speicherplatz zu ermitteln.
 
 In der ersten Implementierungsversion wurde die Menge der geschriebenen Daten
 einfach als Differenz zwischen dem Schreib- und Leseindex berechnet, wenn der
-Schreibindex numerisch \textit{nach} dem Schreibindex lag. Andernfalls umfassten
+Schreibindex numerisch \textit{nach} dem Leseindex lag. Andernfalls umfassten
 die geschriebenen Daten die Reihe vom Leseindex bis zum Pufferende sowie vom
 Pufferanfang bis zum Schreibindex, da die beiden Indizes stets korrekt im
 Ringpuffer positioniert waren.
@@ -68,28 +68,28 @@ Hierbei musste zusätzlich der Sonderfall berücksichtigt werden, bei dem beide
 Indizes auf dieselbe Position zeigten: Entweder ist der Ringpuffer leer oder
 vollständig gefüllt. Das Problem ließ sich dadurch lösen, indem der Schreiber
 überprüft, ob das Byte an der aktuellen Position noch unverarbeitet ist, oder
-wurde es bereits gelesen und kann somit überschrieben werden. Dies impliziert:
-wenn das aktuelle Byte überschreibbar ist, dann ist die Senke leer, andernfalls
-ist sie voll beschrieben.
+wurde es bereits gelesen und kann somit überschrieben werden. Bei dem Sonderfall
+impliziert dies: wenn das aktuelle Byte nicht mehr überschreibbar ist, dann ist
+die Senke voll beschrieben.
 
 In einem C++-Konferenzvortrag über eine
-\ac{MPMC}-Warteschlange~\cite{CppCon2024LockFreeQueue} basiert deren
-Implementierung auf folgendem Prinzip: Jede Position des Datenpuffers besitzt
-eine eindeutige Schreibsequenznummer. Bei Datenentnahme wird diese atomar um die
-Gesamtlänge $N$ des Puffers erhöht. Dadurch wird signalisiert, dass die Daten in
-dieser Position in Iteration $N$ verarbeitet wurden und in Iteration $N+1$ vom
-Schreiber überschrieben werden können. Die Entscheidung hierüber erfolgt durch
-Vergleich mit der globalen Schreibsequenznummer, die ebenfalls nach jedem
-Schreibvorgang atomar inkrementiert wird.
+\ac{MPMC}-Queue~\cite{CppCon2024LockFreeQueue} basiert deren Implementierung auf
+folgendem Prinzip: Jede Position des Datenpuffers besitzt eine eindeutige
+Schreibsequenznummer. Bei Datenentnahme wird diese atomar um die Gesamtlänge $N$
+des Puffers erhöht. Dadurch wird signalisiert, dass die Daten in dieser Position
+in Iteration $N$ verarbeitet wurden und in Iteration $N+1$ vom Schreiber
+überschrieben werden können. Die Entscheidung hierüber erfolgt durch Vergleich
+mit einer globalen Schreibsequenznummer, die ebenfalls nach jedem Schreibvorgang
+atomar inkrementiert wird.
 
-Für den Fall einer Senke mit einem einzigen Verbraucher genügt es, den Zustand
-als \mintinline{cpp}|bool| zu speichern. Dieser gibt an, ob die Daten an einer
+Für den Fall einer Senke mit einem einzigen Consumer genügt es, den Zustand als
+\mintinline{cpp}|bool| zu speichern. Dieser gibt an, ob die Daten an einer
 bestimmten Position noch verarbeitet werden müssen oder bereits überschrieben
 werden können.
 
 Um diesen zusätzlichen Speicherbedarf -- verursacht durch die explizite
-Zustandsmarkierung jedes Bytes im Puffer -- in der finalen Implementierung zu
-eliminieren, können die Indizes auf eine stets korrekte Positionierung
+Zustandsspeicherung für jedes Byte im Puffer -- in der finalen Implementierung
+zu eliminieren, können die Indizes auf eine stets korrekte Positionierung
 verzichten: Stattdessen können sie einfach über den Puffer hinaus zählen. Bei
 jeder Verwendung wird ihr Wert durch eine Modulo-Operation mit der Puffergröße
 normalisiert, wodurch sie dann auf die korrekte Position verweisen. Demnach
@@ -98,7 +98,8 @@ einfache Subtraktion zwischen beiden Indizes -- vorausgesetzt dass beide Indexe
 vorzeichenlos sind.
 
 Wenn die Puffergröße eine Zweierpotenz ist, kann die Modulo-Operation hier
-ebenfalls auf einen einzigen Taktzyklus reduziert werden.
+ebenfalls auf eine Ein-Zyklus-UND-Verknüpfung reduziert werden
+\cite{stackoverflow_mod, arm_instruction_set}.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -118,10 +119,10 @@ size_t normalize(size_t idx) { return idx % TSINK_CAPACITY; }
 
 \subsubsection{Schreibvorgang in die Senke}
 
-Auf ARM-Architekturen sind Zugriffe auf Bytes, Halbwörter (16-Bit) sowie Wörter
-(32-Bit) standardmäßig atomar, sofern sie im Speicher ausgerichtet sind~\cite[S.
-A3-79]{ARM_DDI0403_EE} und verursachen somit keine Schreib-Lese-Konflikte,
-sowohl beim Lesen als auch beim Schreiben.
+Auf ARM-Architekturen sind Zugriffe auf Bytes, Halbdatenworte (16-Bit) sowie
+Datenworte (32-Bit) standardmäßig atomar, sofern sie im Speicher ausgerichtet
+sind~\cite[S. A3-79]{ARM_DDI0403_EE} und verursachen somit keine
+Schreib-Lese-Konflikte.
 
 Es muss aber sichergestellt werden, dass zu jedem Zeitpunkt nur ein Thread die
 nächste, freie Position des Ringpuffers beschreibt -- insbesondere bei
@@ -173,9 +174,9 @@ ressourcenschonender und somit vorteilhaft ist \cite{wikipedia_cas}.
 Um das Schreiben mehrerer Bytes ebenfalls threadsicher zu gestalten, muss der
 gesamte Schreibvorgang durch geeignete Synchronisationsmechanismen geschützt
 werden~\cite{FreeRTOSForumPrintf}. Hier wird ein Mutex verwendet, da dieser --
-im Gegensatz zu einem einfachen Semaphor -- sicherstellt, dass der Thread den
-Mutex und damit die Kontrolle umgehend freigibt und nicht aufgrund niedrigerer
-Priorität blockiert wird (\ref{sec:mutex}).
+im Gegensatz zu einem Semaphor -- sicherstellt, dass der Thread den Mutex und
+damit die Kontrolle umgehend freigibt und nicht aufgrund niedrigerer Priorität
+blockiert wird (\ref{sec:mutex}).
 
 \begin{code}
 \begin{minted}{cpp}
@@ -243,12 +244,13 @@ void task_impl(void*) {
 Zunächst wird der mögliche Anteil der verfügbaren Daten, der sich vom
 Pufferanfang bis zum Schreibindex erstreckt, mathematisch berechnet. Der Anteil
 ist nur gültig, wenn nach der Normalisierung der beiden Indizes der Schreibindex
-hinter dem Leseindex liegt: In diesem Fall wurde der Ringpuffer bis zum Ende
-beschrieben und beginnt wieder am Anfang. Dann wird die (Teil-)Menge vom
-aktuellen Leseindex bis zum Schreibindex oder Pufferende -- abhängig vom
-berechneten Anteil -- bestimmt. Diese Vorgehensweise ist notwendig, da die API
-zur UART-Übertragung einen Zeiger und eine Größe als Parameter erwartet und der
-Ringpuffer aufgrund seiner Funktionsweise dies berücksichtigen muss.
+\textit{hinter} dem Leseindex liegt: In diesem Fall wurde der Ringpuffer bereits
+bis zum Ende beschrieben und beginnt wieder am Anfang. Dann wird die
+(Teil-)Menge vom aktuellen Leseindex bis zum Schreibindex oder Pufferende --
+abhängig von dem zuvor berechneten Anteil -- bestimmt. Diese Vorgehensweise ist
+notwendig, da die API zur UART-Übertragung einen Zeiger und eine Größe als
+Parameter erwartet und der Ringpuffer aufgrund seiner Funktionsweise dies
+berücksichtigen muss.
 
 Bei jedem Aufruf von \mintinline{cpp}|consume_and_wait()| wird durch
 \mintinline{cpp}|ulTaskNotifyTake()| auf den Abschluss der aktuell laufenden
@@ -284,7 +286,6 @@ enum struct CALL_FROM { ISR, NON_ISR };
 
 template <CALL_FROM callsite>
 void consume_complete() {
-  using namespace detail;
   if constexpr (callsite == CALL_FROM::ISR) {
     static BaseType_t xHigherPriorityTaskWoken;
     vTaskNotifyGiveFromISR(task_hdl, &xHigherPriorityTaskWoken);
@@ -299,10 +300,9 @@ void consume_complete() {
 
 \subsubsection{Nutzung der Senke mit UART-DMA}
 
-Für die Nutzung dieser Senke mit UART kombiniert mit DMA und aktiviertem
-Datencache muss zunächst das Interrupt-Callback
-\mintinline{cpp}|HAL_UART_TxCpltCallback()| definiert werden, das nach jeder
-DMA-Übertragung ausgelöst wird.
+Für die Nutzung dieser Senke mit UART-DMA und aktiviertem Datencache muss
+zunächst das Interrupt-Callback \mintinline{cpp}|HAL_UART_TxCpltCallback()|
+definiert werden, das nach jeder DMA-Übertragung ausgelöst wird.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -315,10 +315,10 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart) {
 \end{code}
 
 Die Senke wird durch den Aufruf ihrer Initialisierungsfunktion bereitgestellt.
-Wie zuvor kurz erwähnt, nimmt diese einen Funktionszeiger, dessen
+Wie zuvor kurz erwähnt, erwartet diese einen Funktionszeiger, dessen
 Implementierung eine cache-kohärente Datenverarbeitung (\ref{code:cache_clean})
 durchführt, sowie eine Priorität für die interne Task~(\ref{code:consumer_task})
-als Argumente entgegen.
+als Funktionsargumente.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -521,12 +521,12 @@ Samplings und dient als Referenzpunkt zur Normalisierung der Messwerte.
 
 FreeRTOS bietet Makros (\ref{sec:trace_hooks}), die beim Kontextwechsel -- oder
 genauer gesagt zu Beginn und auch beim Abschluss jedes FreeRTOS-Zeitabschnitts
-(time slice) der aktuellen Task -- als Callbacks aufgerufen werden können. Das
-Makro \mintinline{cpp}|traceTASK_SWITCHED_IN()| wird aufgerufen, unmittelbar
-nachdem eine Task zum Ausführen bzw. Fortfahren ausgewählt wurde.
+(time slice) der aktuellen Task -- als Callbacks aufgerufen werden. Das Makro
+\mintinline{cpp}|traceTASK_SWITCHED_IN()| wird aufgerufen, unmittelbar nachdem
+eine Task zum Ausführen bzw. Fortfahren ausgewählt wurde.
 \mintinline{cpp}|traceTASK_SWITCHED_OUT()| wird aufgerufen, unmittelbar bevor
-der Programmlauf zu einer neuen Task gewechselt wird. An diesen Zeitpunkten
-innerhalb vom Scheduling-Code enthält \mintinline{cpp}|pxCurrentTCB| -- der
+der Programmfluss zu einer neuen Task gewechselt wird. An diesen Zeitpunkten
+innerhalb vom Scheduling-Code enthält \mintinline{cpp}|pxCurrentTCB| -- die
 interne Task-Control-Block-Struktur von FreeRTOS -- die Metadaten der aktuellen
 Task, wodurch der Nutzer die Möglichkeit hat, direkt darauf als
 Funktionsargument zuzugreifen. (\cite{freertos_rtos_trace_hooks})
@@ -570,9 +570,9 @@ void task_switched_isr(const char* name, uint8_t is_begin) {
 \end{code}
 
 Die Funktion überprüft zunächst, ob eine Aufzeichnung beim Kontextwechsel
-durchgeführt werden soll, und ruft anschließend \mintinline{cpp}|stamp()| auf
+durchgeführt werden soll, und ruft anschließend \mintinline{cpp}|stamp()| auf --
 wenn dies der Fall ist. Nebenbei wird ein Zähler inkrementiert, der die
-akkumulierte Anzahl von Kontextwechsel repräsentiert.
+kumulierte Anzahl von Kontextwechsel repräsentiert.
 
 Da das threadsichere Schreiben eines Zyklenstempels -- der aus mehreren Bytes
 besteht -- mittels Mutex schließlich eine blockierende Operation darstellt, kann
@@ -729,9 +729,9 @@ erfolgt.
 \subsection{Streaming-Mode via Button}
 
 Laut Benutzerhandbuch des Boards ist der User-Button standardmäßig mit dem
-I/O-Pin PC13 verbunden, was der EXTI-Linie 13 entspricht. Praktischerweise muss
-in STM32CubeMX nur die Option für EXTI-Line-Interrupts der Linien 10 bis 15
-unter \textit{System Core/NVIC} aktiviert werden, sodass der Button bei jedem
+I/O-Pin PC13 verbunden, was der \ac{EXTI}-Linie 13 entspricht. Praktischerweise
+muss in STM32CubeMX nur die Option für EXTI-Line-Interrupts der Linien 10 bis 15
+unter \textit{System Core/NVIC} aktiviert werden, so dass der Button bei jedem
 Druck einen Interrupt auslöst.
 
 Im entsprechenden Interrupt-Callback wird ein Toggle-Mechanismus implementiert:
@@ -777,13 +777,13 @@ Die Profiling-Daten werden im menschenlesbaren Format ausgegeben. Sie bestehen a
     \mintinline{text}|<Identifikator> <konvertierte Zeit> <Start-/End-Marker>|
 \end{quote}
 
-Die Zeitangaben werden in Mikrosekunden umgerechnet, indem man sie durch die
-Taktfrequenz teilt, mit $1.000.000$ multipliziert und auf die gewünschte
-Genauigkeit rundet.
+Die Zyklenzahlen werden dabei in Mikrosekunden umgewandelt, indem man sie durch
+die Taktfrequenz teilt und auf die gewünschte Genauigkeit mit $1.000.000$
+multipliziert.
 
-Sie folgen nicht einer aufsteigenden Reihenfolge nach den konvertierten Zeiten,
-da die von den ISR generierten Zyklenstempel zunächst zwischengespeichert und
-erst später durch die FreeRTOS-Task in einer frei wählbaren Frequenz ausgegeben
+Die Profiling-Daten folgen nicht einer aufsteigenden Reihenfolge nach den
+konvertierten Zeitpunkten, da die ISR-Zyklenstempel erst zwischengespeichert und
+später durch die FreeRTOS-Task in einer frei wählbaren Frequenz ausgegeben
 werden müssen. Da jedoch jeder Zyklenstempel in Echtzeit ohne Verzögerung oder
 Overhead erzeugt wird, spiegelt die zugehörige Zyklenzahl und somit die
 konvertierten Zeitpunkten die tatsächlichen Echtzeitaspekte des Systems korrekt
@@ -815,13 +815,14 @@ Ansatz erwies sich als nicht erfolgreich, da die resultierende Systemleistung
 durch das nicht-deterministische Scheduling ohne Threadbevorzugung circa um die
 Hälfte sank.
 
-Anschließend wurde versucht, alle Zyklenstempel vorab in dem statischen Puffer
-zwischenzuspeichern. Damit wird das Erzeugen und Ausgabe von Zyklenstempeln
-komplett voneinander getrennt. Mit diesem Ansatz konnte die Reihenfolge
-konsistent gehalten werden. Allerdings führt diese Lösung dazu, dass der
+Anschließend wurde versucht, alle Zyklenstempel vorab in dem Zwischenpuffer zu
+speichern. Damit wird das Erzeugen und Ausgabe von Zyklenstempeln komplett
+voneinander getrennt. Mit diesem Ansatz konnte die Reihenfolge konsistent
+gehalten werden. Allerdings führt diese Lösung dazu, dass der
 Multi-Producer-Aspekt der Queue bzw. Senke nicht mehr benötigt wird, da alle
-Daten nun von einem einzigen Producer stammen, obwohl die Senke technisch
-korrekt funktioniert und in diesem Kontext weiterhin zur Ausgabe verwendet wird.
+Daten nun von einem einzigen Producer stammen, obwohl die Senke weiterhin zur
+Ausgabe verwendet wird und auch in diesem Kontext technisch korrekt
+funktioniert.
 
 \begin{code}
 \begin{minted}{cpp}

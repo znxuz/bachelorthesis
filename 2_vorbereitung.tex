@@ -14,8 +14,8 @@ Maßnahmen folgen in den nächsten Abschnitten.
 
 In der bisherigen Implementierung erhielt der Mikrocontroller als Client
 Geschwindigkeitssollwerte über das ROS2-Framework vom Micro-ROS-Agent auf einem
-Linux-Host. Da Micro-ROS und damit das ROS2-Framework beseitigt wird, muss die
-Übertragung nun manuell realisiert werden.
+Linux-Host. Da Micro-ROS und damit die Kompatibilität mit ROS2-Framework
+beseitigt wird, muss die Übertragung nun manuell realisiert werden.
 
 Dazu wird zunächst eine Struktur \mintinline{cpp}|Vel2d| definiert, der die
 2D-Geschwindigkeitswerte bündelt, welche vom Host an den Mikrocontroller
@@ -48,16 +48,14 @@ struct Vel2dFrame {
 
   bool compare(uint32_t rhs) { return crc == rhs; }
 } __attribute__((packed));
-
-inline constexpr std::size_t VEL2D_FRAME_LEN = sizeof(Vel2dFrame);
 \end{minted}
     \captionof{listing}{Definition des UART-Daten-Frames}
 \end{code}
 
-Für die Übertragung über UART kann die Funktion
-\mintinline{cpp}|HAL_UARTEx_ReceiveToIdle_IT()| verwendet werden, um die
-serialisierten Bytes eines Daten-Frames mittels der STM32-HAL in den
-vorallokierten Puffer zu empfangen.
+Für die Übertragung über UART wird die Funktion
+\mintinline{cpp}|HAL_UARTEx_ReceiveToIdle_IT()| verwendet, um die serialisierten
+Bytes eines Daten-Frames mittels der STM32-HAL in einen statisch vorallokierten
+Puffer zu empfangen.
 
 Dies ist gepaart mit einem Interrupt-Callback
 \mintinline{cpp}|HAL_UARTEx_RxEventCallback()|, die entweder ausgelöst wird,
@@ -78,8 +76,9 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t size) {
   if (huart->Instance != huart3.Instance) return;
 
   rx_len = size;
+
+  // unblock the task
   static BaseType_t xHigherPriorityTaskWoken;
-  configASSERT(task_handle != NULL);
   vTaskNotifyGiveFromISR(task_handle, &xHigherPriorityTaskWoken);
   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 
@@ -90,8 +89,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t size) {
 // setup reception from UART in task init
 HAL_UARTEx_ReceiveToIdle_IT(&huart3, uart_rx_buf, sizeof(uart_rx_buf));
 \end{minted}
-    \captionof{listing}{Nutzung der STM32-API für den Datenempfang über UART via
-    Interrupt}
+    \captionof{listing}{Datenempfang über UART via Interrupt}
     \label{code:uart_isr}
 \end{code}
 
@@ -101,9 +99,9 @@ gewährleisten einen fehlertoleranten Datenempfang.
 
 Um die empfangenen Bytes zu parsen, ohne dies aber während der Ausführung des
 Interrupt-Callbacks zu tun, wird eine eigenständige FreeRTOS-Task erstellt.
-Mittels \mintinline{cpp}|vTaskNotifyGiveFromISR()| aufgerufen innerhalb des
-Interrupt-Callbacks (\ref{code:uart_isr}) wird dieser Task signalisiert
-(\ref{sec:direct_task_notification}). Demnach werden die empfangenen Bytes durch
+Mittels \mintinline{cpp}|vTaskNotifyGiveFromISR()| -- aufgerufen innerhalb des
+Interrupt-Callbacks -- wird dieser Task signalisiert (\ref{code:uart_isr},
+\ref{sec:direct_task_notification}). Demnach werden die empfangenen Bytes durch
 \mintinline{cpp}|reinterpret_cast| zurück in ein Daten-Frame deserialisiert.
 
 Folglich lässt sich zur Kontrolle ein CRC-Wert lokal aus den empfangenen
@@ -147,12 +145,13 @@ $\textbf{1,6\,\%}$ der Taktzyklen im Vergleich zur Softwarelösung benötigt
 
 Auf dem Host wird das ROS2-Paket \mintinline{text}|teleop_twist_keyboard|
 verwendet, um weiterhin Tastatureingaben als Geschwindigkeitswerte zu
-interpretieren. Um die Werte dann über UART zu übertragen, wird ein kleiner
+interpretieren. Um die Werte dann über UART zu übertragen, wird ein minimaler
 ROS2-Node als Brücke erstellt.
 
 Dabei empfängt der Node kontinuierlich Werte über einen Subscriber, und
 überträgt sie zusammen mit dem im Konstruktur berechneten CRC-Wert an die
-UART-Schnittstelle, die als abstrahierter serieller Port auf Linux geöffnet ist.
+UART-Schnittstelle, die als abstrahierter serieller Port unter Linux geöffnet
+ist.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -164,12 +163,7 @@ class Vel2dBridge : public rclcpp::Node {
           auto frame =
               Vel2dFrame{{twist->linear.x, twist->linear.y, twist->angular.z}};
 
-          if (!uart.send(frame.data())) {
-            RCLCPP_ERROR(this->get_logger(), "write failed");
-            return;
-          }
-          RCLCPP_INFO(this->get_logger(), "sending [%f, %f, %f], crc: %u",
-                      frame.vel.x, frame.vel.y, frame.vel.z, frame.crc);
+        uart.send(frame.data());
         });
   }
 
@@ -184,9 +178,8 @@ class Vel2dBridge : public rclcpp::Node {
 \end{code}
 
 Die CRC-Berechnung hierbei erfolgt mithilfe einer quelloffenen C++-Bibliothek
-von Daniel Bahr \cite{CRCpp}. Der Algorithmus
-\mintinline{cpp}|CRC::CRC_32_MPEG2()| entspricht demjenigen, der von der
-CRC-Hardware verwendet wird.
+von Daniel Bahr \cite{CRCpp}. Der Algorithmus \mintinline{cpp}|CRC_32_MPEG2()|
+entspricht demjenigen, der von der CRC-Hardware verwendet wird.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -205,7 +198,7 @@ FreeRTOS-Tasks umgesetzt. Der Fokus liegt darauf, den zugrundeliegenden
 Datenaustausch ebenfalls über eine Publisher-Subscriber-Architektur mit Queues
 zu realisieren. Dadurch entfällt die Notwendigkeit, gemeinsam genutzte Daten als
 globale Variablen mit Semaphoren oder Mutexen zu schützen, die in FreeRTOS
-ohnehin nur als Queue-Objekte abstrahiert sind.
+ebanfalls nur als Queue-Objekte abstrahiert sind.
 
 Zunächst wird eine FreeRTOS-Task zur Abfrage und auch Übertragung von
 Encoderwerten implementiert. Diese stellt sicher, dass alle anderen Tasks bei
@@ -233,7 +226,7 @@ static void task_impl(void*) {
 \end{code}
 
 Die Empfänger-Task, welche mit \mintinline{cpp}|xQueueSend()| addressiert wird,
-läuft mit der gleich Frequenz wie der Sender-Task. Die Übertragung erfolgt
+läuft mit der selben Frequenz wie der Sender-Task. Die Übertragung erfolgt
 garantiert nicht-blockierend zusätzlich durch den übergebenen Null-Wert für die
 Wartezeit im Fall einer vollen Queue.
 
@@ -252,11 +245,11 @@ folgt darstellen:
 \setlength{\tabcolsep}{4pt} % Reduce column padding
 \begin{tabular}{|c|c|c|c|}
 \hline
-    \diagbox{Sendertask}{Empfänger-Task} & \textbf{Odometrie} & \textbf{Drehzahlregelung} & \textbf{Posenregelung} \\ \hline
-\textbf{Encoderwerte}               & $\uparrow$             & $\uparrow$       &               \\ \hline
-\textbf{Posenregelung}           &                           & $\uparrow$ & \cellcolor{gray!20} \\ \hline
-\textbf{Geschwindigkeitssollwert}   &                           &                     & $\uparrow$ \\ \hline
-\textbf{Odometrie}                  & \cellcolor{gray!20}       &                     & $\uparrow$ \\ \hline
+\diagbox{Sendertask}{Empfänger-Task}    & \textbf{Odometrie}    & \textbf{Posenregelung}    & \textbf{Drehzahlregelung} \\ \hline
+\textbf{Odometrie}                      & \cellcolor{gray!20}   & $\uparrow$                &                           \\ \hline
+\textbf{Posenregelung}                  &                       & \cellcolor{gray!20}       & $\uparrow$                \\ \hline
+\textbf{Encoder}                        & $\uparrow$            &                           & $\uparrow$                \\ \hline
+\textbf{Sollgeschwindigkeit}            &                       & $\uparrow$                &                           \\ \hline
 \end{tabular}
 \caption{Kommunikationskanal-Matrix}
 % \label{tab:kommunikationsmatrix}
@@ -340,8 +333,8 @@ task_handle = xTaskCreateStatic(
     \captionof{listing}{Statische Allokation eines FreeRTOS-Tasks}
 \end{code}
 
-Analog dazu muss für eine statische Initialisierung eines Queue-Objekts
-ebanfalls ein Speicherpuffer sowie eine Queue-Struktur definiert werden:
+Analog dazu muss für die statische Initialisierung eines Queue-Objekts ebanfalls
+ein Speicherpuffer sowie eine Queue-Struktur definiert werden:
 
 \begin{code}
 \begin{minted}{cpp}
@@ -356,7 +349,7 @@ ebanfalls ein Speicherpuffer sowie eine Queue-Struktur definiert werden:
 \end{code}
 
 Damit schließt der Abschnitt zur FreeRTOS-Umstellung ab. Der Code für die
-Software auf dem Mikrocontroller sowie für den ROS2-Node ist im
+Steuerungssoftware sowie für den ROS2-Node ist im
 Repository~\cite{mecarover_freertos_profiling} im Branch
 \mintinline{text}|freertos-profiling| einsehbar.
 
@@ -393,16 +386,15 @@ und des LwIP-Heaps aus CubeMX-Standardkonfigurationen entnommen.
 
 Obwohl die MPU korrekt konfiguriert wurde, tritt dennoch ein Fehler auf, sobald
 die Verbindung zum Micro-ROS-Client hergestellt wird. Der Fehler
-(\ref{fig:micro_ros_err}), der in den Debug-Ausgaben des Micro-ROS-Agents
-sichtbar ist, deutet darauf hin, dass bei der Datenübertragung über UDP
-weiterhin Probleme auftreten. Insbesondere scheint das
+(\ref{fig:micro_ros_err}) deutet darauf hin, dass bei der Datenübertragung über
+UDP weiterhin Probleme auftreten. Insbesondere scheint das
 \mintinline{text}|client_key| bzw. die assoziierten Daten immer noch nicht
 ordentlich gecacht zu sein.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/micro_ros_agent_err}
-    \caption{Micro-ROS-Agent Fehlermeldung mit Debugausgaben}
+    \caption{Micro-ROS-Agent Debugausgaben}
     \label{fig:micro_ros_err}
 \end{figure}
 
@@ -434,13 +426,13 @@ beheben.
      {
        Txbuffer[i-1].next = &Txbuffer[i];
 \end{minted}
-    \captionof{listing}{Modifizierung des ST-Treibercode in Diffansicht
+    \captionof{listing}{Modifizierung des ST-Treibercodes in Diffansicht
     \cite{microROS_STM32CubeMX_Issue139_code}}
     \label{code:cache_clean}
 \end{code}
 
 Die Lösung funktioniert folgendermaßen: Bei jeder Übertragung im Treibercode in
-\mintinline{cpp}|low_level_output()| muss der Cache für jeden Paketpuffer über
+\mintinline{cpp}|low_level_output()| muss der Cache für jeden Paketpuffer durch
 den Funktionsaufruf \mintinline{cpp}|SCB_CleanDCache_by_Addr()| geleert werden,
 so dass Daten-Modifizierungen tatsächlich in den Speicher geschrieben und
 folglich auch beim DMA-Controller korrekt widergespiegelt werden

@@ -2,17 +2,16 @@
 
 Die vorliegende Bachelorarbeit hat zunächst als Ziel, die bestehende
 Robotersteuerungssoftware von Micro-ROS auf FreeRTOS zu portieren, um die
-Echtzeitleistung beider Plattformen zu analysieren und miteinander zu
-vergleichen.
+Echtzeitleistung beider Plattformen miteinander zu vergleichen.
 
 Beide Systeme sind für die Steuerung eines mobilen Roboters auf einem Cortex-M7
-Mikrocontroller von Arm ausgelegt, unterscheiden sich aber in ihrer
-zugrundeliegenden Softwarearchitektur: Während Micro-ROS auf dem \ac{ROS 2}
-Framework aufbaut und eine höhere Abstraktionsebene sowie standardisierte
-Kommunikationsschnittstellen mittels einer integrierten \ac{DDS}-Middleware
+Mikrocontroller ausgelegt, unterscheiden sich aber in ihrer zugrundeliegenden
+Softwarearchitektur: Während Micro-ROS auf dem \ac{ROS 2} Framework aufbaut und
+somit eine höhere Abstraktionsebene durch eine standardisierte
+Kommunikationsschnittstelle in Form einer integrierten \ac{DDS}-Middleware
 bietet, basiert dies selbst auf einem \ac{RTOS} wie FreeRTOS. Die Portierung auf
-FreeRTOS kann daher als eine Reduzierung einer Abhängigkeitsebene betrachtet
-werden. Dies ermöglicht eine direktere und damit effizientere Nutzung der
+FreeRTOS kann daher als eine Reduzierung von Abhängigkeiten betrachtet werden.
+Dies ermöglicht eine direktere und damit effizientere Nutzung der
 zugrundeliegenden Echtzeit-, sowie Speicherressourcen.
 
 \begin{figure}[htb] \centering
@@ -20,17 +19,17 @@ zugrundeliegenden Echtzeit-, sowie Speicherressourcen.
     \caption{Micro-ROS Architektur\cite[S. 6]{koubaa2023}}
 \end{figure}
 
-Danach wird die Echtzeitleistung der Steuerungssoftware basierend auf den beiden
+Danach wird die Echtzeitleistung der Steuerungssoftware auf den beiden
 Plattformen analysiert, wobei die Ausführungsdauer zeitkritischer Funktionen
 sowie Tasks untersucht wird. Der Vergleich soll unter anderem aufzeigen,
 inwiefern FreeRTOS durch die Eliminierung dieser zusätzlichen Abhängigkeit eine
 effizientere und leichtgewichtigere Lösung darstellt. Dabei soll der Einsatz
 einer zyklengenauen Messung des Programmablaufs ermöglicht werden, um fundierte
-Aussagen über das Echtzeitverhalten beider Plattformen zu treffen und den
+Aussagen über das Echtzeitverhalten beider Systeme zu treffen und den
 Leistungsgewinn quantitativ zu belegen.
 
 Die Arbeit gliedert sich in vier Hauptteile: Nach einer Einführung in die
 grundlegenden Konzepte wird zunächst die Implementierung der Steuerungssoftware
 auf FreeRTOS beschrieben. Anschließend wird Implementierung zur Erfassung von
-Laufzeitdaten detailliert dargestellt. Den Abschluss bildet die Präsentation der
-Ergebnisse, deren Bewertung sowie mögliche Optimierungsansätze.
+Laufzeitdaten detailliert gezeigt. Den Abschluss bildet die quantitative
+Präsentation der Ergebnisse, deren Bewertung sowie mögliche Optimierungsansätze.

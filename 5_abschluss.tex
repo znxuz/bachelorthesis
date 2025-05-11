@@ -12,9 +12,10 @@ Es lässt sich schlussfolgern, dass die Steuerungssoftware zwar durch Integratio
 von Micro-ROS funktionsreicher und folglich mit einer Vielzahl von
 ROS-Komponenten kompatibel wird, dies allerdings mit erheblichem Overhead
 erkauft wird. Bei begrenztem Speicher oder Rechenleistung bleibt FreeRTOS mit
-seinem schlanken Kernel und den threadsicheren Queue-Implementierungen weiterhin
-eine geeignete Wahl gegenüber komplexeren RTOS-Lösungen -- insbesondere wenn
-Echtzeitanforderungen oder hochfrequente Aufgabenausführungen prioritär sind.
+seinem schlanken Kernel und den standardmäßig threadsicheren Queue-Abstraktionen
+weiterhin eine geeignete Wahl gegenüber komplexeren RTOS-Lösungen --
+insbesondere wenn hochfrequente Aufgabenausführungen mit Echtzeitanforderungen
+prioritär sind.
 
 Zudem wurde demonstriert, dass L1-Caches die Performance signifikant steigern --
 eine für leistungskritische Software wesentliche Optimierung, die nicht
@@ -23,17 +24,17 @@ vernachlässigt werden darf.
 \subsection{Ausblick}
 
 Für zukünftige Arbeiten könnte die Multi-Producer-Senke so weiterentwickelt
-werden, dass sie atomare Schreiboperationen auf 4-Byte-/32-Bit-Ebene
-unterstützt. Dadurch könnten die Laufzeitdaten nicht mehr im menschenlesbaren
-Format, sondern maschinenlesbar und komprimiert jeweils als 32-Bit-Dateneinheit
+werden, dass sie Schreiboperationen atomar auf 4-Byte-/32-Bit-Ebene unterstützt.
+Dadurch könnten die Laufzeitdaten nicht mehr im menschenlesbaren Format mit
+überflüssigem Daten-Overhead, sondern komprimiert jeweils als 32-Bit-Datenwort
 ausgegeben werden.
 
 Dies würde erstens den Zwischenpuffer und den erforderlichen Mutex zum
-Serialisieren sowie Speichern von generierten Zyklenstempeln überflüssig machen,
-da sie als 32-bit-Daten atomar direkt in die Senke geschrieben werden könnten.
-Zweitens könnte dann ein dedizierter Parser auf dem Linux-Host entwickelt
-werden, der die Visualisierung übernimmt und idealerweise parallel eine
-Echtzeitanalyse durchführt.
+Serialisieren sowie Speichern von erzeugten Zyklenstempeln überflüssig machen,
+da sie als 32-bit-Datenworte atomar direkt in die Senke geschrieben werden
+könnten. Zweitens könnte dann ein dedizierter Parser auf dem Linux-Host
+entwickelt werden, der die Visualisierung übernimmt und idealerweise eine
+Echtzeitanalyse parallel zur Laufzeit durchführt.
 
 % Diese Vorgehensweise ähnelt der Rust-Bibliothek \mintinline{text}|defmt|, bei
 % der die rechenintensive Formatierung von Logging-Informationen nicht auf dem

@@ -5,7 +5,7 @@
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth]{assets/micro_ros_profiling}
-    \caption{Visualisierung der Laufzeit-Statistik unter Micro-ROS -- Übersicht}
+    \caption{Visualisierung der Laufzeit-Statistik unter Micro-ROS -- Überblick}
     \label{fig:micro_ros_profiling}
 \end{figure}
 
@@ -43,7 +43,7 @@ profiled for 18881864 us
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth]{assets/freertos_profiling}
-    \caption{Visualisierung der Laufzeit-Statistik unter FreeRTOS -- Übersicht}
+    \caption{Visualisierung der Laufzeit-Statistik unter FreeRTOS -- Überblick}
     \label{fig:freertos_profiling}
 \end{figure}
 
@@ -80,16 +80,16 @@ profiled for 18779120 us
     \label{code:freertos_summary_freertos}
 \end{code}
 
+Die Profiling-Daten werden mit einem Python-Skript verarbeitet und als
+Gantt-Diagramm dargestellt (\ref{fig:micro_ros_profiling},
+\ref{fig:freertos_profiling}).
+
 Die FreeRTOS-Funktionen \mintinline{cpp}|vTaskGetRunTimeStats()| und
 \mintinline{cpp}|vTaskList()| werden genutzt, um am Ende eines Samplings eine
 zusammenfassende Auswertung bereitzustellen
-(\ref{code:freertos_summary_freertos}, \ref{code:freertos_summary_uros}). Diese
-dokumentiert die kumulierten Ausführungszeiten sowie Zustände aller Tasks vom
+(\ref{code:freertos_summary_uros}, \ref{code:freertos_summary_freertos}). Diese
+dokumentieren die kumulierten Ausführungszeiten sowie Zustände aller Tasks vom
 Systemstart bis zum Funktionsaufruf \cite{freertos_runtime_stats}.
-
-Die Profiling-Daten werden mit einem Python-Skript verarbeitet und als
-Gantt-Diagramm dargestellt (\ref{fig:freertos_profiling},
-\ref{fig:micro_ros_profiling}).
 
 \begin{figure}[h]
     \centering
@@ -99,11 +99,12 @@ Gantt-Diagramm dargestellt (\ref{fig:freertos_profiling},
 \end{figure}
 
 Die Abbildung (\ref{fig:profiling_ausschnitt}) zeigt einen vergrößerten
-Ausschnitt, der Kontextwechsel zwischen Tasks sowie Funktionsaufrufe
-visualisiert. Während die gesamte Steuerungslogik ausschließlich innerhalb der
-Micro-ROS-Task (\mintinline{text}|uros| in Pink) verarbeitet wird, übernehmen
-die parallel laufenden Tasks den zugrundeliegenden Datentransport über die
-Micro-ROS-Middleware sowie die Ausgabe von Profiling-Daten.
+Ausschnitt, der die Kontextwechsel visualisiert. Während die gesamte
+Steuerungslogik ausschließlich innerhalb der Micro-ROS-Task
+(\mintinline{text}|uros| in Pink) verarbeitet wird -- weswegen sie alle
+Regelungsfunktionen zeitlich überdeckt, übernehmen die restlichen Tasks die
+Ausgabe von Profiling-Daten sowie den zugrundeliegenden Datentransport über die
+Micro-ROS-Middleware ohne Überschneidung.
 
 \subsection{Laufzeit-Statistik -- Micro-ROS}
 
@@ -113,9 +114,9 @@ jeweilige Durchschnittswert berechnet.
 \subsubsection{Regler mit 50 Hz und 30 Hz}
 
 Bei einer Sollfrequenz von $50\,\text{Hz}$ für die Drehzahlregelung und
-$30\,\text{Hz}$ für die Positionsregelung mit Odometrie zeigen die
-Messergebnisse nach etwa $18$ Sekunden Profiling folgende Werte -- jeweils ohne
-und mit Nutzung von Caches:
+$30\,\text{Hz}$ für die Posenregelung sowie Odometrie zeigen die Messergebnisse
+nach etwa $18$ Sekunden Sampling folgende Werte -- jeweils ohne und mit Nutzung
+von Caches:
 
 \begin{table}[H]
 \centering
@@ -167,7 +168,7 @@ und mit Nutzung von Caches:
 \subsubsection{Regler mit 100 Hz und 50 Hz}
 
 Bei einer $100\,\text{Hz}|50\,\text{Hz}$-Reglerkonfiguration zeigen die
-Messergebnisse nach etwa $18$ Sekunden Profiling folgende Werte -- jeweils ohne
+Messergebnisse nach etwa $18$ Sekunden Sampling folgende Werte -- jeweils ohne
 und mit Nutzung von Caches:
 
 \begin{table}[H]
@@ -225,8 +226,8 @@ System zu $\textbf{48,17\,\%}$ bzw. $\textbf{38,75\,\%}$ im Leerlauf.
 
 Mit aktiviertem Daten- und Instruktionscache benötigte die Micro-ROS-Task bei
 den Reglern mit $50\,\text{Hz}$ sowie $30\,\text{Hz}$ nur $\textbf{8,52\,\%}$
-Rechenzeit. Bei höheren Frequenzen ($100\,\text{Hz}$ sowie $50\,\text{Hz}$) sind
-es $\textbf{10,50\,\%}$, während die Leerlaufzeit bei $\textbf{81,81\,\%}$ bzw.
+Rechenzeit. Bei höheren Frequenzen ($100\,\text{Hz}$ sowie $50\,\text{Hz}$) ist
+sie $\textbf{10,50\,\%}$, während die Leerlaufzeit bei $\textbf{81,81\,\%}$ bzw.
 $\textbf{78,00\,\%}$ liegt.
 
 Durch die Nutzung der Caches reduzierte sich die Rechenzeit für die Roboterlogik
@@ -329,7 +330,7 @@ Ohne Micro-ROS-Abhängigkeit erreicht das System bereits ohne Caches eine
 Leerlaufzeit von etwa $\textbf{80\,\%}$. Mit aktivierten Caches steigt diese auf
 circa $\textbf{95\,\%}$ an.
 
-Die Leistungssteigerung durch die Nutzung von Caches ist bei Implementierung
+Die Leistungssteigerung durch die Nutzung von Caches ist bei der Implementierung
 unter FreeRTOS ebenfalls signifikant, wobei sich die gesamte Profiling-Dauer
 beider Samplings bei der $100\,\text{Hz}|50\,\text{Hz}$-Reglerkonfiguration um
 $213,584\,\text{ms}$ unterscheidet: Die Rechenzeiten verringerten sich für die
@@ -346,11 +347,12 @@ Kontextwechsel. Die praktische maximale Frequenz liegt standardmäßig bei
 $1000\,\text{Hz}$, da der Tick-Interrupt (für den Kontextwechsel) standardmäßig
 auf $1\,\text{ms}$ (entsprechend $1000$ Interrupts pro Sekunde) festgelegt ist.
 
-Um eine Taktfrequenz über $1000\,\text{Hz}$ zu erreichen, muss lediglich der
-Wert des Makros \mintinline{cpp}|configTICK_RATE_HZ| auf die gewünschte Frequenz
-angepasst werden. Von Frequenzen über $1000\,\text{Hz}$ wird jedoch abgeraten,
-da die kumulativen Kontextwechselkosten einen spürbaren Overhead verursachen
-\cite{FreertosTickRate2010}. Bei hochfrequenten Systemen, die deutlich über der
+Um eine Taktfrequenz für das FreeRTOS-System über $1000\,\text{Hz}$ zu
+erreichen, muss lediglich der Wert des Makros
+\mintinline{cpp}|configTICK_RATE_HZ| auf die gewünschte Frequenz angepasst
+werden. Von Frequenzen über $1000\,\text{Hz}$ wird jedoch abgeraten, da die
+kumulativen Kontextwechselkosten einen spürbaren Overhead verursachen
+\cite{FreertosTickRate2010}. Bei hochfrequenten Systemen, die deutlich über die
 Standardfrequenz für Kontextwechsel arbeiten, empfiehlt sich daher der Verzicht
 auf ein RTOS zugunsten eines minimalen Schedulers \cite{FreertosForumHF2019}.
 
@@ -433,8 +435,8 @@ das System ein relativ zuverlässiges Laufzeitverhalten ohne vollständige
 Prozessorauslastung -- abgesehen von der Profiling-Task. Hier wird vermutlich
 die zugrundeliegende Übertragung zur Ausgabe von Profiling-Daten zum Bottleneck:
 Die hohen Takt- und Regelungsfrequenzen erzeugen Datenmengen, die nicht mehr
-rechtzeitig verarbeitet werden können, was periodische Pufferüberläufe
-verursacht.
+rechtzeitig verarbeitet werden können, was zu periodischen Pufferüberläufen
+führt.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -517,10 +519,10 @@ Drehzahlregelung & 191.027 (Ø:~103,59) & 19.559 (Ø:~10,69) & 171.468 (Ø:~92,9
 
 Die Implementierung ist auf beiden Plattformen größtenteils identisch, abgesehen
 vom erwähnten Datenaustausch. Bei Micro-ROS müssen alle zu übertragenden Daten
-in einer dedizierten Struktur mit Metadaten -- unter anderem einem Header mit
+in eine dedizierte Struktur mit Metadaten -- unter anderem einem Header mit
 Zeitstempel in Sekunden und Nanosekunden -- serialisiert werden. Bei FreeRTOS
-werden die Daten als rohe Bytes direkt in die Warteschlange kopiert und beim
-Empfänger extrahiert.
+werden die Daten als rohe Bytes direkt in die Queue kopiert und beim Empfänger
+extrahiert.
 
 Zusätzlich unterscheidet sich die FreeRTOS-Implementierung von Micro-ROS auch
 dadurch, dass die Encoderdaten nicht vom Drehzahlregler abgefragt und dann erst
@@ -533,7 +535,7 @@ Zusammenfassend zeigt sich, dass die Steuerungslogik sowohl unter Micro-ROS als
 auch unter FreeRTOS relativ wenig Rechenzeit beansprucht -- vorausgesetzt, dass
 die Daten ordentlich gecacht sind und nicht bei jedem Zugriff neu aus dem RAM
 oder Flash geladen werden müssen. Unter FreeRTOS kann selbst bei deutlich
-höheren Sollfrequenzen eine stabile Regelung erreicht werden. Dank des
-leistungsstarken Mikrocontrollers in Kombination mit Cache-Nutzung und hardware-
-sowie softwareseitig optimiertem Code befindet sich das System auf beiden
-Plattformen ebenfalls überwiegend im Leerlauf.
+höheren Taktfrequenzen ein stabiler Kontextwechsel gewährleistet werden. Dank
+des leistungsstarken Mikrocontrollers in Kombination mit Cache-Nutzung und
+hardware- sowie softwareseitig optimiertem Code befindet sich das System auf
+beiden Plattformen ebenfalls überwiegend im Leerlauf.
