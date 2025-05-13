@@ -1,4 +1,4 @@
-\section{Umsetzung der Laufzeitmessung}
+\section{Umsetzung}
 
 Nachdem die Steuerungssoftware sowohl für FreeRTOS als auch für Micro-ROS
 entwickelt wurde, wird nun eine Methode zur Erfassung von Laufzeitdaten
@@ -94,7 +94,7 @@ verzichten: Stattdessen können sie einfach über den Puffer hinaus zählen. Bei
 jeder Verwendung wird ihr Wert durch eine Modulo-Operation mit der Puffergröße
 normalisiert, wodurch sie dann auf die korrekte Position verweisen. Demnach
 reduziert sich die Berechnung der verfügbaren Datenmenge ebenfalls auf eine
-einfache Subtraktion zwischen beiden Indizes -- vorausgesetzt dass beide Indexe
+einfache Subtraktion zwischen beiden Indizes -- vorausgesetzt, dass beide Indexe
 vorzeichenlos sind.
 
 Wenn die Puffergröße eine Zweierpotenz ist, kann die Modulo-Operation hier
@@ -117,7 +117,7 @@ size_t normalize(size_t idx) { return idx % TSINK_CAPACITY; }
     \captionof{listing}{Struktur der Senke}
 \end{code}
 
-\subsubsection{Schreibvorgang in die Senke}
+\subsubsection{Schreibvorgang}
 
 Auf ARM-Architekturen sind Zugriffe auf Bytes, Halbdatenworte (16-Bit) sowie
 Datenworte (32-Bit) standardmäßig atomar, sofern sie im Speicher ausgerichtet
@@ -205,7 +205,7 @@ des Gültigkeitsbereichs -- in diesem Fall beim Verlassen des
 der Senke vorhanden ist, wird kooperativ der Kontrollfluss für eine Millisekunde
 an den Scheduler zurückgegeben, um andauerndes Polling zu vermeiden.
 
-\subsubsection{Lesevorgang aus der Senke}
+\subsubsection{Lesevorgang}
 
 Eine statisch allokierte FreeRTOS-Task wird erzeugt, die kontinuierlich
 versucht, verfügbare Daten aus der Senke zu verarbeiten.
@@ -271,11 +271,6 @@ weshalb die zugehörigen APIs nicht aus mehreren Threads gleichzeitig aufgerufen
 werden dürfen. Daher müssen nachfolgende Aufrufe hierbei miteinander
 synchronisiert werden.
 
-Der Funktionszeiger \mintinline{cpp}|consume()| für zur Datenverarbeitung lässt
-sich bei der Senke-Initialisierung beispielsweise mit der
-UART-DMA-Übertragungsfunktion aus der STM32-HAL konfigurieren
-(\ref{code:sink_initialization}).
-
 Analog zu \ref{code:uart_isr} wird die Task erst wieder entblockt, wenn eine
 Task-Notifikation eintrifft -- beispielsweise ausgelöst durch eine \ac{ISR} der
 DMA-Hardware nach Übertragungsende, um weitere I/O-Übertragungen zu starten.
@@ -297,8 +292,6 @@ void consume_complete() {
 \end{minted}
     \captionof{listing}{Callback-Funktion für die Task-Notifikation}
 \end{code}
-
-\subsubsection{Nutzung der Senke mit UART-DMA}
 
 Für die Nutzung dieser Senke mit UART-DMA und aktiviertem Datencache muss
 zunächst das Interrupt-Callback \mintinline{cpp}|HAL_UART_TxCpltCallback()|
@@ -473,7 +466,9 @@ void main() {
 % Der Code für die Senke sowie den Benchmark befinden sich in den
 % Repositorys~\cite{freertos_threadsafe_sink, freertos_tsink_benchmark}.
 
-\subsection{Aktivierung der DWT}
+\subsection{Aufzeichnung von Zyklenstempeln}
+
+\paragraph{Aktivierung der DWT}
 
 Wie im vorherigen Abschnitt \ref{sec:dwt} erläutert, eignet sich die DWT zur
 Generierung von Laufzeitdaten in Form von Zyklenzahlen. Mittels der folgenden
@@ -493,8 +488,6 @@ void enable_dwt() {
 
 Danach kann die aktuelle Zyklenzahl direkt über \mintinline{cpp}|DWT->CYCCNT|
 ausgelesen werden.
-
-\subsection{Aufzeichnung von Zyklenstempeln}
 
 Drei wesentliche Informationen werden bei der Aufzeichnung von Zyklenstempeln
 erfasst: der Identifikator der zugehörigen Task oder Funktion, die aktuelle
@@ -516,8 +509,6 @@ struct cycle_stamp {
 
 Die statische Variable speichert zur Laufzeit die Zyklenzahl zu Beginn eines
 Samplings und dient als Referenzpunkt zur Normalisierung der Messwerte.
-
-\subsubsection{Beim Kontextwechsel}
 
 FreeRTOS bietet Makros (\ref{sec:trace_hooks}), die beim Kontextwechsel -- oder
 genauer gesagt zu Beginn und auch beim Abschluss jedes FreeRTOS-Zeitabschnitts
@@ -641,8 +632,6 @@ auto output_stamps = []() static {
     \end{minted}
     \captionof{listing}{Callback zur Ausgabe von ISR-Zyklenstempeln}
 \end{code}
-
-\subsubsection{Im Nicht-ISR-Kontext}
 
 Für Nicht-ISR-Kontexte ist die Funktion zur direkten Ausgabe eines
 Zyklenstempels wie folgt definiert:
@@ -769,9 +758,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 Um ungewollte Mehrfachauslösungen durch unpräzises Drücken zu vermeiden, ist
 eine kurze Debounce-Zeit notwendig.
 
-\subsection{Profiling-Daten -- Überblick}
+\subsection{Exkurs: Laufzeitdaten -- Überblick}
 
-Die Profiling-Daten werden im menschenlesbaren Format ausgegeben. Sie bestehen aus:
+Die Laufzeit- bzw. Profiling-Daten werden im menschenlesbaren Format ausgegeben.
+Sie bestehen aus:
 
 \begin{quote}
     \mintinline{text}|<Identifikator> <konvertierte Zeit> <Start-/End-Marker>|
@@ -785,8 +775,8 @@ Die Profiling-Daten folgen nicht einer aufsteigenden Reihenfolge nach den
 konvertierten Zeitpunkten, da die ISR-Zyklenstempel erst zwischengespeichert und
 später durch die FreeRTOS-Task in einer frei wählbaren Frequenz ausgegeben
 werden müssen. Da jedoch jeder Zyklenstempel in Echtzeit ohne Verzögerung oder
-Overhead erzeugt wird, spiegelt die zugehörige Zyklenzahl und somit die
-konvertierten Zeitpunkten die tatsächlichen Echtzeitaspekte des Systems korrekt
+Overhead erzeugt wird, spiegelt die zugehörige Zyklenzahl und somit auch der
+konvertierte Zeitpunkt den tatsächlichen Echtzeitaspekt des Systems korrekt
 wider. Daher ist eine strikt geordnete Ausgabe nicht zwingend erforderlich.
 
 \begin{code}

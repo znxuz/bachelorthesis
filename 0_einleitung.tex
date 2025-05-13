@@ -21,14 +21,14 @@ zugrundeliegenden Echtzeit-, sowie Speicherressourcen.
     \caption{Micro-ROS Architektur\cite[S. 6]{koubaa2023}}
 \end{figure}
 
-Danach wird die Echtzeitleistung der Steuerungssoftware auf den beiden
-Plattformen analysiert, wobei die Ausführungsdauer zeitkritischer Funktionen
-sowie Tasks untersucht wird. Der Vergleich soll unter anderem aufzeigen,
-inwiefern FreeRTOS durch die Eliminierung dieser zusätzlichen Abhängigkeit eine
-effizientere und leichtgewichtigere Lösung darstellt. Dabei soll der Einsatz
-einer zyklengenauen Messung des Programmablaufs ermöglicht werden, um fundierte
-Aussagen über das Echtzeitverhalten beider Systeme zu treffen und den
-Leistungsgewinn quantitativ zu belegen.
+Daher wird die Steuerungssoftware erneut auf Basis von FreeRTOS implementiert,
+um die Echtzeitleistung auf beiden Plattformen zu analysieren und zu
+vergleichen. Die Analyse soll unter anderem aufzeigen, inwiefern FreeRTOS durch
+die Eliminierung dieser zusätzlichen Abhängigkeit eine effizientere und
+leichtgewichtigere Lösung darstellt. Dabei soll der Einsatz einer zyklengenauen
+Messung des Programmablaufs ermöglicht werden, um fundierte Aussagen über das
+Echtzeitverhalten beider Systeme zu treffen und den Leistungsgewinn quantitativ
+zu belegen.
 
 \subsection{Vorgehensweise}
 

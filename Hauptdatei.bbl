@@ -13,7 +13,7 @@
 \newblock
   \url{https://community.st.com/t5/stm32-mcus-embedded-software/stm32h7-lwip-cache-bug-fix/m-p/383712}.
   --
-\newblock Zugriff: 21. März 2025
+\newblock Letzter Zugriff: 21. März 2025
 
 \bibitem[{ARM}a]{ARMv7_ref_man_dwt_profiling}
 \textsc{{ARM Limited}}:
@@ -21,7 +21,7 @@
 \newblock
   \url{https://developer.arm.com/documentation/ddi0403/d/Debug-Architecture/ARMv7-M-Debug/The-Data-Watchpoint-and-Trace-unit/Profiling-counter-support?lang=en}.
   --
-\newblock Zugriff: 14. März 2025
+\newblock Letzter Zugriff: 14. März 2025
 
 \bibitem[{ARM}b]{ARMv7_ref_man_dwt_cycle}
 \textsc{{ARM Limited}}:
@@ -29,13 +29,13 @@
 \newblock
   \url{https://developer.arm.com/documentation/ddi0403/d/Debug-Architecture/ARMv7-M-Debug/The-Data-Watchpoint-and-Trace-unit/CYCCNT-cycle-counter-and-related-timers?lang=en}.
   --
-\newblock Zugriff: 14. März 2025
+\newblock Letzter Zugriff: 14. März 2025
 
 \bibitem[{ARM}c]{ka001150}
 \textsc{{ARM Limited}}:
 \newblock \emph{Cortex-M7 Documentation - Arm Developer}.
 \newblock \url{https://developer.arm.com/documentation/ka001150/latest/}. --
-\newblock Zugriff: 19. März 2025
+\newblock Letzter Zugriff: 19. März 2025
 
 \bibitem[{Arm}d]{Arm_DWT_Programmers_Model}
 \textsc{{Arm Limited}}:
@@ -43,7 +43,7 @@
 \newblock
   \url{https://developer.arm.com/documentation/ddi0439/b/Data-Watchpoint-and-Trace-Unit/DWT-Programmers-Model}.
   --
-\newblock Zugriff: 14. März 2025
+\newblock Letzter Zugriff: 14. März 2025
 
 \bibitem[{ARM}e]{arm_den0042}
 \textsc{{ARM Limited}}:
@@ -51,7 +51,7 @@
 \newblock
   \url{https://developer.arm.com/documentation/den0042/a/Tightly-Coupled-Memory}.
   --
-\newblock Zugriff: 20. März 2025
+\newblock Letzter Zugriff: 20. März 2025
 
 \bibitem[{ARM}21]{ARM_DDI0403_EE}
 \textsc{{ARM Limited}}:
@@ -64,14 +64,14 @@
 \newblock
   \url{https://developer.arm.com/documentation/ddi0432/c/programmers-model/instruction-set-summary?lang=en}.
   --
-\newblock Zugriff: 27. März 2025
+\newblock Letzter Zugriff: 27. März 2025
 
 \bibitem[Bah22]{CRCpp}
 \textsc{Bahr}, Daniel:
 \newblock \emph{CRCpp}.
 \newblock \url{https://github.com/d-bahr/CRCpp}.
 \newblock \,Version:\,2022. --
-\newblock Zugriff: 16. März 2025
+\newblock Letzter Zugriff: 16. März 2025
 
 \bibitem[Bar10]{FreertosTickRate2010}
 \textsc{Barry}, Richard:
@@ -79,7 +79,7 @@
 \newblock
   \url{https://www.freertos.org/FreeRTOS_Support_Forum_Archive/April_2010/freertos_Increasing_configTICK_RATE_HZ_beyond_1000_3667628.html}.
 \newblock \,Version:\,2010. --
-\newblock Zugriff: 01. Mai 2025
+\newblock Letzter Zugriff: 01. Mai 2025
 
 \bibitem[Bar16]{freertos_tutorial}
 \textsc{Barry}, Richard:
@@ -88,7 +88,7 @@
 \newblock 2016
   \url{https://github.com/FreeRTOS/FreeRTOS-Kernel-Book/blob/a4c1c83289196317db549f1899330c5b9e7ecb73/ch01.md?plain=1#L35}.
   --
-\newblock Zugriff: 14. März 2025
+\newblock Letzter Zugriff: 14. März 2025
 
 \bibitem[Bar19]{FreeRTOSForumPrintf}
 \textsc{Barry}, Richard:
@@ -96,7 +96,7 @@
 \newblock
   \url{https://forums.freertos.org/t/implementation-of-printf-that-works-in-threads/8117/2}.
 \newblock \,Version:\,2019. --
-\newblock Zugriff: 27. März 2025
+\newblock Letzter Zugriff: 27. März 2025
 
 \bibitem[CMS23]{CMSIS_Core_CacheFunctions}
 \textsc{CMSIS}:
@@ -104,13 +104,13 @@
 \newblock
   \url{https://docs.contiki-ng.org/en/release-v4.5/_api/group__CMSIS__Core__CacheFunctions.html#ga696fadbf7b9cc71dad42fab61873a40d}.
 \newblock \,Version:\,2023. --
-\newblock Zugriff: 21. März 2025
+\newblock Letzter Zugriff: 21. März 2025
 
 \bibitem[cpp]{cppreference_eval_order}
 \textsc{cppreference.com}:
 \newblock \emph{Order of evaluation}.
 \newblock \url{https://en.cppreference.com/w/c/language/eval_order}. --
-\newblock Zugriff: 29. März 2025
+\newblock Letzter Zugriff: 29. März 2025
 
 \bibitem[Dam19]{FreertosForumHF2019}
 \textsc{Damon}, Richard:
@@ -118,21 +118,21 @@
 \newblock
   \url{https://forums.freertos.org/t/rtos-design-for-high-frequency-application/8137/3}.
 \newblock \,Version:\,2019. --
-\newblock Zugriff: 01. Mai 2025
+\newblock Letzter Zugriff: 01. Mai 2025
 
 \bibitem[Emb]{embeddedexpert_cache}
 \textsc{EmbeddedExpert.io}:
 \newblock \emph{Understanding Cache Memory in Embedded Systems}.
 \newblock Blog post.
 \newblock \url{https://blog.embeddedexpert.io/?p=2707}. --
-\newblock Zugriff: 19. März 2025
+\newblock Letzter Zugriff: 19. März 2025
 
 \bibitem[Fou25]{isocpp_dtor_order}
 \textsc{Foundation}, ISO~C.:
 \newblock \emph{FAQ: Destructor Order for Locals}.
 \newblock \url{https://isocpp.org/wiki/faq/dtors#order-dtors-for-locals}.
 \newblock \,Version:\,2025. --
-\newblock Zugriff: 29. März 2025
+\newblock Letzter Zugriff: 29. März 2025
 
 \bibitem[Frea]{freertos_task_c_410}
 \textsc{FreeRTOS}:
@@ -140,7 +140,7 @@
 \newblock
   \url{https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/tasks.c#L410}.
   --
-\newblock Zugriff: 29. März 2025
+\newblock Letzter Zugriff: 29. März 2025
 
 \bibitem[{Fre}b]{freertos_semphr_doc}
 \textsc{{FreeRTOS}}:
@@ -148,7 +148,7 @@
 \newblock
   \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/02-Queues-mutexes-and-semaphores/02-Binary-semaphores#freertos-binary-semaphores}.
   --
-\newblock Zugriff: 15. März 2025
+\newblock Letzter Zugriff: 15. März 2025
 
 \bibitem[{Fre}c]{freertos_queue_mtx}
 \textsc{{FreeRTOS}}:
@@ -156,7 +156,7 @@
 \newblock
   \url{https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/queue.c#L647}.
   --
-\newblock Zugriff: 15. März 2025
+\newblock Letzter Zugriff: 15. März 2025
 
 \bibitem[{Fre}d]{freertos_rtos_tick}
 \textsc{{FreeRTOS}}:
@@ -164,7 +164,7 @@
 \newblock
   \url{https://www.freertos.org/Documentation/02-Kernel/05-RTOS-implementation-tutorial/02-Building-blocks/03-The-RTOS-tick}.
   --
-\newblock Zugriff: 15. März 2025
+\newblock Letzter Zugriff: 15. März 2025
 
 \bibitem[{Fre}e]{freertos_rtos_trace_hooks}
 \textsc{{FreeRTOS}}:
@@ -172,7 +172,7 @@
 \newblock
   \url{https://freertos.org/Documentation/02-Kernel/02-Kernel-features/09-RTOS-trace-feature#defining}.
   --
-\newblock Zugriff: 15. März 2025
+\newblock Letzter Zugriff: 15. März 2025
 
 \bibitem[{Fre}f]{freertos_semphr_incl}
 \textsc{{FreeRTOS}}:
@@ -180,7 +180,7 @@
 \newblock
   \url{https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/include/semphr.h#L99}.
   --
-\newblock Zugriff: 15. März 2025
+\newblock Letzter Zugriff: 15. März 2025
 
 \bibitem[{Fre}g]{freertos_memory_management}
 \textsc{{FreeRTOS}}:
@@ -188,7 +188,7 @@
 \newblock
   \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/09-Memory-management/03-Static-vs-Dynamic-memory-allocation#creating-an-rtos-object-using-statically-allocated-ram}.
   --
-\newblock Zugriff: 19. März 2025
+\newblock Letzter Zugriff: 19. März 2025
 
 \bibitem[{Fre}h]{freertos_task_notifications_usage}
 \textsc{{FreeRTOS}}:
@@ -197,7 +197,7 @@
 \newblock
   \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/03-Direct-to-task-notifications/01-Task-notifications#performance-benefits-and-usage-restrictions}.
   --
-\newblock Zugriff: 15. März 2025
+\newblock Letzter Zugriff: 15. März 2025
 
 \bibitem[{Fre}i]{freertos_tasks_c_308}
 \textsc{{FreeRTOS}}:
@@ -205,7 +205,7 @@
 \newblock
   \url{https://github.com/znxuz/mecarover/blob/5ba898b9051b682c8f6cfce867b99b681a5dda7f/Middlewares/Third_Party/FreeRTOS/Source/tasks.c#L308}.
   --
-\newblock Zugriff: 15. März 2025
+\newblock Letzter Zugriff: 15. März 2025
 
 \bibitem[{Fre}j]{freertos_tasks_c_4990}
 \textsc{{FreeRTOS}}:
@@ -213,7 +213,7 @@
 \newblock
   \url{https://github.com/znxuz/mecarover/blob/5ba898b9051b682c8f6cfce867b99b681a5dda7f/Middlewares/Third_Party/FreeRTOS/Source/tasks.c#L4990}.
   --
-\newblock Zugriff: 15. März 2025
+\newblock Letzter Zugriff: 15. März 2025
 
 \bibitem[{Fre}k]{freertos_tasks_c_4614}
 \textsc{{FreeRTOS}}:
@@ -221,7 +221,7 @@
 \newblock
   \url{https://github.com/znxuz/mecarover/blob/5ba898b9051b682c8f6cfce867b99b681a5dda7f/Middlewares/Third_Party/FreeRTOS/Source/tasks.c#L4614}.
   --
-\newblock Zugriff: 15. März 2025
+\newblock Letzter Zugriff: 15. März 2025
 
 \bibitem[Fre21]{FreeRTOSStreamBuffer}
 \textsc{FreeRTOS}:
@@ -229,7 +229,7 @@
 \newblock
   \url{https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/include/stream_buffer.h#L41}.
 \newblock \,Version:\,2021. --
-\newblock Zugriff: 27. März 2025
+\newblock Letzter Zugriff: 27. März 2025
 
 \bibitem[Fre25]{freertos_runtime_stats}
 \textsc{FreeRTOS}:
@@ -237,7 +237,7 @@
 \newblock
   \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/08-Run-time-statistics#description}.
 \newblock \,Version:\,2025. --
-\newblock Zugriff: 28. März 2025
+\newblock Letzter Zugriff: 28. März 2025
 
 \bibitem[HAL]{HAL_UART_Transmit_DMA}
  ; SourceVu (Veranst.):
@@ -245,7 +245,7 @@
 \newblock
   \url{https://sourcevu.sysprogs.com/stm32/HAL/files/Src/stm32f4xx_hal_uart.c#tok5956}.
   --
-\newblock Zugriff: 28. März 2025
+\newblock Letzter Zugriff: 28. März 2025
 
 \bibitem[hot23]{STM32H7_LwIP_Examples}
 \textsc{hotspot} stm32:
@@ -253,7 +253,7 @@
 \newblock
   \url{https://github.com/stm32-hotspot/STM32H7-LwIP-Examples?tab=readme-ov-file#cortex-m7-configuration}.
 \newblock \,Version:\,2023. --
-\newblock Zugriff: 21. März 2025
+\newblock Letzter Zugriff: 21. März 2025
 
 \bibitem[iso20]{iso_iec_14882_2020}
  ; International Organization for Standardization (Veranst.):
@@ -265,7 +265,7 @@
 \newblock \emph{Synchronization Overview and Case Study on Arm Architecture}.
 \newblock \url{https://developer.arm.com/documentation/107630/1-0/?lang=en}.
 \newblock \,Version:\,2022. --
-\newblock Zugriff: 21. April 2025
+\newblock Letzter Zugriff: 21. April 2025
 
 \bibitem[Kou23]{koubaa2023}
 \textsc{Koubaa}, Anis:
@@ -277,7 +277,7 @@
 \bibitem[lwi]{lwip_pitfalls}
 \emph{lwIP: Common Pitfalls}.
 \newblock \url{https://www.nongnu.org/lwip/2_1_x/pitfalls.html}. --
-\newblock Zugriff: 20. März 2025
+\newblock Letzter Zugriff: 20. März 2025
 
 \bibitem[Mau24]{microROS_STM32CubeMX_Issue139}
 \textsc{Maubeuge}, Nicolas de:
@@ -286,7 +286,7 @@
 \newblock
   \url{https://github.com/micro-ROS/micro_ros_stm32cubemx_utils/issues/139}.
 \newblock \,Version:\,2024. --
-\newblock Zugriff: 21. März 2025
+\newblock Letzter Zugriff: 21. März 2025
 
 \bibitem[Mau25]{microROS_STM32CubeMX_Issue139_code}
 \textsc{Maubeuge}, Nicolas de:
@@ -295,7 +295,7 @@
 \newblock
   \url{https://github.com/micro-ROS/micro_ros_stm32cubemx_utils/issues/139#issuecomment-2710543256}.
 \newblock \,Version:\,2025. --
-\newblock Zugriff: 21. März 2025
+\newblock Letzter Zugriff: 21. März 2025
 
 \bibitem[Pfl11]{stackoverflow_mod}
 \textsc{Pflughoeft}, Danny:
@@ -303,21 +303,21 @@
 \newblock Stack Overflow.
 \newblock \url{https://stackoverflow.com/a/6670853}.
 \newblock \,Version:\,2011. --
-\newblock Zugriff: 27. März 2025
+\newblock Letzter Zugriff: 27. März 2025
 
 \bibitem[Plo16]{StackOverflow_DWT_Activation}
 \textsc{Plouch}, Howard:
 \newblock \emph{Activation of DWT on Cortex-M7}.
 \newblock \url{https://stackoverflow.com/a/37345912}.
 \newblock \,Version:\,2016. --
-\newblock Zugriff: 21. März 2025
+\newblock Letzter Zugriff: 21. März 2025
 
 \bibitem[{ROS}19]{ROS_Performance2019}
 \textsc{{ROS Answers Community}}:
 \newblock \emph{Performance comparison between ros2 and micro ros}.
 \newblock \url{https://answers.ros.org/question/318580/}.
 \newblock \,Version:\,2019. --
-\newblock Zugriff: 01. Mai 2025
+\newblock Letzter Zugriff: 01. Mai 2025
 
 \bibitem[Sch19]{stm32_memory_sections}
 \textsc{Schlaikjer}, Ross:
@@ -325,14 +325,14 @@
 \newblock Blog post.
 \newblock \url{https://rhye.org/post/stm32-with-opencm3-4-memory-sections/}.
 \newblock \,Version:\,2019. --
-\newblock Zugriff: 19. März 2025
+\newblock Letzter Zugriff: 19. März 2025
 
 \bibitem[SEGa]{Segger_SystemView_manual}
 \textsc{SEGGER}:
 \newblock \emph{SEGGER SystemView User Manual}.
 \newblock \url{https://www.segger.com/downloads/jlink/UM08027_SystemView.pdf}.
   --
-\newblock Zugriff: 14. März 2025
+\newblock Letzter Zugriff: 14. März 2025
 
 \bibitem[{SEG}b]{SEGGER_SystemView}
 \textsc{{SEGGER Microcontroller}}:
@@ -340,7 +340,7 @@
 \newblock
   \url{https://www.segger.com/products/development-tools/systemview/technology/what-is-systemview#how-does-it-work}.
   --
-\newblock Zugriff: 14. März 2025
+\newblock Letzter Zugriff: 14. März 2025
 
 \bibitem[{ST }23]{stm32_hal_reentrancy}
 \textsc{{ST Community}}:
@@ -348,7 +348,7 @@
 \newblock
   \url{https://community.st.com/t5/stm32cubeide-mcus/is-the-hal-uart-transmit-it-function-thread-safe/m-p/126830/highlight/true#M4692}.
 \newblock \,Version:\,2023. --
-\newblock Zugriff: 01. Mai 2025
+\newblock Letzter Zugriff: 01. Mai 2025
 
 \bibitem[STMa]{an4839}
 \textsc{STMicroelectronics}:
@@ -357,7 +357,7 @@
 \newblock
   \url{https://www.st.com/resource/en/application_note/an4839-level-1-cache-on-stm32f7-series-and-stm32h7-series-stmicroelectronics.pdf}.
   --
-\newblock Zugriff: 19. März 2025
+\newblock Letzter Zugriff: 19. März 2025
 
 \bibitem[STMb]{an4667}
 \textsc{STMicroelectronics}:
@@ -366,13 +366,13 @@
 \newblock
   \url{https://www.st.com/resource/en/application_note/an4667-stm32f7-series-system-architecture-and-performance-stmicroelectronics.pdf}.
   --
-\newblock Zugriff: 19. März 2025
+\newblock Letzter Zugriff: 19. März 2025
 
 \bibitem[STMc]{stm32_datasheet}
 \textsc{STMicroelectronics}:
 \newblock \emph{STM32F767ZI Datasheet}.
 \newblock \url{https://www.st.com/resource/en/datasheet/stm32f767zi.pdf}. --
-\newblock Zugriff: 20. März 2025
+\newblock Letzter Zugriff: 20. März 2025
 
 \bibitem[STMd]{HAL_UARTEx_ReceiveToIdle_IT}
 \textsc{STMicroelectronics}:
@@ -380,14 +380,14 @@
 \newblock
   \url{https://github.com/STMicroelectronics/stm32f7xx-hal-driver/blob/903af163202d9150c57b89ddacfa818e7722451f/Src/stm32f7xx_hal_uart_ex.c#L606}.
   --
-\newblock Zugriff: 16. März 2025
+\newblock Letzter Zugriff: 16. März 2025
 
 \bibitem[STMe]{AN4187}
 \textsc{STMicroelectronics}:
 \newblock \emph{Using the CRC Peripheral on STM32 Microcontrollers},
   \url{https://www.st.com/resource/en/application_note/an4187-using-the-crc-peripheral-on-stm32-microcontrollers-stmicroelectronics.pdf}.
   --
-\newblock Zugriff: 16. März 2025
+\newblock Letzter Zugriff: 16. März 2025
 
 \bibitem[Str24]{CppCon2024LockFreeQueue}
 \textsc{Strauss}, Erez:
@@ -396,20 +396,20 @@
 \newblock CppCon.
 \newblock \url{https://youtu.be/bjz_bMNNWRk?t=2130}.
 \newblock \,Version:\,2024. --
-\newblock Zugriff: 27. März 2025
+\newblock Letzter Zugriff: 27. März 2025
 
 \bibitem[Wika]{wikipedia_cas}
 \textsc{Wikipedia}:
 \newblock \emph{Compare-and-swap}.
 \newblock
   \url{https://en.wikipedia.org/wiki/Compare-and-swap#Costs_and_benefits}. --
-\newblock Zugriff: 27. März 2025
+\newblock Letzter Zugriff: 27. März 2025
 
 \bibitem[Wikb]{wiedereintrittsfaehigkeit}
 \textsc{Wikipedia}:
 \newblock \emph{Eintrittsinvarianz}.
 \newblock \url{https://de.wikipedia.org/wiki/Eintrittsinvarianz}. --
-\newblock Zugriff: 01. Mai 2025
+\newblock Letzter Zugriff: 01. Mai 2025
 
 \bibitem[Wikc]{wikipedia_membarrier}
 \textsc{Wikipedia}:
@@ -418,13 +418,13 @@
 \newblock
   \url{https://en.wikipedia.org/wiki/Memory_barrier#Out-of-order_execution_versus_compiler_reordering_optimizations}.
   --
-\newblock Zugriff: 21. April 2025
+\newblock Letzter Zugriff: 21. April 2025
 
 \bibitem[Xu25]{mecarover_freertos_profiling}
 \textsc{Xu}, Zijian:
 \newblock \emph{Mecarover - FreeRTOS Profiling Branch}.
 \newblock \url{https://github.com/zijian-x/mecarover/tree/freertos-profiling}.
 \newblock \,Version:\,2025. --
-\newblock Zugriff: 19. März 2025
+\newblock Letzter Zugriff: 19. März 2025
 
 \end{thebibliography}

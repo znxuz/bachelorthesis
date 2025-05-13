@@ -10,7 +10,7 @@ Maßnahmen folgen in den nächsten Abschnitten.
 
 \subsection{Umstellung auf FreeRTOS}
 
-\subsubsection{Empfang von Sollgeschwindigkeiten}
+\subsubsection{Übertragung von Sollgeschwindigkeiten}
 
 In der bisherigen Implementierung erhielt der Mikrocontroller als Client
 Geschwindigkeitssollwerte über das ROS2-Framework vom Micro-ROS-Agent auf einem
@@ -140,8 +140,6 @@ $\textbf{1,6\,\%}$ der Taktzyklen im Vergleich zur Softwarelösung benötigt
 \end{minted}
     \captionof{listing}{FreeRTOS-Task Dauerschleife}
 \end{code}
-
-\subsubsection{Übertragung von Sollgeschwindigkeiten}
 
 Auf dem Host wird das ROS2-Paket \mintinline{text}|teleop_twist_keyboard|
 verwendet, um weiterhin Tastatureingaben als Geschwindigkeitswerte zu
@@ -351,9 +349,9 @@ ein Speicherpuffer sowie eine Queue-Struktur definiert werden:
 Damit schließt der Abschnitt zur FreeRTOS-Umstellung ab. Der Code für die
 Steuerungssoftware sowie für den ROS2-Node ist im
 Repository~\cite{mecarover_freertos_profiling} im Branch
-\mintinline{text}|freertos-profiling| einsehbar.
+\linebreak\mintinline{text}|freertos-profiling| einsehbar.
 
-\subsection{Aktivierung von Instruktionscache}
+\subsection{Aktivierung von Instruktions- und Datencache}
 
 Zur Nutzung von Instruktionscache muss lediglich die Funktion
 \mintinline{cpp}|SCB_EnableICache()| aus der STM32-HAL aufgerufen werden.
@@ -362,16 +360,14 @@ Da der Instruktionscache ausschließlich schreibgeschützte Befehle
 zwischenspeichert, entfällt in diesem Fall die Notwendigkeit der
 Cache-Synchronisation für modifizierbaren Daten.
 
-\subsection{Aktivierung von Datencache}
-
 Obwohl der Datencache ebenfalls durch den einfachen Funktionsaufruf
 \mintinline{cpp}|SCB_EnableDCache()| aktiviert werden kann, stellt dies jedoch
 noch nicht den abschließenden Schritt dar.
 
 Die Transportfunktionen von Micro-ROS nutzen die Ethernet-Schnittstelle, die
-intern DMA einsetzt und durch die Integration des LwIP-Stacks erweitert wird. Um
-sicherzustellen, dass die Daten korrekt verarbeitet werden, müssen sowohl der
-Heap für LwIP als auch die Speicherbereiche für die Ethernet-RX- und
+intern DMA einsetzt und durch die Integration des \ac{LwIP}-Stacks erweitert
+wird. Um sicherzustellen, dass die Daten korrekt verarbeitet werden, müssen
+sowohl der Heap für LwIP als auch die Speicherbereiche für die Ethernet-RX- und
 TX-Deskriptoren mittels \ac{MPU} so konfiguriert werden, dass sie nicht gecacht
 werden \cite{STM32H7_LwIP_Examples}.
 
@@ -399,7 +395,7 @@ ordentlich gecacht zu sein.
 \end{figure}
 
 Bei der Recherche zu diesem Problem wurde ein Issue auf GitHub identifiziert
-\cite{microROS_STM32CubeMX_Issue139}, welches genau das selbe Verhalten
+\cite{microROS_STM32CubeMX_Issue139}, welches genau dasselbe Verhalten
 beschrieb. In diesem Kontext wurde dann der Autor um eine Lösung gebeten, die
 daraufhin bereitgestellt wurde und sich als effektiv erwies, um das Problem zu
 beheben.
@@ -436,7 +432,7 @@ Die Lösung funktioniert folgendermaßen: Bei jeder Übertragung im Treibercode 
 den Funktionsaufruf \mintinline{cpp}|SCB_CleanDCache_by_Addr()| geleert werden,
 so dass Daten-Modifizierungen tatsächlich in den Speicher geschrieben und
 folglich auch beim DMA-Controller korrekt widergespiegelt werden
-(\ref{sec:cache_clean_dma}). Dieser Ansatz ist ebenfalls sowohl in einem Beitrag
+(\ref{sec:cache_coherency}). Dieser Ansatz ist ebenfalls sowohl in einem Beitrag
 aus dem Jahr 2018 im ST-Forum~\cite{ST_Forum_Post_2018}, als auch auf der
 offiziellen LwIP-Webseite~\cite{lwip_pitfalls} dokumentiert.
 

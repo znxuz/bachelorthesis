@@ -11,8 +11,6 @@ einer geeigneten Wahl für mehrfädige Software, insbesondere wenn harte
 Echtzeitanforderungen \cite{freertos_tutorial} oder fein abgestimmte Kontrolle
 über Ressourcennutzung im Vordergrund stehen.
 
-\subsubsection{Features}
-
 FreeRTOS unterscheidet sich von der Bare-Metal-Programmierung dadurch, dass es
 einen umfangreichen Abstraktionslayer für den Nutzer bereitstellt. Diese
 Abstraktionen ermöglichen es, komplexe (Echtzeit-)Operationen zu bewältigen,
@@ -40,8 +38,8 @@ Semaphore und Mutexe dienen zur Koordinierung auf gemeinsame Ressourcen.
 Semaphore sind aber im Vergleich zu Mutexen besonders geeignet für
 Inter-Task-Synchronisation aufgrund ihrer Einfachheit
 \cite{freertos_semphr_doc}: Sie sind Synchronisationsmechanismen \textbf{ohne}
-Prioritätsvererbung -- ein Konzept, bei dem eine niedriger priorisierte Task,
-die einen \textit{Mutex} hält, temporär auf die Priorität der auf den Mutex
+Prioritätsvererbung -- ein Konzept, bei dem eine niedrig priorisierte Task, die
+einen \textit{Mutex} hält, temporär auf die höhere Priorität der auf den Mutex
 wartenden Task angehoben wird. Dieses Konzept ist kritisch für eine effiziente
 Zugriffskoordinierung auf gemeinsame Ressourcen -- was mit Semaphoren nicht
 gewährleistet werden kann und folglich zu Prioritätsinversion führen kann: Eine
@@ -70,11 +68,11 @@ dargestellt an drei Tasks mit unterschiedlichen Prioritätsstufen:
 
 Direct-Task-Notifications sind ein effizienterer und ressourcenschonenderer
 Mechanismus zur Inter-Task-Synchronisation: Insbesondere soll das Entblocken
-einer Task mittels Direct-Task-Notifications bis zu 45\% schneller sein und
-weniger RAM benötigen \cite{freertos_task_notifications_usage}. Im Gegensatz zu
-Semaphoren, die als zusätzliche separate Objekte fungieren, koordinieren die
-Tasks direkt miteinander über einen internen Zähler \cite{freertos_tasks_c_308}.
-Analog zur Verwendung von Semaphoren wird mittels Funktionen wie
+mittels Direct-Task-Notifications bis zu $45\,\%$ schneller sein und weniger RAM
+benötigen \cite{freertos_task_notifications_usage}. Im Gegensatz zu Semaphoren,
+die als zusätzliche separate Objekte fungieren, koordinieren die Tasks direkt
+miteinander über einen internen Zähler \cite{freertos_tasks_c_308}. Analog zur
+Verwendung von Semaphoren wird mittels Funktionen wie
 \mintinline{c}|xTaskNotifyGive()| dieser Zähler
 inkrementiert~\cite{freertos_tasks_c_4990}, während
 \mintinline{c}|ulTaskNotifyTake()| ihn wieder
@@ -88,7 +86,7 @@ Systemereignissen. Diese Makros werden direkt innerhalb von Interrupts beim
 Scheduling aufgerufen und sollten stets vor der Einbindung von
 \mintinline{text}|FreeRTOS.h| definiert werden \cite{freertos_rtos_trace_hooks}.
 
-\subsection{Nutzung von Caches}
+\subsection{Caches}
 
 Caches sind schnelle Speicherkomponenten, die häufige Daten- und Befehlzugriffe
 beschleunigen und den Energieverbrauch senken, wodurch jedoch die
@@ -114,7 +112,7 @@ Peripheriebusse, die alle über den \ac{AHB}-Bus an die AXI angebunden sind
 \end{figure}
 
 Aus der Matrix wird außerdem deutlich, dass für den Speicher zwischen SRAM und
-TCM-RAM unterschieden wird. Der \ac{TCM} verfügt jeweils für Instruktionen und
+\ac{TCM}-RAM unterschieden wird. Der TCM verfügt jeweils für Instruktionen und
 Daten über einen dedizierten Kanal direkt zum Prozessor und ist \textit{nicht}
 cachefähig, bietet aber als Besonderheit niedrigere und konsistente
 Zugriffszeiten als SRAM. Dies macht sie besonders geeignet für zeitkritische
@@ -171,20 +169,20 @@ void SCB_CleanInvalidateDCache(void)
     \captionof{listing}{Cache-Funktionen}
 \end{code}
 
-\subsubsection{Cache-Leerung} \label{sec:cache_clean}
+\paragraph{Cache-Leerung} \label{sec:cache_clean}
 
 Bei einer Cache-Leerung (cache clean) werden die modifizierten Cache-Zeilen, die
 vom Prozessor während der Programmausführung aktualisiert wurden, zurück in den
 Hauptspeicher geschrieben. Dieser Vorgang wird gelegentlich auch als „flush”
 bezeichnet.
 
-\subsubsection{Cache-Invalidierung} \label{sec:cache_invalidate}
+\paragraph{Cache-Invalidierung} \label{sec:cache_invalidate}
 
 Eine Cache-Invalidierung markiert hingegen den Cache als ungültig, so dass bei
 dem nachfolgenden Zugriff auf die assoziierten Daten diese zwingend erneut aus
 dem Hauptspeicher geladen und der Cache entsprechend aktualisiert werden.
 
-\subsubsection{Cache-Leerung bei DMA} \label{sec:cache_clean_dma}
+\subsubsection{Cache-Kohärenz} \label{sec:cache_coherency}
 
 Bei der Nutzung von Caches kann für Speicherbereiche, die mit dem DMA-Controller
 geteilt werden, ein Cache-Kohärenzproblem (cache coherency) auftreten, da der
@@ -198,8 +196,6 @@ Schritt würden die Änderungen nicht umgehend im Speicher widergespiegelt, und
 der DMA-Controller würde in der Zwischenzeit auf die veralteten und somit
 ungültigen Daten zugreifen.
 
-\subsubsection{Cache-Invalidierung bei DMA}
-
 Bei Daten, die aus einem Speicherbereich gelesen werden, der auch vom
 DMA-Controller modifiziert werden kann, ist \textit{vor} jedem Lesevorgang eine
 Cache-Invalidierung (\ref{sec:cache_invalidate}) notwendig
@@ -207,7 +203,7 @@ Cache-Invalidierung (\ref{sec:cache_invalidate}) notwendig
 der CPU schreiben kann, sind gecachten Daten immer potenziell veraltet, und
 müssen stets manuell aktualisiert werden.
 
-\subsection{Methode zur Erfassung von Laufzeitdaten} \label{sec:dwt}
+\subsection{Data Watchpoint and Trace Unit} \label{sec:dwt}
 
 Für die Echtzeitfähigkeitsanalyse der Steuerungssoftware wird eine Methode
 benötigt, die Code- bzw. Ausführungsabschnitte flexibel messen kann. Da es sich
@@ -228,7 +224,7 @@ ermöglicht die DWT eine Laufzeit-Protokollierung mit \textit{zyklengenauer}
 Präzision „unter normalen Betriebsbedingungen”
 \cite{ARMv7_ref_man_dwt_profiling}.
 
-\subsubsection{Beispiel: Segger SystemView}
+\subsubsection*{Beispiel: Segger SystemView}
 
 Ein Beispiel hierfür ist Segger SystemView, ein Echtzeitanalyse-Tool, das die
 DWT nutzt, um Live-Code-Profiling auf eingebetteten Systemen durchzuführen

@@ -5,7 +5,7 @@
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth]{assets/micro_ros_profiling}
-    \caption{Visualisierung der Laufzeit-Statistik unter Micro-ROS -- Überblick}
+    \caption{Laufzeit-Statistik unter Micro-ROS -- Überblick}
     \label{fig:micro_ros_profiling}
 \end{figure}
 
@@ -43,7 +43,7 @@ profiled for 18881864 us
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth]{assets/freertos_profiling}
-    \caption{Visualisierung der Laufzeit-Statistik unter FreeRTOS -- Überblick}
+    \caption{Laufzeit-Statistik unter FreeRTOS -- Überblick}
     \label{fig:freertos_profiling}
 \end{figure}
 
@@ -94,7 +94,7 @@ Systemstart bis zum Funktionsaufruf \cite{freertos_runtime_stats}.
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\textwidth]{assets/micro_ros_profiling_ausschnitt_cache_enabled}
-    \caption{Visualisierung der Laufzeit-Statistik unter Micro-ROS -- Ausschnitt}
+    \caption{Laufzeit-Statistik unter Micro-ROS -- Ausschnitt}
     \label{fig:profiling_ausschnitt}
 \end{figure}
 
@@ -110,8 +110,6 @@ Micro-ROS-Middleware ohne Überschneidung.
 
 Die Profiling-Daten werden nun pro Task/Funktion separat aufsummiert und der
 jeweilige Durchschnittswert berechnet.
-
-\subsubsection{Regler mit 50 Hz und 30 Hz}
 
 Bei einer Sollfrequenz von $50\,\text{Hz}$ für die Drehzahlregelung und
 $30\,\text{Hz}$ für die Posenregelung sowie Odometrie zeigen die Messergebnisse
@@ -165,9 +163,7 @@ von Caches:
 }}
 \end{table}
 
-\subsubsection{Regler mit 100 Hz und 50 Hz}
-
-Bei einer $100\,\text{Hz}|50\,\text{Hz}$-Reglerkonfiguration zeigen die
+Bei einer $100\,\text{Hz}\text{|}50\,\text{Hz}$-Reglerkonfiguration zeigen die
 Messergebnisse nach etwa $18$ Sekunden Sampling folgende Werte -- jeweils ohne
 und mit Nutzung von Caches:
 
@@ -240,7 +236,9 @@ $349,\!045\,\text{ms}$ aufwies.
 
 \subsection{Laufzeit-Statistik -- FreeRTOS}
 
-\subsubsection{Regler mit 50 Hz und 30 Hz}
+Bei einer $50\,\text{Hz}\text{|}30\,\text{Hz}$-Reglerkonfiguration zeigen die
+Messergebnisse nach etwa $18$ Sekunden Sampling folgende Werte -- jeweils ohne
+und mit Nutzung von Caches:
 
 \begin{table}[H]
 \centering
@@ -283,7 +281,9 @@ $349,\!045\,\text{ms}$ aufwies.
 }}
 \end{table}
 
-\subsubsection{Regler mit 100 Hz und 50 Hz}
+Bei einer $100\,\text{Hz}\text{|}50\,\text{Hz}$-Reglerkonfiguration zeigen die
+Messergebnisse nach etwa $18$ Sekunden Sampling folgende Werte -- jeweils ohne
+und mit Nutzung von Caches:
 
 \begin{table}[H]
 \centering
@@ -359,35 +359,33 @@ auf ein RTOS zugunsten eines minimalen Schedulers \cite{FreertosForumHF2019}.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/freertos_profiling_1000hz}
-    \caption{Visualisierung der Laufzeit-Statistik mit 1000 Hz unter FreeRTOS}
+    \caption{Laufzeit-Statistik mit 1000 Hz unter FreeRTOS}
 \end{figure}
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/freertos_profiling_1000hz_ausschnitt}
-    \caption{Visualisierung der Laufzeit-Statistik mit 1000 Hz unter FreeRTOS --
-    Ausschnitt}
+    \caption{Laufzeit-Statistik mit 1000 Hz unter FreeRTOS -- Ausschnitt}
 \end{figure}
 
-Wie in den Grafiken veranschaulicht, kann das Regelungssystem, dessen Threads
-und zugrundeliegende Datenaustausch mittels FreeRTOS-APIs auf minimalen Overhead
-optimiert wurden, problemlos mit $1000\,\text{Hz}$ betrieben werden. Die Tasks
+Wie in den Grafiken veranschaulicht, kann das Regelungssystem, dessen
+zugrundeliegende Datenaustausch mittels FreeRTOS-APIs auf minimalen Overhead
+optimiert wurde, problemlos mit $1000\,\text{Hz}$ betrieben werden. Die Tasks
 werden rhythmisch und auch deterministisch jeweils mit den vorgegebenen
 Frequenzen ausgeführt -- stets zum gleichen relativen Zeitpunkt zueinander.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/freertos_profiling_5000hz}
-    \caption{Visualisierung der Laufzeit-Statistik mit 5000 Hz unter FreeRTOS}
+    \caption{Laufzeit-Statistik mit 5000 Hz unter FreeRTOS}
 \end{figure}
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/freertos_profiling_5000hz_ausschnitt}
-    \caption{Visualisierung der Laufzeit-Statistik mit 5000 Hz unter FreeRTOS --
-    Ausschnitt}
+    \caption{Laufzeit-Statistik mit 5000 Hz unter FreeRTOS -- Ausschnitt}
 \end{figure}
 
-Bei einer $\textbf{5000\,\text{Hz}|2000\,\text{Hz}}$-Reglerkonfiguration führt
-der Scheduler die Kontextwechsel weiterhin zuverlässig aus. Die Funktionen
+Bei einer $\textbf{5000\,\text{Hz}\text{|}2000\,\text{Hz}}$-Reglerkonfiguration
+führt der Scheduler die Kontextwechsel weiterhin zuverlässig aus. Die Funktionen
 werden in regelmäßigen Abständen von $200\,\mu\text{s}$ bzw. $500\,\mu\text{s}$
 aufgerufen. Das System verbleibt bei diesen Frequenzen größtenteils ebenfalls im
 Leerlauf.
@@ -421,13 +419,12 @@ odometry 788 1      << nach etwa 500 us zur vorherigen Iteration (Odom)
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/freertos_profiling_10000hz}
-    \caption{Visualisierung der Laufzeit-Statistik mit 10000 Hz unter FreeRTOS}
+    \caption{Laufzeit-Statistik mit 10000 Hz unter FreeRTOS}
 \end{figure}
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/freertos_profiling_10000hz_ausschnitt}
-    \caption{Visualisierung der Laufzeit-Statistik mit 10000 Hz unter FreeRTOS --
-    Ausschnitt}
+    \caption{Laufzeit-Statistik mit 10000 Hz unter FreeRTOS -- Ausschnitt}
 \end{figure}
 
 Selbst bei einer $\textbf{10000\,\text{Hz}|5000\,\text{Hz}}$-Konfiguration zeigt
@@ -474,21 +471,20 @@ pose_control 246 0
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/micro_ros_profiling_1000hz}
-    \caption{Visualisierung der Laufzeit-Statistik mit 1000 Hz unter Micro-ROS}
+    \caption{Laufzeit-Statistik mit 1000 Hz unter Micro-ROS}
 \end{figure}
 \begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{assets/micro_ros_profiling_1000hz_ausschnitt}
-    \caption{Visualisierung der Laufzeit-Statistik mit 1000 Hz unter Micro-ROS
-    -- Ausschnitt}
+    \caption{Laufzeit-Statistik mit 1000 Hz unter Micro-ROS -- Ausschnitt}
 \end{figure}
 
 Micro-ROS erreichte eine Sollfrequenz von $1000\,\text{Hz}$ nicht und wies
 stattdessen Schwankungen zwischen $910\,\text{Hz}$ und $980\,\text{Hz}$ auf.
 Dies lässt sich vermutlich auf zwei Hauptfaktoren zurückführen: Erstens wird die
 maximal erreichbare Frequenz durch die Integration der zusätzlichen Middleware
-beeinflusst -- konkret XRCE-DDS seitens Micro-ROS und standardmäßig Fast DDS bei
-ROS2, deren Leistung und Konfiguration eine entscheidende Rolle spielen
+beeinflusst -- konkret \ac{XRCE}-DDS seitens Micro-ROS und standardmäßig Fast
+DDS bei ROS2, deren Leistung und Konfiguration eine entscheidende Rolle spielen
 \cite{ROS_Performance2019}.
 
 Zweitens könnte der inhärente Overhead des ROS/Micro-ROS-Stacks ebenfalls
