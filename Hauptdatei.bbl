@@ -45,7 +45,14 @@
   --
 \newblock Letzter Zugriff: 14. März 2025
 
-\bibitem[{ARM}e]{arm_den0042}
+\bibitem[{ARM}e]{arm_mem_barrier}
+\textsc{{ARM Limited}}:
+\newblock \emph{Memory barriers},
+  \url{https://developer.arm.com/documentation/den0042/a/Memory-Ordering/Memory-barriers}.
+  --
+\newblock Letzter Zugriff: 27. März 2025
+
+\bibitem[{ARM}f]{arm_den0042}
 \textsc{{ARM Limited}}:
 \newblock \emph{Tightly Coupled Memory}.
 \newblock
@@ -134,23 +141,15 @@
 \newblock \,Version:\,2025. --
 \newblock Letzter Zugriff: 29. März 2025
 
-\bibitem[Frea]{freertos_task_c_410}
-\textsc{FreeRTOS}:
-\newblock \emph{FreeRTOS Source Code}.
-\newblock
-  \url{https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/tasks.c#L410}.
-  --
-\newblock Letzter Zugriff: 29. März 2025
-
-\bibitem[{Fre}b]{freertos_semphr_doc}
+\bibitem[{Fre}a]{freertos_semphr_doc}
 \textsc{{FreeRTOS}}:
-\newblock \emph{Mutexes}.
+\newblock \emph{Mutexe}.
 \newblock
   \url{https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/02-Queues-mutexes-and-semaphores/02-Binary-semaphores#freertos-binary-semaphores}.
   --
 \newblock Letzter Zugriff: 15. März 2025
 
-\bibitem[{Fre}c]{freertos_queue_mtx}
+\bibitem[{Fre}b]{freertos_queue_mtx}
 \textsc{{FreeRTOS}}:
 \newblock \emph{queue.h}.
 \newblock
@@ -158,7 +157,7 @@
   --
 \newblock Letzter Zugriff: 15. März 2025
 
-\bibitem[{Fre}d]{freertos_rtos_tick}
+\bibitem[{Fre}c]{freertos_rtos_tick}
 \textsc{{FreeRTOS}}:
 \newblock \emph{The RTOS Tick}.
 \newblock
@@ -166,7 +165,7 @@
   --
 \newblock Letzter Zugriff: 15. März 2025
 
-\bibitem[{Fre}e]{freertos_rtos_trace_hooks}
+\bibitem[{Fre}d]{freertos_rtos_trace_hooks}
 \textsc{{FreeRTOS}}:
 \newblock \emph{RTOS Trace Feature}.
 \newblock
@@ -174,7 +173,7 @@
   --
 \newblock Letzter Zugriff: 15. März 2025
 
-\bibitem[{Fre}f]{freertos_semphr_incl}
+\bibitem[{Fre}e]{freertos_semphr_incl}
 \textsc{{FreeRTOS}}:
 \newblock \emph{semphr.h}.
 \newblock
@@ -182,7 +181,7 @@
   --
 \newblock Letzter Zugriff: 15. März 2025
 
-\bibitem[{Fre}g]{freertos_memory_management}
+\bibitem[{Fre}f]{freertos_memory_management}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Static vs Dynamic Memory Allocation}.
 \newblock
@@ -190,7 +189,7 @@
   --
 \newblock Letzter Zugriff: 19. März 2025
 
-\bibitem[{Fre}h]{freertos_task_notifications_usage}
+\bibitem[{Fre}g]{freertos_task_notifications_usage}
 \textsc{{FreeRTOS}}:
 \newblock \emph{Task Notifications - Performance Benefits and Usage
   Restrictions}.
@@ -199,7 +198,7 @@
   --
 \newblock Letzter Zugriff: 15. März 2025
 
-\bibitem[{Fre}i]{freertos_tasks_c_308}
+\bibitem[{Fre}h]{freertos_tasks_c_308}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
@@ -207,7 +206,7 @@
   --
 \newblock Letzter Zugriff: 15. März 2025
 
-\bibitem[{Fre}j]{freertos_tasks_c_4990}
+\bibitem[{Fre}i]{freertos_tasks_c_4990}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
@@ -215,7 +214,7 @@
   --
 \newblock Letzter Zugriff: 15. März 2025
 
-\bibitem[{Fre}k]{freertos_tasks_c_4614}
+\bibitem[{Fre}j]{freertos_tasks_c_4614}
 \textsc{{FreeRTOS}}:
 \newblock \emph{tasks.c}.
 \newblock
@@ -410,15 +409,6 @@
 \newblock \emph{Eintrittsinvarianz}.
 \newblock \url{https://de.wikipedia.org/wiki/Eintrittsinvarianz}. --
 \newblock Letzter Zugriff: 01. Mai 2025
-
-\bibitem[Wikc]{wikipedia_membarrier}
-\textsc{Wikipedia}:
-\newblock \emph{Memory barrier - Out-of-order execution versus compiler
-  reordering optimizations}.
-\newblock
-  \url{https://en.wikipedia.org/wiki/Memory_barrier#Out-of-order_execution_versus_compiler_reordering_optimizations}.
-  --
-\newblock Letzter Zugriff: 21. April 2025
 
 \bibitem[Xu25]{mecarover_freertos_profiling}
 \textsc{Xu}, Zijian:

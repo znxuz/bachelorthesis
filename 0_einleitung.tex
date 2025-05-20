@@ -1,24 +1,23 @@
 \section{Einleitung}
 
-\subsection{Zielsetzung und Motivation}
-
 Die vorliegende Bachelorarbeit hat zunächst als Ziel, die bestehende
 Robotersteuerungssoftware von Micro-ROS auf FreeRTOS zu portieren, um die
 Echtzeitleistung beider Plattformen miteinander zu vergleichen.
 
 Beide Systeme sind für die Steuerung eines mobilen Roboters auf einem Cortex-M7
 Mikrocontroller ausgelegt, unterscheiden sich aber in ihrer zugrundeliegenden
-Softwarearchitektur: Während Micro-ROS auf dem \ac{ROS 2} Framework aufbaut und
-somit eine höhere Abstraktionsebene durch eine standardisierte
-Kommunikationsschnittstelle in Form einer integrierten \ac{DDS}-Middleware
-bietet, basiert dies selbst auf einem \ac{RTOS} wie FreeRTOS. Die Portierung auf
-FreeRTOS kann daher als eine Reduzierung von Abhängigkeiten betrachtet werden.
-Dies ermöglicht eine direktere und damit effizientere Nutzung der
-zugrundeliegenden Echtzeit-, sowie Speicherressourcen.
+Softwarearchitektur (\ref{fig:micro_ros_arch}): Während Micro-ROS auf dem
+\ac{ROS 2} Framework aufbaut und somit eine höhere Abstraktionsebene durch eine
+standardisierte Kommunikationsschnittstelle in Form einer integrierten
+\ac{DDS}-Middleware bietet, basiert dies selbst auf einem \ac{RTOS} wie
+FreeRTOS. Die Portierung auf FreeRTOS kann daher als eine Reduzierung von
+Abhängigkeiten betrachtet werden. Dies ermöglicht eine direktere und damit
+effizientere Nutzung der zugrundeliegenden Echtzeit- sowie Speicherressourcen.
 
 \begin{figure}[htb] \centering
     \includegraphics[width=0.8\textwidth]{assets/Micro-ROS_architecture}
     \caption{Micro-ROS Architektur\cite[S. 6]{koubaa2023}}
+    \label{fig:micro_ros_arch}
 \end{figure}
 
 Daher wird die Steuerungssoftware erneut auf Basis von FreeRTOS implementiert,
@@ -30,10 +29,8 @@ Messung des Programmablaufs ermöglicht werden, um fundierte Aussagen über das
 Echtzeitverhalten beider Systeme zu treffen und den Leistungsgewinn quantitativ
 zu belegen.
 
-\subsection{Vorgehensweise}
-
-Die Arbeit gliedert sich in vier Hauptteile: Nach der Einführung in die
-grundlegenden Konzepte wird zunächst die Implementierung der Steuerungssoftware
-auf FreeRTOS beschrieben. Anschließend wird Implementierung zur Erfassung von
+Die Arbeit gliedert sich in vier Teile: Nach der Einführung in die grundlegenden
+Konzepte wird zunächst die Implementierung der Steuerungssoftware auf FreeRTOS
+beschrieben. Anschließend wird die Implementierung zur Erfassung von
 Laufzeitdaten detailliert gezeigt. Den Abschluss bildet die quantitative
 Präsentation der Ergebnisse, deren Bewertung sowie mögliche Optimierungsansätze.
