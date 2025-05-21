@@ -3,15 +3,16 @@
 Diese Arbeit analysiert die Echtzeitfähigkeit von Micro-ROS und FreeRTOS anhand
 einer Robotersteuerungssoftware. Ziel ist der Vergleich beider Systeme
 hinsichtlich ihres Echtzeitverhaltens mit Schwerpunkt auf den Ausführungszeiten.
-Dazu wird zunächst die bestehende Micro-ROS-Steuerungssoftware auf FreeRTOS
-portiert. Anschließend wird eine zyklengenaue Messmethode für den Programmlauf
-basierend auf der Data Watchpoint and Trace Unit (DWT) der ARM-Architektur
-entwickelt. Zum Abschluss werden die Laufzeitdaten visualisiert und ausgewertet.
-Die Ergebnisse verdeutlichen die unterschiedlichen Schwerpunkte beider
-Plattformen: Micro-ROS punktet durch die Kompatibilität mit dem ROS-Ökosystem,
-während FreeRTOS mit minimalen Latenzen und deterministischem Scheduling
-deutlich besseres Echtzeitverhalten bietet. Die Analyse bestätigt zudem den
-maßgeblichen Einfluss der Cache-Nutzung auf die Rechenleistung.
+Dazu wird zunächst die bestehende Steuerungssoftware von Micro-ROS auf FreeRTOS
+portiert. Anschließend wird eine zyklengenaue Messmethode mittels Data
+Watchpoint and Trace Unit (DWT) für den Programmlauf entwickelt. Dadurch lassen
+sich Laufzeitdaten aufzeichnen, die das Echtzeitverhalten des Systems abbilden,
+um abschließend visuell dargestellt und ausgewertet zu werden. Die Ergebnisse
+verdeutlichen die unterschiedlichen Schwerpunkte beider Plattformen: Micro-ROS
+punktet durch die Kompatibilität mit dem ROS-Ökosystem, während FreeRTOS mit
+minimalen Latenzen und deterministischem Scheduling deutlich besseres
+Echtzeitverhalten bietet. Die Analyse bestätigt zudem den maßgeblichen Einfluss
+der Cache-Nutzung auf die Rechenleistung.
 
 \section*{Abstract}
 
