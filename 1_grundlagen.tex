@@ -8,19 +8,17 @@ Erläuterung der \ac{DWT}.
 
 FreeRTOS ist ein leichtgewichtiges, quelloffenes RTOS, das speziell für
 Mikrocontroller und eingebettete Systeme entwickelt wurde. Es zeichnet sich
-unter anderem durch ein deterministisches Thread-Ausführungsverhalten und eine
-Konfigurierbarkeit von Heap-Allokationen aus. Diese Eigenschaften machen es zu
-einer geeigneten Wahl für Multithreaded-Software, insbesondere wenn harte
-Echtzeitanforderungen \cite{freertos_tutorial} oder fein abgestimmte Kontrolle
-über Ressourcennutzung im Vordergrund stehen.
+unter anderem durch ein echtzeitfähiges \cite{freertos_tutorial} und
+deterministisches Ausführungsverhalten sowie eine Konfigurierbarkeit von
+Heap-Allokationen aus.
 
 FreeRTOS unterscheidet sich von der Bare-Metal-Programmierung dadurch, dass es
-einen umfangreichen Abstraktionslayer für den Nutzer bereitstellt. Diese
-Abstraktionen ermöglichen es, komplexe (Echtzeit-)Operationen zu bewältigen,
-ohne dass der Nutzer die benötigten Funktionalitäten selbst implementieren muss.
-Beispiele hierfür sind unter anderem Timer mit konfigurierbarer Genauigkeit
-(basierend auf dem sogenannten Tick \cite{freertos_rtos_tick}), Queues,
-Semaphore sowie Mutexe.
+dem Nutzer einen umfangreichen Abstraktionslayer in Kombination mit einem
+prioritätsbasierten Scheduling-Verfahren bereitstellt. Diese Abstraktionen
+ermöglichen es, komplexe (Echtzeit-)Operationen zu bewältigen, ohne dass der
+Nutzer die benötigten Funktionalitäten selbst implementieren muss. Beispiele
+hierfür sind unter anderem Timer mit konfigurierbarer Genauigkeit (basierend auf
+dem sogenannten Tick \cite{freertos_rtos_tick}), Queues, Semaphore sowie Mutexe.
 
 Im Fokus dieser Arbeit stehen Queues für den Datenaustausch der
 Steuerungssoftware sowie sogenannte „Direct Task Notifications“ zur
@@ -122,9 +120,8 @@ Aus der Matrix wird außerdem deutlich, dass für den Speicher zwischen SRAM und
 \ac{TCM}-RAM unterschieden wird. Der TCM verfügt jeweils für Instruktionen und
 Daten über einen dedizierten Kanal direkt zum Prozessor und ist \textit{nicht}
 cachefähig, bietet aber als Besonderheit niedrigere und konsistentere
-Zugriffszeiten als SRAM. Dies macht sie besonders geeignet für zeitkritische
-Routinen wie Interrupt-Handler oder kritische Echtzeitaufgaben.
-(\cite{arm_den0042})
+Zugriffszeiten als SRAM. Dies macht es besonders geeignet für zeitkritische
+Routinen, wie beispielsweise Interrupt-Handler. (\cite{arm_den0042})
 
 Im Rahmen dieser Bachelorarbeit wird der TCM nicht genutzt und daher nicht
 weiter betrachtet.
@@ -214,13 +211,12 @@ immer potenziell veraltet und müssen stets manuell aktualisiert werden.
 \subsection{Data Watchpoint and Trace Unit} \label{sec:dwt}
 
 Für die Echtzeitfähigkeitsanalyse der Steuerungssoftware wird eine Methode
-benötigt, die Code- beziehungsweise Ausführungsabschnitte flexibel messen kann.
-Da es sich dabei um eine Multithreaded-Anwendung handelt, muss gewährleistet sein,
-dass die Messungen trotz präemptives Scheduling, auftretender Interrupts sowie
-Software- und Hardwareoptimierungen threadsicher und präzise durchgeführt
-werden. Die endgültige Lösung muss garantieren, dass dabei keine Race Conditions
-entstehen und auch die Zeiterfassung selbst keinen nennenswerten Overhead
-verursacht.
+benötigt, die Code- bzw. Ausführungsabschnitte flexibel messen kann. Da es sich
+dabei um eine Multithreaded-Anwendung handelt, muss gewährleistet sein, dass die
+Messungen trotz präemptives Scheduling, auftretender Interrupts sowie Software-
+und Hardwareoptimierungen threadsicher und präzise durchgeführt werden. Die
+endgültige Lösung muss garantieren, dass dabei keine Race Conditions entstehen
+und auch die Zeiterfassung selbst keinen nennenswerten Overhead verursacht.
 
 Daher bietet sich die DWT als geeigneter Ansatz zur Protokollierung von
 Laufzeiten an. Die DWT ist eine in ARM-Prozessoren eingebaute Debugging-Einheit,
@@ -229,16 +225,14 @@ unterstützt \cite{ARMv7_ref_man_dwt_profiling}. Ein für diese Arbeit zentraler
 Baustein ist der Zyklenzähler \mintinline{c}|DWT_CYCCNT|, der bei jedem CPU-Takt
 inkrementiert wird, solange sich der Prozessor nicht im Debug-Zustand befindet
 \cite{ARMv7_ref_man_dwt_cycle}. Die DWT ermöglicht eine Laufzeit-Protokollierung
-mit \textit{zyklengenauer} Präzision „unter normalen Betriebsbedingungen”
+mit zyklengenauer Präzision „unter normalen Betriebsbedingungen”
 \cite{ARMv7_ref_man_dwt_profiling}.
 
 Ein Beispiel hierfür ist Segger SystemView, ein Echtzeitanalyse-Tool, das die
 DWT nutzt, um Live-Code-Profiling auf eingebetteten Systemen durchzuführen
-\cite{SEGGER_SystemView}.
-
-Das Segger SystemView nutzt den DWT-Zyklenzähler, indem die Funktion \linebreak
-\mintinline{c}|SEGGER_SYSVIEW_GET_TIMESTAMP()| für Cortex-M3/4/7-Prozessoren
-einfach auf die hardkodierte Registeradresse des
+\cite{SEGGER_SystemView}. Das Tool nutzt den DWT-Zyklenzähler, indem die
+Funktion \mintinline{c}|SEGGER_SYSVIEW_GET_TIMESTAMP()| für
+Cortex-M3/4/7-Prozessoren einfach auf die hardkodierte Registeradresse des
 Zyklenzählers~\cite{Arm_DWT_Programmers_Model} zugreift \cite[S.
 65]{Segger_SystemView_manual}, anstatt die interne Funktion
-\mintinline{c}|SEGGER_SYSVIEW_X_GetTimestamp()| aufzurufen.
+\linebreak \mintinline{c}|SEGGER_SYSVIEW_X_GetTimestamp()| aufzurufen.

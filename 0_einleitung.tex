@@ -4,13 +4,13 @@ Die vorliegende Bachelorarbeit hat zunächst als Ziel, die bestehende
 Robotersteuerungssoftware von Micro-ROS auf FreeRTOS zu portieren, um die
 Echtzeitleistung beider Plattformen miteinander zu vergleichen.
 
-Beide Systeme sind für die Steuerung eines mobilen Roboters auf einem Cortex-M7
-Mikrocontroller ausgelegt, unterscheiden sich aber in ihrer zugrundeliegenden
-Softwarearchitektur (\ref{fig:micro_ros_arch}): Während Micro-ROS auf dem
-\ac{ROS 2} Framework aufbaut und somit eine höhere Abstraktionsebene durch eine
+Beide Systeme sind für die PID-geregelte Steuerung eines mobilen Roboters auf
+einem Cortex-M7 Mikrocontroller ausgelegt, unterscheiden sich aber in ihrer
+zugrundeliegenden Softwarearchitektur: Während Micro-ROS auf dem \ac{ROS 2}
+Framework aufbaut und somit eine höhere Abstraktionsebene durch eine
 standardisierte Kommunikationsschnittstelle in Form einer integrierten
-\ac{DDS}-Middleware bietet, basiert dies selbst auf einem \ac{RTOS} wie
-FreeRTOS. Die Portierung auf FreeRTOS kann daher als eine Reduzierung von
+\ac{DDS}-Middleware bietet, basiert dies selbst auf einem \ac{RTOS} wie FreeRTOS
+(\ref{fig:micro_ros_arch}). Die Portierung kann daher als eine Reduzierung von
 Abhängigkeiten betrachtet werden. Dies ermöglicht eine direktere und damit
 effizientere Nutzung der zugrundeliegenden Echtzeit- sowie Speicherressourcen.
 
@@ -21,7 +21,7 @@ effizientere Nutzung der zugrundeliegenden Echtzeit- sowie Speicherressourcen.
 \end{figure}
 
 Daher wird die Steuerungssoftware erneut auf Basis von FreeRTOS implementiert,
-um die Echtzeitleistung auf beiden Plattformen zu analysieren und zu
+um demnach die Echtzeitleistung auf beiden Plattformen zu analysieren und zu
 vergleichen. Die Analyse soll unter anderem aufzeigen, inwiefern FreeRTOS durch
 die Eliminierung dieser zusätzlichen Abhängigkeit eine effizientere und
 leichtgewichtigere Lösung darstellt. Dabei soll der Einsatz einer zyklengenauen

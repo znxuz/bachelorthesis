@@ -26,11 +26,11 @@ Dadurch könnten die Laufzeitdaten nicht mehr im menschenlesbaren Format mit
 ausgegeben werden.
 
 Dies würde erstens den Zwischenpuffer und den erforderlichen Mutex zum
-Serialisieren sowie Speichern von erzeugten Zyklenstempeln überflüssig machen,
-da sie als 32-bit-Datenworte atomar direkt in die Senke geschrieben werden
-könnten. Zweitens könnte dann ein dedizierter Parser auf dem Linux-Host
-entwickelt werden, der die Visualisierung übernimmt und idealerweise eine
-Echtzeitanalyse parallel zur Laufzeit durchführt.
+Serialisieren sowie Speichern von erzeugten Laufzeitdaten überflüssig machen, da
+sie als 32-bit-Datenworte atomar direkt in die Senke geschrieben werden könnten.
+Zweitens könnte dann ein dedizierter Parser auf dem Linux-Host entwickelt
+werden, der die Visualisierung übernimmt und idealerweise eine Echtzeitanalyse
+parallel zur Laufzeit durchführt.
 
 % Diese Vorgehensweise ähnelt der Rust-Bibliothek \mintinline{text}|defmt|, bei
 % der die rechenintensive Formatierung von Logging-Informationen nicht auf dem

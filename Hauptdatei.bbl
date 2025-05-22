@@ -88,15 +88,6 @@
 \newblock \,Version:\,2010. --
 \newblock Letzter Zugriff: 01. Mai 2025
 
-\bibitem[Bar16]{freertos_tutorial}
-\textsc{Barry}, Richard:
-\newblock \emph{Mastering the FreeRTOS Real Time Kernel - A Hands-On Tutorial
-  Guide}.
-\newblock 2016
-  \url{https://github.com/FreeRTOS/FreeRTOS-Kernel-Book/blob/a4c1c83289196317db549f1899330c5b9e7ecb73/ch01.md?plain=1#L35}.
-  --
-\newblock Letzter Zugriff: 14. März 2025
-
 \bibitem[Bar19]{FreeRTOSForumPrintf}
 \textsc{Barry}, Richard:
 \newblock \emph{Implementation of printf that works in threads}.
@@ -229,6 +220,15 @@
   \url{https://github.com/FreeRTOS/FreeRTOS-Kernel/blob/0030d609a4b99118d9a400340d88c3c3c4816f2b/include/stream_buffer.h#L41}.
 \newblock \,Version:\,2021. --
 \newblock Letzter Zugriff: 27. März 2025
+
+\bibitem[{Fre}23]{freertos_tutorial}
+\textsc{{FreeRTOS}}:
+\newblock \emph{Mastering the FreeRTOS Real Time Kernel - A Hands-On Tutorial
+  Guide}.
+\newblock 2023
+  \url{https://github.com/FreeRTOS/FreeRTOS-Kernel-Book/blob/a4c1c83289196317db549f1899330c5b9e7ecb73/ch01.md?plain=1#L35}.
+  --
+\newblock Letzter Zugriff: 14. März 2025
 
 \bibitem[Fre25]{freertos_runtime_stats}
 \textsc{FreeRTOS}:
@@ -397,14 +397,7 @@
 \newblock \,Version:\,2024. --
 \newblock Letzter Zugriff: 27. März 2025
 
-\bibitem[Wika]{wikipedia_cas}
-\textsc{Wikipedia}:
-\newblock \emph{Compare-and-swap}.
-\newblock
-  \url{https://en.wikipedia.org/wiki/Compare-and-swap#Costs_and_benefits}. --
-\newblock Letzter Zugriff: 27. März 2025
-
-\bibitem[Wikb]{wiedereintrittsfaehigkeit}
+\bibitem[Wik]{wiedereintrittsfaehigkeit}
 \textsc{Wikipedia}:
 \newblock \emph{Eintrittsinvarianz}.
 \newblock \url{https://de.wikipedia.org/wiki/Eintrittsinvarianz}. --

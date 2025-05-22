@@ -5,8 +5,7 @@ Steuerungssoftware von Micro-ROS auf FreeRTOS: Der Datenaustausch erfolgt intern
 über FreeRTOS-Queues, während die Inter-Task-Synchronisation auf den
 leichtgewichtigen Direct-Task-Notifications basiert. Zusätzlich wird die Methode
 zur Sollgeschwindigkeitseingabe per UART mit CRC-Überprüfung implementiert. Den
-Abschluss bildet die Aktivierung der Caches. Die Details zu den genannten
-Maßnahmen folgen in den nächsten Abschnitten.
+Abschluss bildet die Aktivierung der Caches.
 
 \subsection{Umstellung auf FreeRTOS}
 
@@ -38,8 +37,8 @@ Darauf aufbauend wird eine weitere Struktur \mintinline{cpp}|Vel2dFrame|
 nur zusätzlich ein Feld \mintinline{cpp}|crc| für die CRC-Überprüfung und eine
 Methode \mintinline{cpp}|compare()|, die einen nachträglich zu berechnenden
 CRC-Wert als Parameter übernimmt und mit dem vorhandenen vergleicht. Durch das
-Attribut \mintinline{cpp}|packed| wird verhindert, dass zusätzliches Padding für
-die Speicherausrichtung eingefügt wird.
+Attribut \mintinline{cpp}|packed| wird verhindert, dass zusätzliches Padding zur
+Speicherausrichtung eingefügt wird.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -101,10 +100,9 @@ gewährleisten einen fehlertoleranten Datenempfang.
 
 Um die empfangenen Bytes zu parsen, ohne dies aber während der Ausführung des
 Interrupt-Callbacks zu tun, wird eine eigenständige FreeRTOS-Task erstellt
-(\ref{code:recv_vel}). Mittels \mintinline{cpp}|vTaskNotifyGiveFromISR()| --
-aufgerufen innerhalb des Interrupt-Callbacks -- wird dieser Task signalisiert
-(\ref{code:uart_isr}, \ref{sec:direct_task_notification}). Demnach werden die
-empfangenen Bytes durch \mintinline{cpp}|reinterpret_cast| zurück in ein
+(\ref{code:recv_vel}). Mittels des zuvor erwähnten Interrupt-Callbacks wird
+dieser Task signalisiert (\ref{sec:direct_task_notification}). Demnach werden
+die empfangenen Bytes durch \mintinline{cpp}|reinterpret_cast| zurück in ein
 Daten-Frame deserialisiert.
 
 Folglich lässt sich zur Kontrolle ein CRC-Wert lokal aus den empfangenen
@@ -207,10 +205,9 @@ zu realisieren. Dadurch entfällt die Notwendigkeit, gemeinsam genutzte Daten al
 globale Variablen mit Semaphoren oder Mutexen zu schützen, die in FreeRTOS
 ebenfalls nur als Queue-Objekte abstrahiert sind.
 
-Zunächst wird eine FreeRTOS-Task zur Abfrage und auch Übertragung von
-Encoderwerten implementiert (\ref{code:enc_data_task}). Diese stellt sicher,
-dass alle anderen Tasks bei jeder Iteration auf einheitliche Werte zugreifen
-können.
+Zunächst wird eine FreeRTOS-Task (\ref{code:enc_data_task}) zur Abfrage und auch
+Übertragung von Encoderwerten implementiert. Diese stellt sicher, dass alle
+anderen Tasks bei jeder Iteration auf einheitliche Werte zugreifen können.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -279,9 +276,8 @@ extern QueueHandle_t odom_queue;
 \end{code}
 
 Die grundlegende Implementierung der Steuerungskomponenten bleibt größtenteils
-gegenüber der Micro-ROS-Version erhalten. Die Initialisierung
-(\ref{code:freertos_init}) erfolgt in \mintinline{cpp}|freertos::init()| wie
-folgt:
+gegenüber der Micro-ROS-Version erhalten. Die globale Initialisierungsfunktion
+(\ref{code:freertos_init}) ist wie folgt definiert:
 
 \begin{code}
 \begin{minted}{cpp}
@@ -304,9 +300,9 @@ Determinierbarkeit des Systems durch den Verzicht auf dynamische
 Speicherallokationen zu erhöhen \cite{freertos_memory_management} -- besteht
 darin, FreeRTOS-Objekte statisch zu erzeugen.
 
-Für eine dynamisch allokierte Task müssen die zugehörige Implementierung als
-Funktionszeiger, der Name, die maximale Stackgröße sowie eine Priorität an die
-Initialisierungsfunktion (\ref{code:dyn_task_alloc}) übergeben werden.
+Für eine (standardmäßig) dynamisch allokierte Task müssen die zugehörige
+Implementierungsfunktion als Funktionszeiger, der Name, die maximale Stackgröße
+sowie eine Priorität an die API (\ref{code:dyn_task_alloc}) übergeben werden.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -322,10 +318,10 @@ xTaskCreate(task_impl, "hal_fetch", STACK_SIZE, NULL, osPriorityNormal,
     \label{code:dyn_task_alloc}
 \end{code}
 
-Wenn eine Task statisch initialisiert werden soll
-(\ref{code:static_task_alloc}), muss der Nutzer zusätzlich sowohl einen
-ausreichenden Speicherpuffer für den Task-Stack, als auch für die Task-Struktur
-manuell definieren und an die API übergeben.
+Wenn eine Task statisch initialisiert werden soll, muss der Nutzer zusätzlich
+sowohl einen ausreichenden Speicherpuffer für den Task-Stack, als auch für die
+Task-Struktur manuell definieren und an die API (\ref{code:static_task_alloc})
+übergeben.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -361,7 +357,7 @@ zusätzlich ein Speicherpuffer sowie eine Queue-Struktur definiert werden
     \label{code:static_queue_alloc}
 \end{code}
 
-Damit schließt der Abschnitt zur FreeRTOS-Umstellung ab. Der Code für die
+Damit schließt der Abschnitt zur Portierung auf FreeRTOS ab. Der Code für die
 Steuerungssoftware sowie für den ROS2-Node ist im
 Repository~\cite{mecarover_freertos_profiling} im Branch
 \linebreak\mintinline{text}|freertos-profiling| einsehbar.
@@ -382,7 +378,7 @@ noch nicht den abschließenden Schritt dar.
 Die Transportfunktionen von Micro-ROS nutzen die Ethernet-Schnittstelle, die
 intern DMA einsetzt und durch die Integration des \ac{LwIP}-Stacks erweitert
 wird. Um sicherzustellen, dass die Daten korrekt verarbeitet werden, müssen
-sowohl der Heap für LwIP als auch die Speicherbereiche für die Ethernet-RX- und
+sowohl der Heap für LwIP, als auch die Speicherbereiche für die Ethernet-RX- und
 TX-Deskriptoren mittels \ac{MPU} so konfiguriert werden (\ref{fig:conf_cubemx}),
 dass sie nicht gecacht werden \cite{STM32H7_LwIP_Examples}.
 
@@ -412,8 +408,8 @@ ordentlich gecacht zu sein.
 
 Bei der Recherche zu diesem Problem wurde ein Issue auf GitHub identifiziert
 \cite{microROS_STM32CubeMX_Issue139}, welches genau dasselbe Verhalten
-beschreibt. Daraufhin wird der Autor um eine Lösung (\ref{code:cache_clean})
-gebeten, die sich als effektiv erweist, um das Problem zu beheben.
+beschreibt. Daraufhin wurde der Autor um eine Lösung (\ref{code:cache_clean})
+gebeten, die sich als effektiv erwies, um das Problem zu beheben.
 
 \begin{code}
 \begin{minted}{diff}
