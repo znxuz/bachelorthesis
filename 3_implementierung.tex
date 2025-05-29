@@ -123,11 +123,12 @@ size_t normalize(size_t idx) { return idx % TSINK_CAPACITY; }
 
 Auf der ARM-Architektur sind Zugriffe auf Bytes, Halbdatenworte (16-Bit) sowie
 Datenworte (32-Bit) standardmäßig atomar, sofern sie im Speicher ausgerichtet
-sind~\cite[S. A3-79]{ARM_DDI0403_EE} und verursachen somit keine
+sind~\cite[S. A3-79]{ARM_DDI0403_EE}, und verursachen somit keine
 Schreib-Lese-Konflikte.
 
 Es muss aber sichergestellt werden, dass bei Multithreaded-Zugriffen nur ein
-Thread die nächste freie Position des Ringpuffers beschreibt.
+Thread die nächste freie Position des Ringpuffers beschreibt und den
+Schreibzeiger aktualisiert.
 
 Hier lässt sich eine \ac{CAS}-Operation (\ref{code:cas}) nutzen, um
 sicherzustellen, dass der Schreibindex bei konkurrierendem Zugriff durch den
@@ -247,9 +248,9 @@ void task_impl(void*) {
 
 Zunächst wird der mögliche Anteil der verfügbaren Daten, der sich vom
 Pufferanfang bis zum Schreibindex erstreckt, mathematisch berechnet. Dieser
-Anteil existiert und wird nur gültig sein, wenn nach der Normalisierung der
-beiden Indizes der Schreibindex \textit{hinter} dem Leseindex liegt: In diesem
-Fall wurde der Ringpuffer bereits bis zum Ende beschrieben und beginnt wieder am
+Anteil existiert und ist nur gültig, wenn nach der Normalisierung der beiden
+Indizes der Schreibindex \textit{hinter} dem Leseindex liegt: In diesem Fall
+wurde der Ringpuffer bereits bis zum Ende beschrieben und beginnt wieder am
 Anfang. Dann wird die (Teil-)Menge vom aktuellen Leseindex bis zum Schreibindex
 oder Pufferende -- abhängig von dem zuvor berechneten Anteil -- bestimmt. Diese
 Vorgehensweise ist notwendig, da die API zur UART-Übertragung nur einen Zeiger
@@ -299,7 +300,7 @@ void consume_complete() {
 \end{code}
 
 Für die Nutzung dieser Senke mit UART-DMA und aktiviertem Datencache muss somit
-zunächst eine ISR \ref{code:dma_irq_cb} definiert werden, das nach jeder
+zunächst eine ISR (\ref{code:dma_irq_cb}) definiert werden, das nach jeder
 DMA-Übertragung ausgelöst wird und die Callback-Funktion
 (\ref{code:task_noti_cb}) aufruft.
 
@@ -638,7 +639,7 @@ auto output_stamps = []() static {
     \label{freertos_output_task}
 \end{code}
 
-Für Nicht-ISR-Kontexte ist die Funktion (\ref{code:stamp_direct_impl}) zur
+Für Nicht-ISR-Kontexte ist die Funktion \ref{code:stamp_direct_impl} zur
 direkten Ausgabe eines Zyklenstempels wie folgt definiert:
 
 \begin{code}
@@ -655,9 +656,10 @@ inline void stamp_direct(const char* name, bool is_begin) {
     \label{code:stamp_direct_impl}
 \end{code}
 
-Das RAII-Konzept (\ref{code:stamp_raii}) kommt ebenfalls hier zur Anwendung:
-Beim Erstellen eines Objekts dieses Typs wird automatisch die Funktion
-\ref{code:stamp_direct_impl} aufgerufen, beim Zerstören erneut.
+Das RAII-Konzept kommt ebenfalls hier (\ref{code:stamp_raii}) zur Anwendung:
+Beim Erstellen eines Objekts des Typs \mintinline{cpp}|struct cycle_stamp_raii|
+wird automatisch die Funktion \ref{code:stamp_direct_impl} aufgerufen, beim
+Zerstören erneut.
 
 \begin{code}
 \begin{minted}{cpp}
@@ -738,7 +740,7 @@ Laut Benutzerhandbuch des Boards ist der User-Button standardmäßig mit dem
 I/O-Pin PC13 verbunden, was der \ac{EXTI}-Linie 13 entspricht. Praktischerweise
 muss in STM32CubeMX nur die Option für EXTI-Line-Interrupts der Linien 10 bis 15
 unter \textit{System Core/NVIC} aktiviert werden, sodass der Button bei jedem
-Druck einen Interrupt auslöst.
+Druck mithilfe der STM32-HAL einen Interrupt auslöst.
 
 Im entsprechenden Interrupt-Callback (\ref{code:btn_irq}) wird ein
 Toggle-Mechanismus implementiert: Bei jedem Auslösen wird die boolesche Variable

@@ -491,9 +491,9 @@ beeinflusst \cite{ROS_Performance2019} -- konkret \ac{XRCE}-DDS seitens
 Micro-ROS und standardmäßig Fast DDS bei ROS2.
 
 Zweitens könnte der inhärente Overhead des ROS/Micro-ROS-Stacks ebenfalls
-signifikante Latenzen verursachenda alle Daten zwingend als gepackte Pakete über
-eine UDP-basierte Verbindung zum Linux-Host und zurück übertragen werden müssen.
-Dieser transportbedingte, plattformübergreifende Mechanismus führt zu
+signifikante Latenzen verursachen, da alle Daten zwingend als gepackte Pakete
+über eine UDP-basierte Verbindung zum Linux-Host und zurück übertragen werden
+müssen. Dieser transportbedingte, plattformübergreifende Mechanismus führt zu
 zusätzlichen nicht-deterministischen Verzögerungen im Gegensatz zur
 FreeRTOS-Implementierung, bei der der Datenaustausch vollständig intern durch
 direkte Speicherkopien zwischen Adressräumen realisiert wird.
@@ -540,9 +540,9 @@ extrahiert.
 Zusätzlich unterscheidet sich die FreeRTOS-Implementierung von Micro-ROS auch
 dadurch, dass die Encoderdaten nicht vom Drehzahlregler abgefragt und dann erst
 an die Odometrie übergeben werden. Stattdessen übernimmt eine dedizierte
-FreeRTOS-Task \mintinline{cpp}|hal_fetch| die Übertragung dieser Daten sowohl an
-den Drehzahlregler als auch an die Odometrie (\ref{code:enc_data_task}). Dadurch
-wird ein Teil des Overheads vom Drehzahlregler entkoppelt.
+FreeRTOS-Task (\ref{code:enc_data_task}) die Übertragung dieser Daten sowohl an
+den Drehzahlregler als auch an die Odometrie. Dadurch wird ein Teil des
+Overheads vom Drehzahlregler entkoppelt.
 
 Zusammenfassend zeigt sich, dass die Steuerungslogik sowohl unter Micro-ROS als
 auch unter FreeRTOS relativ wenig Rechenzeit beansprucht -- vorausgesetzt, dass
